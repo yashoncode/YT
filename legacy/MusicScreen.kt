@@ -1,4 +1,4 @@
-package io.github.aedev.flow.ui.screens.music
+package com.yt.ui.screens.music
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

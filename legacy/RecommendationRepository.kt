@@ -1,4 +1,4 @@
-package io.github.aedev.flow.data.recommendation
+package com.yt.data.recommendation
 
 import android.content.Context
 import android.util.Log
@@ -8,16 +8,16 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import io.github.aedev.flow.data.local.ChannelSubscription
-import io.github.aedev.flow.data.local.LikedVideoInfo
-import io.github.aedev.flow.data.local.LikedVideosRepository
-import io.github.aedev.flow.data.local.PlaylistRepository
-import io.github.aedev.flow.data.local.SearchHistoryRepository
-import io.github.aedev.flow.data.local.SubscriptionRepository
-import io.github.aedev.flow.data.local.VideoHistoryEntry
-import io.github.aedev.flow.data.local.ViewHistory
-import io.github.aedev.flow.data.model.Video
-import io.github.aedev.flow.data.repository.YouTubeRepository
+import com.yt.data.local.ChannelSubscription
+import com.yt.data.local.LikedVideoInfo
+import com.yt.data.local.LikedVideosRepository
+import com.yt.data.local.PlaylistRepository
+import com.yt.data.local.SearchHistoryRepository
+import com.yt.data.local.SubscriptionRepository
+import com.yt.data.local.VideoHistoryEntry
+import com.yt.data.local.ViewHistory
+import com.yt.data.model.Video
+import com.yt.data.repository.YouTubeRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
@@ -258,7 +258,7 @@ class RecommendationRepository private constructor(private val context: Context)
             // =====================
             val allRelatedVideos = fetchResults.relatedFromHistory + fetchResults.relatedFromLiked
             
-            val candidates = FlowAlgorithmV2.mergeAndDeduplicate(
+            val candidates = YTAlgorithmV2.mergeAndDeduplicate(
                 subscriptionVideos = fetchResults.subscriptionVideos,
                 relatedVideos = allRelatedVideos,
                 searchInterestVideos = fetchResults.searchVideos,
@@ -298,7 +298,7 @@ class RecommendationRepository private constructor(private val context: Context)
             val watchHistoryMap = watchHistory.associate { it.videoId to it.timestamp }
             val searchInterestVideoIds = fetchResults.searchVideos.map { it.id }.toSet()
             
-            val ranked = FlowAlgorithmV2.scoreAndRank(
+            val ranked = YTAlgorithmV2.scoreAndRank(
                 context = context,
                 candidates = finalCandidates,
                 subscriptionChannelIds = subscriptionChannelIds,
@@ -310,7 +310,7 @@ class RecommendationRepository private constructor(private val context: Context)
             // =====================
             // 7. LIGHT SHUFFLE FOR VARIETY
             // =====================
-            val shuffled = FlowAlgorithmV2.lightShuffle(ranked)
+            val shuffled = YTAlgorithmV2.lightShuffle(ranked)
             
             // =====================
             // 8. CACHE RESULTS

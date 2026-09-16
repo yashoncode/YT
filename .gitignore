@@ -15,7 +15,7 @@ newpipe-dev
 release.keystore
 generate_key.ps1
 generate_key.bat
-flow-website
+yt-website
 svglogo
 metro*
 release.ps1
@@ -33,7 +33,7 @@ pipepipe
 graphify-out/
 .claude/
 claude.md
-Flow-desktop/
+YT-desktop/
 
 # Kotlin compiler session/daemon state
 .kotlin/

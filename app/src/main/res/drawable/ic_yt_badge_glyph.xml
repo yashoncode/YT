@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The "F" glyph of the YT badge (same tight-crop viewport as
+     ic_yt_badge_shape) so the two layers can be tinted independently. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="36dp"
+    android:viewportWidth="20.08"
+    android:viewportHeight="15.22">
+    <group
+        android:translateX="-1.96"
+        android:translateY="-4.77">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M5.75 8.4L7.65 8.4L8.55 10.55L9.45 8.4L11.35 8.4L9.4 12.5L9.4 16.4L7.7 16.4L7.7 12.5ZM12.9 8.4H18.5V10.1H16.55V16.4H14.85V10.1H12.9Z" />
+    </group>
+</vector>

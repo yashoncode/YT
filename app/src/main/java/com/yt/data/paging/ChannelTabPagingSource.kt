@@ -1,0 +1,63 @@
+package com.yt.data.paging
+
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
+import com.yt.data.model.DistinctKeyTracker
+import com.yt.innertube.YouTube
+import com.yt.innertube.pages.channel.ChannelTabContent
+import com.yt.innertube.pages.channel.ChannelTabKind
+import com.yt.innertube.pages.renderer.FeedItem
+import com.yt.innertube.pages.renderer.FeedItemOwner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/**
+ * Any channel tab, paged. One source for every tab because every tab parses to the same
+ * [ChannelTabContent]; what differs is the params token, which the response itself supplied.
+ *
+ * @param sortToken a chip from the tab's own sort bar. A chip token already encodes the channel, so
+ *   with one chosen it *is* the first page rather than a filter applied to one.
+ * @param onPageLoaded reports the sort bar and the resolved owner back once, so the screen can render
+ *   chips without a second browse.
+ */
+class ChannelTabPagingSource(
+    private val browseId: String,
+    private val params: String,
+    private val kind: ChannelTabKind,
+    private val sortToken: String? = null,
+    private var owner: FeedItemOwner = FeedItemOwner(id = browseId),
+    private val onPageLoaded: (ChannelTabContent) -> Unit = {},
+) : PagingSource<String, FeedItem>() {
+    private val seen = DistinctKeyTracker()
+
+    override fun getRefreshKey(state: PagingState<String, FeedItem>): String? = null
+
+    override suspend fun load(params: LoadParams<String>): LoadResult<String, FeedItem> =
+        withContext(Dispatchers.IO) {
+            val cursor = params.key
+            val page =
+                when {
+                    cursor != null -> YouTube.channelTabContinuation(cursor, owner, kind)
+                    sortToken != null -> YouTube.channelTabContinuation(sortToken, owner, kind)
+                    else -> YouTube.channelTab(browseId, this@ChannelTabPagingSource.params, owner, kind)
+                }.getOrElse { return@withContext LoadResult.Error(it) }
+
+            if (page.owner.id.isNotBlank()) owner = page.owner
+            if (cursor == null || page.filters.isNotEmpty()) onPageLoaded(page)
+
+            LoadResult.Page(
+                data = seen.filter(page.items) { it.pagingKey() },
+                prevKey = null,
+                nextKey = page.continuation,
+            )
+        }
+}
+
+private fun FeedItem.pagingKey(): String =
+    when (this) {
+        is FeedItem.VideoItem -> video.id
+        is FeedItem.ShortItem -> video.id
+        is FeedItem.PlaylistItem -> playlist.id
+        is FeedItem.RelatedChannelItem -> channel.id
+        is FeedItem.PostItem -> post.id
+    }

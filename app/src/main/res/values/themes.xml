@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Flow" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.YT" parent="android:Theme.Material.Light.NoActionBar">
         <!-- Enable edge-to-edge -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -12,10 +12,10 @@
 
     <!-- OS-level splash screen theme (Android 12+).
          Background matches the Compose splash screen so there is no white flash. -->
-    <style name="Theme.Flow.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.YT.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#0F0F0F</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
-        <item name="postSplashScreenTheme">@style/Theme.Flow</item>
+        <item name="postSplashScreenTheme">@style/Theme.YT</item>
     </style>
 </resources>
 

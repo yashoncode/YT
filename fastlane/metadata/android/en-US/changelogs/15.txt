@@ -1,7 +1,7 @@
 #New
 - Playback speed memory, presets, slider, & 4x support
 - Subscription groups, filters, in-channel search, region picker
-- Deep Flow, themes, diagnostics, crash logs & backups
+- Deep YT, themes, diagnostics, crash logs & backups
 - DeArrow badge, mark watched, NewPipe export, & card actions
 
 #Improved & Fixed

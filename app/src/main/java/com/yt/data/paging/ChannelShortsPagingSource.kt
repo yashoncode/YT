@@ -1,0 +1,55 @@
+package com.yt.data.paging
+
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
+import com.yt.data.model.DistinctKeyTracker
+import com.yt.data.model.Video
+import com.yt.data.shorts.ChannelShortsFeed
+import com.yt.data.shorts.ChannelShortsOwner
+import com.yt.innertube.pages.channel.ChannelSortOption
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/**
+ * The channel Shorts tab grid, in the user's chosen sort order.
+ *
+ *
+ * @param sortToken the chosen chip's continuation token, or null for the channel's own default.
+ * @param onPageLoaded reports the sort bar and channel identity back, so the screen can render the
+ *   chips and the queue can be opened with the same owner without a second browse.
+ */
+class ChannelShortsPagingSource(
+    private val channelId: String,
+    private val sortToken: String?,
+    private val onPageLoaded: (sorts: List<ChannelSortOption>, owner: ChannelShortsOwner) -> Unit = { _, _ -> },
+) : PagingSource<String, Video>() {
+    private val seen = DistinctKeyTracker()
+    private var owner = ChannelShortsOwner(id = channelId)
+
+    override fun getRefreshKey(state: PagingState<String, Video>): String? = null
+
+    override suspend fun load(params: LoadParams<String>): LoadResult<String, Video> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val cursor = params.key
+                val page =
+                    if (cursor == null) {
+                        ChannelShortsFeed.initial(channelId, sortToken)
+                    } else {
+                        ChannelShortsFeed.more(cursor, owner)
+                    }
+
+                if (page == null) {
+                    LoadResult.Page<String, Video>(emptyList(), prevKey = null, nextKey = null)
+                } else {
+                    owner = page.owner
+                    if (page.sorts.isNotEmpty() || cursor == null) onPageLoaded(page.sorts, page.owner)
+                    LoadResult.Page(
+                        data = seen.filter(page.videos, Video::id),
+                        prevKey = null,
+                        nextKey = page.continuation,
+                    )
+                }
+            }.getOrElse { LoadResult.Error(it) }
+        }
+}

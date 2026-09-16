@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 env:
-  # Certificate of the official Flow release key. IzzyOnDroid and every
+  # Certificate of the official YT release key. IzzyOnDroid and every
   # installed client pin this value; an APK signed with anything else cannot
   # be installed as an update. Changing it forces every user to reinstall.
   EXPECTED_SIGNER_SHA256: 4322294ed4caa2d4294140095818080ffe8acc1fbe3cdc76107df45c5286be40
@@ -199,7 +199,7 @@ jobs:
       - name: Upload GitHub universal APK
         uses: actions/upload-artifact@v7
         with:
-          name: flow-github-universal-release-apk
+          name: yt-github-universal-release-apk
           path: app/build/outputs/apk/github/release/app-github-universal-release*.apk
           if-no-files-found: error
           retention-days: 14
@@ -208,7 +208,7 @@ jobs:
       - name: Upload GitHub ARM64 APK
         uses: actions/upload-artifact@v7
         with:
-          name: flow-github-arm64-release-apk
+          name: yt-github-arm64-release-apk
           path: app/build/outputs/apk/github/release/app-github-arm64-v8a-release*.apk
           if-no-files-found: error
           retention-days: 14
@@ -217,7 +217,7 @@ jobs:
       - name: Upload GitHub ARMv7 APK
         uses: actions/upload-artifact@v7
         with:
-          name: flow-github-armeabi-v7a-release-apk
+          name: yt-github-armeabi-v7a-release-apk
           path: app/build/outputs/apk/github/release/app-github-armeabi-v7a-release*.apk
           if-no-files-found: error
           retention-days: 14
@@ -227,7 +227,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v7
         with:
-          name: flow-nightly-apk
+          name: yt-nightly-apk
           path: |
             app/build/outputs/apk/github/nightly/app-github-universal-nightly.apk
             app/build/outputs/apk/github/nightly/app-github-universal-nightly.apk.sha256
@@ -237,7 +237,7 @@ jobs:
       - name: Upload FOSS universal APK
         uses: actions/upload-artifact@v7
         with:
-          name: flow-foss-universal-release-apk
+          name: yt-foss-universal-release-apk
           path: app/build/outputs/apk/foss/release/app-foss-universal-release*.apk
           if-no-files-found: error
           retention-days: 14
@@ -246,7 +246,7 @@ jobs:
       - name: Upload FOSS ARM64 APK
         uses: actions/upload-artifact@v7
         with:
-          name: flow-foss-arm64-release-apk
+          name: yt-foss-arm64-release-apk
           path: app/build/outputs/apk/foss/release/app-foss-arm64-v8a-release*.apk
           if-no-files-found: error
           retention-days: 14
@@ -255,7 +255,7 @@ jobs:
       - name: Upload FOSS ARMv7 APK
         uses: actions/upload-artifact@v7
         with:
-          name: flow-foss-armeabi-v7a-release-apk
+          name: yt-foss-armeabi-v7a-release-apk
           path: app/build/outputs/apk/foss/release/app-foss-armeabi-v7a-release*.apk
           if-no-files-found: error
           retention-days: 14
@@ -277,28 +277,28 @@ jobs:
       - name: Download release APKs
         uses: actions/download-artifact@v8
         with:
-          pattern: flow-*-release-apk
+          pattern: yt-*-release-apk
           path: dist/
           merge-multiple: true
 
-      # flow.apk and flow-foss.apk are the universal builds and are a public
+      # yt.apk and yt-foss.apk are the universal builds and are a public
       # contract: IzzyOnDroid matches release assets by file name, and the
       # README links to them directly. Do not rename or drop them without
-      # first updating the IzzyOnDroid entry for io.github.aedev.flow.
+      # first updating the IzzyOnDroid entry for com.yt.
       - name: Rename APKs for release
         run: |
           set -euo pipefail
-          mv dist/app-github-universal-release.apk   dist/flow.apk
-          mv dist/app-foss-universal-release.apk     dist/flow-foss.apk
-          mv dist/app-github-arm64-v8a-release.apk   dist/flow-arm64-v8a.apk
-          mv dist/app-github-armeabi-v7a-release.apk dist/flow-armeabi-v7a.apk
-          mv dist/app-foss-arm64-v8a-release.apk     dist/flow-foss-arm64-v8a.apk
-          mv dist/app-foss-armeabi-v7a-release.apk   dist/flow-foss-armeabi-v7a.apk
+          mv dist/app-github-universal-release.apk   dist/yt.apk
+          mv dist/app-foss-universal-release.apk     dist/yt-foss.apk
+          mv dist/app-github-arm64-v8a-release.apk   dist/yt-arm64-v8a.apk
+          mv dist/app-github-armeabi-v7a-release.apk dist/yt-armeabi-v7a.apk
+          mv dist/app-foss-arm64-v8a-release.apk     dist/yt-foss-arm64-v8a.apk
+          mv dist/app-foss-armeabi-v7a-release.apk   dist/yt-foss-armeabi-v7a.apk
 
       - name: Generate checksums
         run: |
           cd dist
-          sha256sum flow*.apk > checksums.txt
+          sha256sum yt*.apk > checksums.txt
           cat checksums.txt
 
       - name: Get version from tag
@@ -310,22 +310,22 @@ jobs:
           RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
         run: |
           test -s release-notes.md
-          grep -Fqx "# Flow ${RELEASE_VERSION}" release-notes.md
+          grep -Fqx "# YT ${RELEASE_VERSION}" release-notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
-          name: Flow ${{ steps.get_version.outputs.VERSION }}
+          name: YT ${{ steps.get_version.outputs.VERSION }}
           body_path: release-notes.md
           generate_release_notes: false
           files: |
-            dist/flow.apk
-            dist/flow-foss.apk
-            dist/flow-arm64-v8a.apk
-            dist/flow-armeabi-v7a.apk
-            dist/flow-foss-arm64-v8a.apk
-            dist/flow-foss-armeabi-v7a.apk
+            dist/yt.apk
+            dist/yt-foss.apk
+            dist/yt-arm64-v8a.apk
+            dist/yt-armeabi-v7a.apk
+            dist/yt-foss-arm64-v8a.apk
+            dist/yt-foss-armeabi-v7a.apk
             dist/checksums.txt
           draft: false
           prerelease: false

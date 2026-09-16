@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Flow</string>
+    <string name="app_name">YT</string>
     <string name="subscriptions_search_placeholder">सब्सक्रिप्शनस में से खोजें..।</string>
     <string name="top_bar_subscriptions_title">सब्सक्रिप्शनें</string>
     <string name="view_all_button_label">सभी</string>
@@ -164,7 +164,7 @@
     <string name="new_update_available">नया अपडेट उपलब्ध</string>
     <string name="update_available_template">%1$s अब उपलब्ध है</string>
     <string name="release_notes">रिलीज़ नोट्स</string>
-    <string name="update_flow">फ्लो अपडेट करें</string>
+    <string name="update_yt">फ्लो अपडेट करें</string>
     <string name="maybe_later">बाद में शायद</string>
     <string name="nav_home">होम</string>
     <string name="nav_shorts">शॉर्ट्स</string>
@@ -198,7 +198,7 @@
     <string name="chapters">अध्याय</string>
     <string name="artist">कलाकार</string>
     <string name="playlist">प्लेलिस्ट</string>
-    <string name="app_name_uppercase">FLOW</string>
+    <string name="app_name_uppercase">YT</string>
     <string name="notification_badge_9_plus">9+</string>
     <string name="personalized_feed">आपकी व्यक्तिगत फ़ीड</string>
     <string name="import_newpipe_backup">न्यूपाइप बैकअप आयात करें</string>
@@ -267,7 +267,7 @@
     <string name="peace_and_quiet">शांति और सन्नाटा</string>
     <string name="notifications_empty_body">आप अपडेटेड हैं! आपकी सब्सक्रिप्शनस से नए अपडेट यहाँ दिखेंगे।</string>
     <string name="settings_title">सेटिंग्स</string>
-    <string name="settings_flow_engine_header">फ्लो इंजन</string>
+    <string name="settings_yt_engine_header">फ्लो इंजन</string>
     <string name="settings_active_learning">सक्रिय शिक्षण</string>
     <string name="settings_reset_brain_title">फ्लो व्यक्तित्व रीसेट करें?</string>
     <string name="settings_reset_brain_body">यह आपकी \'फ्लो ब्रेन\' रुचि प्रोफ़ाइल को पूरी तरह से मिटा देगा।\n\n• सभी सीखे गए विषय भूल जाएंगे।\n• व्यक्तित्व लक्षण तटस्थ पर रीसेट हो जाएंगे।\n• अनुशंसाएँ डिफ़ॉल्ट पर वापस आ जाएंगी।\n\nयह क्रिया पूर्ववत नहीं की जा सकती।</string>
@@ -298,7 +298,7 @@
     <string name="notif_check_interval">नए वीडियो जांच अंतराल</string>
     <string name="notif_check_interval_subtitle_template">हर %s में जाँच करें</string>
     <string name="notif_check_interval_dialog_title">जांच अंतराल</string>
-    <string name="notif_check_interval_dialog_body">Flow आपके सब्सक्राइब किए चैनलों से नए वीडियो के लिए दिन में कितनी बार जाँच करता है।</string>
+    <string name="notif_check_interval_dialog_body">YT आपके सब्सक्राइब किए चैनलों से नए वीडियो के लिए दिन में कितनी बार जाँच करता है।</string>
     <string name="notif_interval_15m">15 मिनट</string>
     <string name="notif_interval_30m">30 मिनट</string>
     <string name="notif_interval_1h">1 घंटा</string>
@@ -331,8 +331,8 @@
     <string name="settings_item_export_data_subtitle">अपने डेटा का बैकअप लें</string>
     <string name="settings_item_import_data">डेटा आयात करें</string>
     <string name="settings_item_import_data_subtitle">बैकअप से पुनर्स्थापित करें या अन्य ऐप्स से आयात करें</string>
-    <string name="settings_item_about_flow">फ्लो के बारे में</string>
-    <string name="settings_item_about_flow_subtitle">संस्करण, लाइसेंस, योगदानकर्ता</string>
+    <string name="settings_item_about_yt">फ्लो के बारे में</string>
+    <string name="settings_item_about_yt_subtitle">संस्करण, लाइसेंस, योगदानकर्ता</string>
     <string name="settings_item_support">सहायता और दान</string>
     <string name="settings_item_support_subtitle">फ्लो के विकास में सहायता करें</string>
     <string name="settings_region_dialog_title">क्षेत्र चुनें</string>
@@ -349,7 +349,7 @@
     <string name="app_icon_picker_subtitle">लॉन्चर आइकन शैली चुनें। परिवर्तन तुरंत प्रभावी होगा और लॉन्चर संक्षेप में ताज़ा होगा।</string>
     <string name="app_icon_picker_warning">⚠ ध्यान दें: आइकन बदलने पर Android सिस्टम तंत्र का उपयोग होता है जो होम स्क्रीन से ऐप शॉर्टकट को अस्थायी रूप से हटा सकता है। यदि आवश्यक हो तो इसे वापस जोड़ने के लिए लॉन्चर को लंबे समय तक दबाएँ।</string>
     <string name="app_icon_apply_toast">आइकन अपडेट किया गया — आपका लॉन्चर ताज़ा होगा</string>
-    <string name="icon_name_flow_red">फ्लो लाल</string>
+    <string name="icon_name_yt_red">फ्लो लाल</string>
     <string name="icon_name_amoled">AMOLED गहरा</string>
     <string name="icon_name_monochrome">एकवर्णी</string>
     <string name="icon_name_ghost">प्रेत</string>
@@ -715,12 +715,12 @@
     <string name="period_six_months">6 महीने</string>
     <string name="period_one_year">1 वर्ष</string>
     <string name="import_data_title">डेटा आयात करें</string>
-    <string name="import_flow_backup_success">फ्लो बैकअप सफलतापूर्वक आयात किया गया</string>
-    <string name="import_flow_backup_failed_template">फ्लो बैकअप आयात करने में विफल: %1$s</string>
+    <string name="import_yt_backup_success">फ्लो बैकअप सफलतापूर्वक आयात किया गया</string>
+    <string name="import_yt_backup_failed_template">फ्लो बैकअप आयात करने में विफल: %1$s</string>
     <string name="import_newpipe_failed_template">न्यूपाइप बैकअप आयात करने में विफल: %1$s</string>
     <string name="import_youtube_failed_template">यूट्यूब बैकअप आयात करने में विफल: %1$s</string>
-    <string name="import_flow_backup_item_title">फ्लो बैकअप आयात करें</string>
-    <string name="import_flow_backup_desc">Flow बैकअप फ़ाइल से अपना इतिहास, सेटिंग्स और सब्सक्रिप्शनस पुनर्स्थापित करें।</string>
+    <string name="import_yt_backup_item_title">फ्लो बैकअप आयात करें</string>
+    <string name="import_yt_backup_desc">YT बैकअप फ़ाइल से अपना इतिहास, सेटिंग्स और सब्सक्रिप्शनस पुनर्स्थापित करें।</string>
     <string name="import_from_newpipe">न्यूपाइप से आयात करें</string>
     <string name="import_from_newpipe_desc">NewPipe से एक्सपोर्ट की गई फ़ाइल (JSON) से सब्सक्रिप्शनें आयात करें।</string>
     <string name="import_from_libretube">लिब्रेट्यूब से आयात करें</string>
@@ -762,8 +762,8 @@
     <string name="location_dialog_subtitle">चुनें कि डाउनलोड की गई फ़ाइलें आपके डिवाइस पर कहाँ सहेजी जाएँ।</string>
     <string name="location_preset_header">पूर्वनिर्धारित स्थान</string>
     <string name="location_custom_header">कस्टम स्थान</string>
-    <string name="location_downloads_label">डाउनलोड / Flow</string>
-    <string name="location_movies_label">मूवीज़ / Flow</string>
+    <string name="location_downloads_label">डाउनलोड / YT</string>
+    <string name="location_movies_label">मूवीज़ / YT</string>
     <string name="location_internal_app_label">आंतरिक ऐप संग्रहण</string>
     <string name="location_internal_app_desc">ऐप की निजी फ़ाइलें — यदि आप ऐप अनइंस्टॉल करते हैं तो फ़ाइलें हट सकती हैं</string>
     <string name="location_custom_saf_label">ब्राउज़ करें…</string>
@@ -777,8 +777,8 @@
     <string name="location_badge_active">सक्रिय</string>
     <string name="select_threads_count_desc">थ्रेड्स की संख्या चुनें (1-8):</string>
     <string name="support_donations_title">सहायता और दान</string>
-    <string name="support_flow_dev_title">फ्लो विकास का समर्थन करें</string>
-    <string name="support_flow_dev_desc">यदि आप फ्लो को उपयोगी पाते हैं और इसके विकास का समर्थन करना चाहते हैं, तो आप निम्न पतों पर दान कर सकते हैं। आपका समर्थन परियोजना को जीवित रखने में मदद करता है!</string>
+    <string name="support_yt_dev_title">फ्लो विकास का समर्थन करें</string>
+    <string name="support_yt_dev_desc">यदि आप फ्लो को उपयोगी पाते हैं और इसके विकास का समर्थन करना चाहते हैं, तो आप निम्न पतों पर दान कर सकते हैं। आपका समर्थन परियोजना को जीवित रखने में मदद करता है!</string>
     <string name="thank_you_support_message">आपके समर्थन के लिए धन्यवाद! ❤️</string>
     <string name="address_copied_toast">पता क्लिपबोर्ड पर कॉपी किया गया</string>
     <string name="donation_address_clip_label">दान पता</string>
@@ -789,7 +789,7 @@
     <string name="newpipe_extractor_subtitle">कोर निष्कर्षण लाइब्रेरी</string>
     <string name="about_license">लाइसेंस</string>
     <string name="about_changelog">परिवर्तन सूची</string>
-    <string name="whats_new_in_flow">फ्लो में नया क्या है</string>
+    <string name="whats_new_in_yt">फ्लो में नया क्या है</string>
     <string name="about_device_info">डिवाइस जानकारी</string>
     <string name="gnu_license_full_title">GNU जनरल पब्लिक लाइसेंस</string>
     <string name="loading_ellipsis">लोड हो रहा है..।</string>
@@ -830,7 +830,7 @@
     <string name="playlist_empty_desc">अपनी प्लेलिस्ट बनाने के लिए\nवीडियो प्लेयर से वीडियो जोड़ें</string>
     <string name="delete_playlist_dialog_title">प्लेलिस्ट हटाएँ?</string>
     <string name="delete_playlist_dialog_text">यह \'%1$s\' और उसके सभी वीडियो को स्थायी रूप से हटा देगा।</string>
-    <string name="welcome_to_flow">फ्लो में आपका स्वागत है</string>
+    <string name="welcome_to_yt">फ्लो में आपका स्वागत है</string>
     <string name="onboarding_subtitle">हमें बताएँ कि आप किस चीज़ में रुचि रखते हैं</string>
     <string name="onboarding_instructions">अपने अनुभव को निजीकृत करने के लिए कम से कम 3 विषय चुनें</string>
     <string name="btn_skip_for_now">अभी के लिए छोड़ें</string>
@@ -847,7 +847,7 @@
     <string name="category_creative">रचनात्मक</string>
     <string name="category_science_nature">विज्ञान और प्रकृति</string>
     <string name="category_news_current_events">समाचार और वर्तमान घटनाएँ</string>
-    <string name="flow_control_center">फ्लो नियंत्रण केंद्र</string>
+    <string name="yt_control_center">फ्लो नियंत्रण केंद्र</string>
     <string name="action_refresh">ताज़ा करें</string>
     <string name="loading_neural_matrix">न्यूरल मैट्रिक्स लोड हो रहा है..।</string>
     <string name="neural_interest_map_subtitle">आपका तंत्रिका रुचि मानचित्र</string>
@@ -870,7 +870,7 @@
     <string name="stats_topics">विषय</string>
     <string name="empty_bubble_cloud_message">अपने इंटरेस्ट नेबुला को आबाद करने के लिए कुछ वीडियो देखें!</string>
     <string name="export_profile_data">प्रोफ़ाइल डेटा निर्यात करें</string>
-    <string name="flow_neural_profile_export_subject">फ्लो तंत्रिका प्रोफ़ाइल निर्यात</string>
+    <string name="yt_neural_profile_export_subject">फ्लो तंत्रिका प्रोफ़ाइल निर्यात</string>
     <string name="screen_title_music_library">संगीत लाइब्रेरी</string>
     <string name="header_your_collection">आपका संग्रह</string>
     <string name="subtitle_liked_music">आपके पसंदीदा गीत</string>
@@ -1026,13 +1026,13 @@
     <string name="check_for_updates">अपडेट्स के लिए जाँचें</string>
     <string name="check_for_updates_subtitle">नया वर्शन चेक करने के लिए टैप करें</string>
     <string name="checking_for_updates">अपडेट की जाँच की जा रही है…</string>
-    <string name="flow_is_up_to_date">Flow अपडेटेड है!</string>
+    <string name="yt_is_up_to_date">YT अपडेटेड है!</string>
     <string name="update_check_failed">अपडेट की जाँच नहीं की जा सकी। अपना कनेक्शन जाँचें।</string>
     <string name="export_engine_data">इंजन प्रोफ़ाइल निर्यात करें</string>
     <string name="export_engine_data_subtitle">अपने AI व्यक्तित्व और सीखने के डेटा का बैकअप लें</string>
     <string name="export_engine_success">इंजन प्रोफ़ाइल सफलतापूर्वक निर्यात की गई</string>
     <string name="export_engine_failed">इंजन प्रोफ़ाइल निर्यात करने में विफल</string>
-    <string name="import_engine_data">Flow इंजन डेटा आयात करें</string>
+    <string name="import_engine_data">YT इंजन डेटा आयात करें</string>
     <string name="import_engine_data_desc">बैकअप फ़ाइल से अपनी AI व्यक्तित्व प्रोफ़ाइल पुनर्स्थापित करें</string>
     <string name="import_engine_success">इंजन प्रोफ़ाइल सफलतापूर्वक पुनर्स्थापित की गई</string>
     <string name="import_engine_failed">इंजन प्रोफ़ाइल आयात करने में विफल</string>
@@ -1053,7 +1053,7 @@
     <string name="error_not_available">वीडियो उपलब्ध नहीं</string>
     <string name="error_not_available_hint">हो सकता है कि यह वीडियो डिलीट हो गया है, प्राइवेट कर दिया गया है, या YouTube ने इसे हटा दिया है।</string>
     <string name="error_not_supported">कंटेंट टाइप समर्थित नहीं</string>
-    <string name="error_not_supported_hint">इस फ़ॉर्मेट या कंटेंट टाइप को Flow में नहीं चलाया जा सकता।</string>
+    <string name="error_not_supported_hint">इस फ़ॉर्मेट या कंटेंट टाइप को YT में नहीं चलाया जा सकता।</string>
     <string name="error_no_internet">कोई इंटरनेट कनेक्शन नहीं है</string>
     <string name="error_no_internet_hint">अपना वाई-फ़ाई या मोबाइल डेटा जांचें और फिर से कोशिश करें।</string>
     <string name="error_timeout">कनेक्शन का समय समाप्त</string>
@@ -1071,7 +1071,7 @@
     <string name="error_playback_failed">प्लेबैक विफल रहा</string>
     <string name="error_playback_failed_hint">एक अनपेक्षित प्लेयर त्रुटि हुई है। कृपया फिर से कोशिश करें।</string>
     <string name="error_extraction_failed">वीडियो डेटा पार्स करने में विफल</string>
-    <string name="error_extraction_failed_hint">YouTube ने अपना प्रारूप अपडेट किया होगा। Flow को जल्द ही अपडेट किया जाएगा —कृपया बाद में फिर से कोशिश करें।</string>
+    <string name="error_extraction_failed_hint">YouTube ने अपना प्रारूप अपडेट किया होगा। YT को जल्द ही अपडेट किया जाएगा —कृपया बाद में फिर से कोशिश करें।</string>
     <string name="error_generic">वीडियो लोड करने में विफल</string>
     <string name="error_generic_hint">एक अज्ञात त्रुटि हुई। कृपया पुनः प्रयास करें।</string>
     <string name="player_settings_overlay_controls">ओवरले कंट्रोल्स</string>
@@ -1115,7 +1115,7 @@
     <string name="copy_logs">लॉग कॉपी करें</string>
     <string name="logs_copied">लॉग कॉपी किए गए</string>
     <string name="logs_copy_failed">लॉग कॉपी नहीं किए जा सके</string>
-    <string name="channel_error_log_clip_label">Flow चैनल त्रुटि लॉग</string>
+    <string name="channel_error_log_clip_label">YT चैनल त्रुटि लॉग</string>
     <string name="collaborators">सहयोगी</string>
     <string name="collaborator">सहयोगी</string>
     <string name="channel_and_more_template">%1$s और %2$d अधिक</string>
@@ -1126,7 +1126,7 @@
     <string name="local_media_scanning">आपके डिवाइस को स्कैन किया जा रहा है…</string>
     <string name="local_media_empty_body">इस डिवाइस पर स्टोर किए गए वीडियो और संगीत यहाँ दिखाई देंगे।</string>
     <string name="local_media_permission_title">अनुमति आवश्यक है</string>
-    <string name="local_media_permission_body">Flow को स्थानीय वीडियो और संगीत खोजने और चलाने की अनुमति देने के लिए अपने मीडिया तक पहुँच दें।</string>
+    <string name="local_media_permission_body">YT को स्थानीय वीडियो और संगीत खोजने और चलाने की अनुमति देने के लिए अपने मीडिया तक पहुँच दें।</string>
     <string name="local_media_grant">पहुँच दें</string>
     <string name="search_watch_history">देखने का इतिहास खोजें</string>
     <string name="history_filter_all_years">सभी वर्ष</string>

@@ -1,0 +1,121 @@
+package com.yt.ui.screens.player
+
+import com.yt.data.local.PlayerPreferences
+import com.yt.data.local.ViewHistory
+import com.yt.data.model.Video
+import com.yt.player.EnhancedMusicPlayerManager
+import com.yt.player.EnhancedPlayerManager
+import com.yt.player.GlobalPlayerState
+import com.yt.ui.screens.player.state.VideoPlayerUiState
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/**
+ * Where playback is shown: the mini player a launch restores, the media notification a start arms,
+ * the move into background playback and the return to the screen.
+ *
+ * Nothing here starts or resolves a load — the restored session hands back to [resumePlayback] for
+ * that, so the one path that begins playback stays the ViewModel's.
+ */
+internal class PlaybackPresenceController(
+    private val uiState: MutableStateFlow<VideoPlayerUiState>,
+    private val playerManager: EnhancedPlayerManager,
+    private val playerPreferences: PlayerPreferences,
+    private val viewHistory: ViewHistory,
+    private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher,
+    private val resumePlayback: (Video) -> Unit,
+) {
+    /** Brings the last unfinished video back as a mini player, unless music already owns it. */
+    fun restoreLastWatchedSession() {
+        scope.launch {
+            if (!playerPreferences.miniPlayerContinueWatchingEnabled.first()) return@launch
+            if (EnhancedMusicPlayerManager.currentTrack.value != null) return@launch
+            val lastVideo = withContext(ioDispatcher) { viewHistory.getLatestUnfinishedVideo() } ?: return@launch
+            if (uiState.value.cachedVideo != null) return@launch
+            uiState.update { it.copy(cachedVideo = lastVideo.toVideo(), isRestoredSession = true) }
+        }
+    }
+
+    /** The media notification every playback start arms, with the one title fallback it uses. */
+    fun armNotificationFor(video: Video) =
+        playerManager.startBackgroundService(
+            videoId = video.id,
+            title = video.title.ifEmpty { "YT Player" },
+            channel = video.channelName,
+            thumbnail = video.thumbnailUrl,
+        )
+
+    /**
+     * Called when the user interacts with the restored-session mini player (taps play
+     * or expands the sheet). Starts loading streams and transitions to active playback.
+     * @param stayMini if true, the player will keep playing in mini mode (don't auto-expand)
+     */
+    fun resumeRestoredSession(stayMini: Boolean) {
+        val video = uiState.value.cachedVideo ?: return
+        if (!uiState.value.isRestoredSession) return
+        uiState.update {
+            it.copy(
+                isRestoredSession = false,
+                resumedInMiniPlayer = stayMini,
+                isBackgroundPlaybackMode = false,
+            )
+        }
+        resumePlayback(video)
+    }
+
+    fun dismissContinueWatching() {
+        val videoId = uiState.value.cachedVideo?.id ?: return
+        scope.launch {
+            viewHistory.markAsWatched(videoId)
+        }
+    }
+
+    fun ensureNotificationServiceRunning() {
+        val video = uiState.value.cachedVideo ?: return
+        armNotificationFor(video)
+    }
+
+    fun clearResumedInMiniPlayer() {
+        uiState.update { it.copy(resumedInMiniPlayer = false) }
+    }
+
+    fun startBackgroundPlayback() {
+        val state = uiState.value
+        val video = state.cachedVideo ?: GlobalPlayerState.currentVideo.value ?: return
+        playerManager.startBackgroundService(
+            videoId = video.id,
+            title = video.title,
+            channel = video.channelName,
+            thumbnail = video.thumbnailUrl,
+        )
+        GlobalPlayerState.setExplicitBackgroundPlaybackActive(true)
+        playerManager.continueVideoPlaybackInBackground()
+        uiState.update {
+            it.copy(
+                shouldDismissPlayer = true,
+                isBackgroundPlaybackMode = true,
+            )
+        }
+    }
+
+    fun showVideoPlayer() {
+        GlobalPlayerState.setExplicitBackgroundPlaybackActive(false)
+        playerManager.restoreVideoOutput()
+        uiState.update {
+            it.copy(
+                shouldDismissPlayer = false,
+                isBackgroundPlaybackMode = false,
+            )
+        }
+    }
+
+    fun resetDismissState() {
+        uiState.update { it.copy(shouldDismissPlayer = false) }
+    }
+}

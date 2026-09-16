@@ -46,21 +46,21 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
-    <!-- Device Sync (FLOW-SYNC/1): resolve the host LAN IP for the QR code. -->
+    <!-- Device Sync (YT-SYNC/1): resolve the host LAN IP for the QR code. -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Device Sync: scan the peer's QR code to receive the session key out-of-band. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <application
-        android:name=".FlowApplication"
+        android:name=".YTApplication"
         android:allowBackup="true"
         android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Flow"
+        android:theme="@style/Theme.YT"
         android:usesCleartextTraffic="true"
         android:resizeableActivity="true"
         android:enableOnBackInvokedCallback="true">
@@ -94,7 +94,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.Flow.Starting">
+            android:theme="@style/Theme.YT.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
@@ -108,7 +108,7 @@
             android:launchMode="singleTop"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.Flow.Starting"
+            android:theme="@style/Theme.YT.Starting"
             android:windowSoftInputMode="adjustResize"
             android:windowLayoutInDisplayCutoutMode="shortEdges">
 
@@ -190,9 +190,9 @@
             </intent-filter>
         </service>
 
-        <!-- Flow Parallel Download Service -->
+        <!-- YT Parallel Download Service -->
         <service
-            android:name=".data.video.downloader.FlowDownloadService"
+            android:name=".data.video.downloader.YTDownloadService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync">
@@ -208,7 +208,7 @@
             </intent-filter>
         </service>
 
-        <!-- Device Sync (FLOW-SYNC/1) foreground service: keeps the LAN WebSocket
+        <!-- Device Sync (YT-SYNC/1) foreground service: keeps the LAN WebSocket
              transfer alive while the screen is off / app is backgrounded. -->
         <service
             android:name=".sync.transport.SyncForegroundService"
@@ -223,11 +223,11 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="io.github.aedev.flow.action.CANCEL_DOWNLOAD" />
-                <action android:name="io.github.aedev.flow.action.RETRY_DOWNLOAD" />
-                <action android:name="io.github.aedev.flow.action.PAUSE_DOWNLOAD" />
-                <action android:name="io.github.aedev.flow.action.RESUME_DOWNLOAD" />
-                <action android:name="io.github.aedev.flow.action.DISMISS_NOTIFICATION" />
+                <action android:name="com.yt.action.CANCEL_DOWNLOAD" />
+                <action android:name="com.yt.action.RETRY_DOWNLOAD" />
+                <action android:name="com.yt.action.PAUSE_DOWNLOAD" />
+                <action android:name="com.yt.action.RESUME_DOWNLOAD" />
+                <action android:name="com.yt.action.DISMISS_NOTIFICATION" />
             </intent-filter>
         </receiver>
 
@@ -317,9 +317,9 @@
         </receiver>
 
         <!-- App Icon Variants (via activity-alias)                          -->
-        <!-- Default: Flow Red -->
+        <!-- Default: YT Red -->
         <activity-alias
-            android:name=".IconFlowRed"
+            android:name=".IconYTRed"
             android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
@@ -331,13 +331,13 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- Flow Light -->
+        <!-- YT Light -->
         <activity-alias
-            android:name=".IconFlowLight"
+            android:name=".IconYTLight"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/ic_launcher_flow_light"
-            android:roundIcon="@mipmap/ic_launcher_flow_light_round"
+            android:icon="@mipmap/ic_launcher_yt_light"
+            android:roundIcon="@mipmap/ic_launcher_yt_light_round"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -345,13 +345,13 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- Flow Play (white background, red video frame + play mark) -->
+        <!-- YT Play (white background, red video frame + play mark) -->
         <activity-alias
-            android:name=".IconFlowPlay"
+            android:name=".IconYTPlay"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/ic_launcher_flow_play"
-            android:roundIcon="@mipmap/ic_launcher_flow_play_round"
+            android:icon="@mipmap/ic_launcher_yt_play"
+            android:roundIcon="@mipmap/ic_launcher_yt_play_round"
             android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

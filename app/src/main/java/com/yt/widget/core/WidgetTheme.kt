@@ -1,0 +1,103 @@
+package com.yt.widget.core
+
+import android.content.Context
+import androidx.glance.color.ColorProviders
+import com.yt.data.local.LocalDataManager
+import com.yt.ui.theme.CustomThemePalettes
+import com.yt.ui.theme.ThemeMode
+import com.yt.ui.theme.ThemeVariant
+import com.yt.ui.theme.resolveYTColorScheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+
+/** Everything that determines the app's active palette — used to detect theme changes. */
+data class WidgetThemeSignature(
+    val themeMode: ThemeMode,
+    val themeVariant: ThemeVariant,
+    val customThemePalettes: CustomThemePalettes,
+    val systemLightThemeMode: ThemeMode,
+    val systemDarkThemeMode: ThemeMode,
+    val systemDarkThemeVariant: ThemeVariant,
+) {
+    /**
+     * A form of this signature that survives the process, so a launch can tell "the theme is the
+     * same as last time" from "this is the first value I have seen".
+     *
+     * Built by hand rather than from `hashCode()`: the palettes are keyed by an enum, and
+     * `Enum.hashCode` is identity-based, so a data-class hash of this is stable within one process
+     * and meaningless across two. Roles are sorted by name so map iteration order cannot change it
+     * either.
+     */
+    fun persistedForm(): String =
+        buildString {
+            append(themeMode.name).append('|')
+            append(themeVariant.name).append('|')
+            append(systemLightThemeMode.name).append('|')
+            append(systemDarkThemeMode.name).append('|')
+            append(systemDarkThemeVariant.name)
+            listOf(
+                customThemePalettes.light,
+                customThemePalettes.dark,
+                customThemePalettes.amoled,
+            ).forEach { palette ->
+                append('|')
+                palette.values.entries
+                    .sortedBy { it.key.name }
+                    .joinTo(this, separator = ",") { "${it.key.name}=${it.value}" }
+            }
+        }
+}
+
+fun widgetThemeSignatureFlow(context: Context): Flow<WidgetThemeSignature> {
+    val dataManager = LocalDataManager(context.applicationContext)
+    return combine(
+        combine(
+            dataManager.themeMode,
+            dataManager.themeVariant,
+            dataManager.customThemePalettes,
+        ) { mode, variant, palettes -> Triple(mode, variant, palettes) },
+        combine(
+            dataManager.systemLightThemeMode,
+            dataManager.systemDarkThemeMode,
+            dataManager.systemDarkThemeVariant,
+        ) { light, dark, darkVariant -> Triple(light, dark, darkVariant) },
+    ) { (mode, variant, palettes), (light, dark, darkVariant) ->
+        WidgetThemeSignature(mode, variant, palettes, light, dark, darkVariant)
+    }.distinctUntilChanged()
+}
+
+/**
+ * The app's active color scheme as Glance color providers, resolved through the same
+ * [resolveYTColorScheme] the in-app theme uses — widgets always match the app.
+ */
+fun widgetColorsFlow(context: Context): Flow<ColorProviders> {
+    val appContext = context.applicationContext
+    return widgetThemeSignatureFlow(appContext).map { signature ->
+        androidx.glance.material3.ColorProviders(
+            light =
+                resolveYTColorScheme(
+                    context = appContext,
+                    isSystemDark = false,
+                    themeMode = signature.themeMode,
+                    themeVariant = signature.themeVariant,
+                    customThemePalettes = signature.customThemePalettes,
+                    systemLightThemeMode = signature.systemLightThemeMode,
+                    systemDarkThemeMode = signature.systemDarkThemeMode,
+                    systemDarkThemeVariant = signature.systemDarkThemeVariant,
+                ),
+            dark =
+                resolveYTColorScheme(
+                    context = appContext,
+                    isSystemDark = true,
+                    themeMode = signature.themeMode,
+                    themeVariant = signature.themeVariant,
+                    customThemePalettes = signature.customThemePalettes,
+                    systemLightThemeMode = signature.systemLightThemeMode,
+                    systemDarkThemeMode = signature.systemDarkThemeMode,
+                    systemDarkThemeVariant = signature.systemDarkThemeVariant,
+                ),
+        )
+    }
+}

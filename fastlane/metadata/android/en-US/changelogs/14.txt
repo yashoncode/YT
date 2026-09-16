@@ -6,7 +6,7 @@
 - Public playlist saving & category screen toggle
 
 #Improved & Fixed
-- FlowNeuroEngine modularization & discovery tuning
+- YTNeuroEngine modularization & discovery tuning
 - Shorts deduplication & load speed optimization
 - Quick actions menu & expanded comment loading
 - Improved SAF download paths & quality options

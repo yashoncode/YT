@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Assets/logo.png" alt="Flow Logo" width="140" height="140">
+  <img src="Assets/logo.png" alt="YT Logo" width="140" height="140">
   <br><br>
   
   <div align="center">
@@ -27,7 +27,7 @@
 <br>
 
 <!-- Community & License -->
-<a href="https://www.reddit.com/r/Flow_Official/">
+<a href="https://www.reddit.com/r/YT_Official/">
   <img src="https://img.shields.io/badge/Reddit-r%2FFlow__Official-FF4500?style=for-the-badge&logo=reddit&logoColor=white">
 </a>
 <img src="https://img.shields.io/github/stars/A-EDev/Flow?style=for-the-badge&logo=star&color=gold">
@@ -46,14 +46,14 @@
   
   <h3>A privacy-respecting YouTube and YouTube Music client for Android with a local recommendation engine.</h3>
   <p>
-    Flow is a YouTube client built with Jetpack Compose and Material 3.<br>
-    It includes FlowNeuro, a recommendation engine that runs entirely on your device — no accounts, no tracking, no data leaves your phone.
+    YT is a YouTube client built with Jetpack Compose and Material 3.<br>
+    It includes YTNeuro, a recommendation engine that runs entirely on your device — no accounts, no tracking, no data leaves your phone.
   </p>
   
   <p>
     <a href="https://github.com/A-EDev/Flow/releases"><b>Download APK</b></a> · 
     <a href="https://github.com/A-EDev/Flow/wiki"><b>Documentation</b></a> · 
-    <a href="https://www.reddit.com/r/Flow_Official/"><b>Subreddit</b></a> · 
+    <a href="https://www.reddit.com/r/YT_Official/"><b>Subreddit</b></a> · 
     <a href="#support--donations"><b>Donate</b></a> .
     <a href="#translate"><b>Translations</b></a>
   </p>
@@ -61,11 +61,11 @@
 
 ---
 
-## Why Flow?
+## Why YT?
 
 Most open-source YouTube clients give you playback but no way to discover new content. You either use the official app and get tracked, or you use an alternative and lose recommendations entirely.
 
-Flow gives you both. The recommendation engine learns what you like by analyzing your watch behavior locally. It never leaves your devices. You can inspect everything it knows about you, adjust it, or wipe it at any time.
+YT gives you both. The recommendation engine learns what you like by analyzing your watch behavior locally. It never leaves your devices. You can inspect everything it knows about you, adjust it, or wipe it at any time.
 
 ---
 
@@ -94,7 +94,7 @@ Flow gives you both. The recommendation engine learns what you like by analyzing
 - Synchronized lyrics display
 - Fetches tracks from YouTube Music
 
-### Recommendations (FlowNeuro Engine)
+### Recommendations (YTNeuro Engine)
 - Runs 100% on-device — no server, no telemetry, no account needed
 - Learns from what you watch, skip, like, dislike, search for, and how long you watch
 - Distinguishes weekday and weekend patterns, morning and night preferences
@@ -171,7 +171,7 @@ Flow gives you both. The recommendation engine learns what you like by analyzing
         </a>
       </td>
       <td align="center" style="vertical-align: middle; padding: 10px;">
-        <a href="https://apt.izzysoft.de/packages/io.github.aedev.flow">
+        <a href="https://apt.izzysoft.de/packages/com.yt">
           <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="IzzyOnDroid" height="90">
         </a>
       </td>
@@ -203,12 +203,12 @@ To ensure the authenticity of the APK and verify it has not been tampered with, 
 <a id="support--donations"></a>
 ## 💰 Support Development
 
-Flow is a free and open-source project. As an independent developer without traditional banking access, keeping this project alive relies entirely on community support. 
+YT is a free and open-source project. As an independent developer without traditional banking access, keeping this project alive relies entirely on community support. 
 
 **You can now easily support the project using a Credit Card, Apple Pay, or PayPal via Patreon!** (You can choose to support monthly, or just leave a simple one-time tip in the shop).
 
 <a href="https://patreon.com/A_EDev" target="_blank" rel="noreferrer noopener">
-  <img src="https://img.shields.io/badge/Patreon-Support_Flow-FF424D?style=for-the-badge&amp;logo=patreon&amp;logoColor=white" alt="Support Flow on Patreon">
+  <img src="https://img.shields.io/badge/Patreon-Support_Flow-FF424D?style=for-the-badge&amp;logo=patreon&amp;logoColor=white" alt="Support YT on Patreon">
 </a>
 
 <br>
@@ -230,11 +230,11 @@ If you already use crypto, you can send it directly to my wallets below:
 
 ## 🙏 Acknowledgments
 
-Flow stands on the shoulders of giants. Special thanks to:
+YT stands on the shoulders of giants. Special thanks to:
 
 *   **[NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor):** The backbone of our data extraction.
 *   **[NewPipe](https://github.com/TeamNewPipe/NewPipe):** For inspiration from their solid foundation for YouTube data handling.
-*   **[PipePipe](https://codeberg.org/NullPointerException/PipePipe):** For their SABR and InnerTube playback implementation, which guided Flow's YouTube streaming pipeline.
+*   **[PipePipe](https://codeberg.org/NullPointerException/PipePipe):** For their SABR and InnerTube playback implementation, which guided YT's YouTube streaming pipeline.
 *   **[PipePipe Developer Docs](https://priveetee.github.io/Docs-PipePipe/):** For their reference documentation on SABR, BotGuard/PoToken attestation, and InnerTube extraction internals.
 *   **[MetroList](https://github.com/MetrolistGroup/Metrolist):** Inspiration for the Hybrid Music fetching approach, Lyrics handling and some icons design references.
 *   **[LibreTube](https://github.com/LibreTube/LibreTube):** Inspiration for SponsorBlock and DeArrow handling and some icons design references.
@@ -248,7 +248,7 @@ Flow stands on the shoulders of giants. Special thanks to:
 
 <a id="translate"></a>
 ## Translations
-Help translate Flow into your language! 
+Help translate YT into your language! 
 
 [![Translation status](https://hosted.weblate.org/widget/flow/strings/287x66-grey.png)](https://hosted.weblate.org/engage/flow/)
 
@@ -259,13 +259,13 @@ Help translate Flow into your language!
 
 ## 📄 License & Copyright
 
-**Flow** is Free Software: You can use, study, share, and improve it at your will.
+**YT** is Free Software: You can use, study, share, and improve it at your will.
 It is distributed under the **GNU General Public License v3 (GPLv3)**.
 
 **Copyright © 2025-2026 A-EDev**
 
 > 🚨 **For Developers:**
-> This license requires that any project using Flow's source code (including the `FlowNeuroEngine` algorithm) must also be **Open Source** under the GPLv3 license. You may not use this code in a proprietary or closed-source application.
+> This license requires that any project using YT's source code (including the `YTNeuroEngine` algorithm) must also be **Open Source** under the GPLv3 license. You may not use this code in a proprietary or closed-source application.
 
 ---
 

@@ -35,7 +35,7 @@ Please do not disclose the issue publicly until a fix has shipped.
 
 ## Verifying release APKs
 
-Official Flow builds are signed with a single release key. Any APK that does
+Official YT builds are signed with a single release key. Any APK that does
 not match the fingerprint below is not an official build, regardless of where
 it was downloaded.
 
@@ -54,5 +54,5 @@ above (lower case, without colons).
 
 Official distribution channels are the
 [GitHub Releases page](https://github.com/A-EDev/Flow/releases) and
-[IzzyOnDroid](https://apt.izzysoft.de/packages/io.github.aedev.flow). Builds
+[IzzyOnDroid](https://apt.izzysoft.de/packages/com.yt). Builds
 obtained anywhere else are unverified.

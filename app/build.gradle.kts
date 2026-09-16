@@ -12,17 +12,17 @@ plugins {
 }
 
 android {
-    namespace = "io.github.aedev.flow"
+    namespace = "com.yt"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "io.github.aedev.flow"
+        applicationId = "com.yt"
         minSdk = 26
         targetSdk = 36
         versionCode = 18
         versionName = "2.2.1"
 
-        testInstrumentationRunner = "io.github.aedev.flow.HiltTestRunner"
+        testInstrumentationRunner = "com.yt.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -247,7 +247,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.encoding)
 
-    // --- Device Sync (FLOW-SYNC/1) ---
+    // --- Device Sync (YT-SYNC/1) ---
     implementation(libs.ktor.server.core) {
         exclude(group = "org.fusesource.jansi", module = "jansi")
     }

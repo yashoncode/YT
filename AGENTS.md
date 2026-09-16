@@ -1,6 +1,6 @@
-# Working with Flow as an AI agent
+# Working with YT as an AI agent
 
-Flow (`io.github.aedev.flow`) is an Android music/video app written in Kotlin with Jetpack Compose, Hilt, and Media3/ExoPlayer. It plays YouTube content via a native InnerTube client with a NewPipe-based fallback extraction path, supports local media playback, offline downloads, casting, lyrics, a device-to-device sync feature, and an on-device recommendation engine (FlowNeuroEngine). It follows Material 3 design guidelines closely.
+YT (`com.yt`) is an Android music/video app written in Kotlin with Jetpack Compose, Hilt, and Media3/ExoPlayer. It plays YouTube content via a native InnerTube client with a NewPipe-based fallback extraction path, supports local media playback, offline downloads, casting, lyrics, a device-to-device sync feature, and an on-device recommendation engine (YTNeuroEngine). It follows Material 3 design guidelines closely.
 
 Product flavors: `github` (default, in-app updater enabled) and `foss` (no updater). Always use flavor-prefixed Gradle tasks — e.g. `assembleGithubDebug`, `compileFossDebugKotlin` — never bare `assembleDebug`/`compileDebugKotlin`.
 
@@ -136,7 +136,7 @@ A legitimate hand-rolled component must therefore:
 
 ## Performance, battery, and thermals — non-negotiable
 
-Flow is a media player that runs for hours at a time. Jank, dropped frames, playback stutter,
+YT is a media player that runs for hours at a time. Jank, dropped frames, playback stutter,
 device heat, and battery drain are critical bugs, not cosmetic issues. Every rule below is
 anchored in a real shipped regression that had to be found and fixed on-device — treat them as
 hard constraints, not suggestions.
@@ -177,7 +177,7 @@ hard constraints, not suggestions.
    Never widen these, never add a new high-frequency position StateFlow, and never collect the
    precise tick from a surface that renders whole seconds. New sub-second consumers must use the
    same refcounted acquire/release pattern with a `DisposableEffect`.
-6. **Event-driven over polling.** Prefer player callbacks, Flow emissions, and
+6. **Event-driven over polling.** Prefer player callbacks, YT emissions, and
    `snapshotFlow`/`collect` chains to timer loops. Any unavoidable polling loop must suspend
    while paused (await a state change, as the position loop does), never busy-wait, and its
    interval must be justified against what actually changes at that rate.
@@ -202,7 +202,7 @@ hard constraints, not suggestions.
     pool. Launch parallel work as one bounded round (`map { async { … } }.awaitAll()`), never as
     an unbounded per-item fan-out, and never queue a second copy of a pipeline that is already
     in flight.
-11. **Flow lifecycle**: `stateIn(WhileSubscribed(5_000))` on UI-facing flows is load-bearing —
+11. **YT lifecycle**: `stateIn(WhileSubscribed(5_000))` on UI-facing flows is load-bearing —
     subscription count gates work to actual UI visibility. Never switch to `Eagerly`/`Lazily`
     for convenience, and never add hot collectors that outlive their surface.
 12. **Caches must be honored and invalidated.** Check for an existing cache (music home cache,
@@ -214,7 +214,7 @@ hard constraints, not suggestions.
 13. Sustained heat while the app is open = per-frame work; drain with the screen off = CPU/network
     loops. Diagnose in that order: (a) run the rule-2 audit over every composed-but-hidden tree;
     (b) count fetches per user action in logcat — any unexplained second fetch is the bug;
-    (c) check `adb shell dumpsys gfxinfo io.github.aedev.flow` for continuous frame production
+    (c) check `adb shell dumpsys gfxinfo com.yt` for continuous frame production
     while the UI should be idle; (d) only then suspect the player path. Do not "fix" heat by
     degrading visible design, motion, or update smoothness — find the invisible work instead.
 
@@ -236,7 +236,7 @@ hard constraints, not suggestions.
 
 ## Dependency injection and service-locator migration
 
-Flow uses Hilt, but some legacy app-owned classes are still reached through static/companion
+YT uses Hilt, but some legacy app-owned classes are still reached through static/companion
 `getInstance()` calls. Treat those calls as migration debt, not as the pattern for new code. The
 goal is explicit, testable dependencies while preserving object identity, lifecycle, startup cost,
 and playback behavior.
@@ -286,7 +286,7 @@ and playback behavior.
     player/media-session owner and do not add startup latency or surface flicker.
 11. DI and SOLID are maintainability/testability tools, not automatic performance improvements.
     Do not claim a performance benefit without measurement. Watch for eager graph creation,
-    expanded singleton lifetimes, retained `Context`/Activity references, duplicate Flow
+    expanded singleton lifetimes, retained `Context`/Activity references, duplicate YT
     collectors, and work that has moved onto the main thread.
 12. Add focused unit tests before or with each migration, using constructor-provided fakes/mocks to
     cover success, failure, cancellation, and delegation as applicable. When the Hilt graph or
@@ -386,8 +386,8 @@ Split by **responsibility**, never by line count. In order of preference:
 
 ### Naming conventions (already in force — match them)
 
-- `shared/` primitives with no domain meaning take the **`Flow`** prefix: `FlowFilterChip`,
-  `FlowSearchField`, `FlowEmptyState`, `FlowLoadingIndicator`.
+- `shared/` primitives with no domain meaning take the **`YT`** prefix: `YTFilterChip`,
+  `YTSearchField`, `YTEmptyState`, `YTLoadingIndicator`.
 - `shared/` components in the media vocabulary take the **`Media`** prefix: `MediaRow`,
   `MediaThumbnail`, `MediaBadges`, `MediaKindSelector`.
 - Feature components take the **feature** prefix: `LibraryShelf`, `MusicTrackItem`,
@@ -420,8 +420,8 @@ identical before and after, unless the task explicitly asked for a visual change
 The route composable, its state hoisting, its effects and its layout. Not: bespoke cards, bespoke
 rows, bespoke empty/error states, bespoke badges, bespoke formatters, or a second copy of a
 `shared/` component. Before writing any of those, run `graphify query` and read
-`ui/components/shared/` — the app already has `FlowEmptyState`, `FlowErrorState`, `MediaRow`,
-`MediaThumbnail`, `MediaBadges`, `FlowSearchField`, `ShimmerLoading` and `FastScrollbar`.
+`ui/components/shared/` — the app already has `YTEmptyState`, `YTErrorState`, `MediaRow`,
+`MediaThumbnail`, `MediaBadges`, `YTSearchField`, `ShimmerLoading` and `FastScrollbar`.
 
 ### ViewModels
 
@@ -514,7 +514,7 @@ generated on a real device by `baselineprofile/`, and the generated files **are 
 **Regenerate when:**
 
 1. Before tagging a release, if the profile has not been regenerated since the last one.
-2. After changing the cold-start path — `MainActivity.onCreate`, `FlowApp`, app-level DI graph,
+2. After changing the cold-start path — `MainActivity.onCreate`, `YTApp`, app-level DI graph,
    theme resolution, or player/cache initialization.
 3. After changing a journey the generator exercises (app launch, Home feed scroll), or after
    editing `BaselineProfileGenerator` itself.

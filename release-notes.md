@@ -1,8 +1,8 @@
-# Flow v2.2.1
+# YT v2.2.1
 
 **Release date:** 2026-08-28
 
-Enjoying Flow? Consider supporting its development on [Patreon](https://patreon.com/A_EDev) to help keep the app free, open source, ad-free, and improving!
+Enjoying YT? Consider supporting its development on [Patreon](https://patreon.com/A_EDev) to help keep the app free, open source, ad-free, and improving!
 
 ## New features
 

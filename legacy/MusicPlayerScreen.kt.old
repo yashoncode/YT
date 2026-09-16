@@ -1,4 +1,4 @@
-package io.github.aedev.flow.ui.screens.music
+package com.yt.ui.screens.music
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import kotlin.math.roundToInt
-import io.github.aedev.flow.player.RepeatMode
+import com.yt.player.RepeatMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

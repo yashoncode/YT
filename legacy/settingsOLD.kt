@@ -1,4 +1,4 @@
-package io.github.aedev.flow.ui.screens.settings
+package com.yt.ui.screens.settings
 
 import android.content.Intent
 import android.net.Uri
@@ -26,11 +26,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.aedev.flow.data.recommendation.FlowNeuroEngine
-import io.github.aedev.flow.ui.theme.ThemeMode
-import io.github.aedev.flow.ui.theme.extendedColors
-import io.github.aedev.flow.data.local.PlayerPreferences
-import io.github.aedev.flow.data.local.VideoQuality
+import com.yt.data.recommendation.YTNeuroEngine
+import com.yt.ui.theme.ThemeMode
+import com.yt.ui.theme.extendedColors
+import com.yt.data.local.PlayerPreferences
+import com.yt.data.local.VideoQuality
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -45,17 +45,17 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val searchHistoryRepo = remember { io.github.aedev.flow.data.local.SearchHistoryRepository(context) }
+    val searchHistoryRepo = remember { com.yt.data.local.SearchHistoryRepository(context) }
     val playerPreferences = remember { PlayerPreferences(context) }
-    val viewHistory = remember { io.github.aedev.flow.data.local.ViewHistory.getInstance(context) }
-    val backupRepo = remember { io.github.aedev.flow.data.local.BackupRepository(context) }
+    val viewHistory = remember { com.yt.data.local.ViewHistory.getInstance(context) }
+    val backupRepo = remember { com.yt.data.local.BackupRepository(context) }
     
     // Brain State
-    var userBrain by remember { mutableStateOf<FlowNeuroEngine.UserBrain?>(null) }
+    var userBrain by remember { mutableStateOf<YTNeuroEngine.UserBrain?>(null) }
     var refreshBrainTrigger by remember { mutableStateOf(0) }
 
     LaunchedEffect(refreshBrainTrigger) {
-        userBrain = FlowNeuroEngine.getBrainSnapshot()
+        userBrain = YTNeuroEngine.getBrainSnapshot()
     }
     
     val exportLauncher = rememberLauncherForActivityResult(
@@ -154,7 +154,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // =================================================
-            // 🧠 MY FLOW PERSONALITY (THE UNIQUE FEATURE)
+            // 🧠 MY YT PERSONALITY (THE UNIQUE FEATURE)
             // =================================================
             item {
                 Text(
@@ -375,7 +375,7 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         coroutineScope.launch {
-                            FlowNeuroEngine.resetBrain(context)
+                            YTNeuroEngine.resetBrain(context)
                             refreshBrainTrigger++
                             showResetBrainDialog = false
                         }
@@ -561,10 +561,10 @@ fun SimpleConfirmDialog(title: String, text: String, onConfirm: () -> Unit, onDi
 }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val searchHistoryRepo = remember { io.github.aedev.flow.data.local.SearchHistoryRepository(context) }
+    val searchHistoryRepo = remember { com.yt.data.local.SearchHistoryRepository(context) }
     val playerPreferences = remember { PlayerPreferences(context) }
-    val viewHistory = remember { io.github.aedev.flow.data.local.ViewHistory.getInstance(context) }
-    val backupRepo = remember { io.github.aedev.flow.data.local.BackupRepository(context) }
+    val viewHistory = remember { com.yt.data.local.ViewHistory.getInstance(context) }
+    val backupRepo = remember { com.yt.data.local.BackupRepository(context) }
     
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
