@@ -27,9 +27,10 @@ android {
             useSupportLibrary = true
         }
 
-        // Support all architectures for maximum device compatibility
+        // One APK, one ABI. arm64-v8a is every phone and tablet shipping today, and dropping the
+        // other three cuts native-library merging and four packaging passes off every build.
         ndk {
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+            abiFilters.add("arm64-v8a")
         }
     }
 
@@ -38,15 +39,6 @@ android {
         includeInApk = false
         // Disables dependency metadata when building Android App Bundles (for Google Play)
         includeInBundle = false
-    }
-
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-            isUniversalApk = true
-        }
     }
 
     flavorDimensions += "version"
