@@ -14,14 +14,10 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Subscriptions
-import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Subscriptions
-import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -43,6 +39,7 @@ import com.yt.ui.components.FloatingBottomNavBar
 import com.yt.ui.utils.LocalWindowSizeClass
 import com.yt.ui.utils.isExpandedWidth
 import com.yt.ui.utils.isMediumHeight
+import dev.chrisbanes.haze.HazeState
 
 const val YT_NAV_BAR_TAG = "yt_nav_bar"
 const val YT_NAV_RAIL_TAG = "yt_nav_rail"
@@ -78,8 +75,6 @@ internal fun rememberYTNavItems(
                 if (isHomeEnabled) add(YTNavItemSpec(0, Icons.Filled.Home, Icons.Outlined.Home, R.string.nav_home))
                 if (isShortsEnabled) add(YTNavItemSpec(1, shortsIcon, shortsIcon, R.string.nav_shorts))
                 if (isMusicEnabled) add(YTNavItemSpec(2, Icons.Filled.MusicNote, Icons.Outlined.MusicNote, R.string.nav_music))
-                add(YTNavItemSpec(3, Icons.Filled.Subscriptions, Icons.Outlined.Subscriptions, R.string.nav_subs))
-                add(YTNavItemSpec(4, Icons.Filled.VideoLibrary, Icons.Outlined.VideoLibrary, R.string.nav_library))
                 if (isSearchEnabled) add(YTNavItemSpec(5, Icons.Filled.Search, Icons.Outlined.Search, R.string.nav_search))
                 if (isCategoriesEnabled) add(YTNavItemSpec(6, Icons.Filled.Explore, Icons.Outlined.Explore, R.string.nav_explore))
             }
@@ -111,6 +106,7 @@ fun BoxScope.YTNavigationChrome(
     barScale: Float = 1f,
     glass: Boolean = false,
     hapticsEnabled: Boolean = true,
+    hazeState: HazeState? = null,
 ) {
     if (flowUsesNavigationRail()) {
         val items =
@@ -159,6 +155,7 @@ fun BoxScope.YTNavigationChrome(
                 barScale = barScale,
                 glass = glass,
                 hapticsEnabled = hapticsEnabled,
+                hazeState = hazeState,
             )
         }
     }

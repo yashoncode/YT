@@ -510,7 +510,6 @@ fun NavGraphBuilder.flowAppGraph(
         showBottomNav.value = false
         com.yt.ui.screens.settings.AboutScreen(
             onNavigateBack = { navController.popBackStack() },
-            onNavigateToDonations = { navController.navigate("donations") },
         )
     }
 

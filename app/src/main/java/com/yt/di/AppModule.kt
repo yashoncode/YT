@@ -1,8 +1,11 @@
 package com.yt.di
 
 import android.content.Context
+import android.os.Build
 import coil3.ImageLoader
 import coil3.disk.DiskCache
+import coil3.gif.AnimatedImageDecoder
+import coil3.gif.GifDecoder
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
@@ -37,6 +40,12 @@ object AppModule {
             .components {
                 add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient }))
                 add(VideoFrameDecoder.Factory())
+                // ImageDecoder animates GIFs from API 28; below that Coil's own decoder does.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    add(AnimatedImageDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
             }.memoryCache {
                 MemoryCache
                     .Builder()

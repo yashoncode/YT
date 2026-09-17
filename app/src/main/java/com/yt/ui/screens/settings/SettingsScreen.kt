@@ -451,20 +451,6 @@ fun SettingsScreen(
                 secAbout,
                 onNavigateToAbout,
             ),
-            SettingSearchEntry(
-                Icons.Outlined.BugReport,
-                stringResource(R.string.settings_item_diagnostics),
-                stringResource(R.string.settings_item_diagnostics_subtitle),
-                secAbout,
-                onNavigateToDiagnostics,
-            ),
-            SettingSearchEntry(
-                Icons.Outlined.VolunteerActivism,
-                stringResource(R.string.settings_item_support),
-                stringResource(R.string.settings_item_support_subtitle),
-                secAbout,
-                onNavigateToDonations,
-            ),
         ) +
             if (BuildConfig.UPDATER_ENABLED) {
                 listOf(
@@ -1228,21 +1214,11 @@ fun SettingsScreen(
                             subtitle = stringResource(R.string.settings_item_about_yt_subtitle),
                             onClick = onNavigateToAbout,
                         )
-                        HorizontalDivider(
-                            Modifier.padding(start = 56.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        )
-                        SettingsItem(
-                            icon = Icons.Outlined.BugReport,
-                            title = stringResource(R.string.settings_item_diagnostics),
-                            subtitle = stringResource(R.string.settings_item_diagnostics_subtitle),
-                            onClick = onNavigateToDiagnostics,
-                        )
-                        HorizontalDivider(
-                            Modifier.padding(start = 56.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        )
                         if (BuildConfig.UPDATER_ENABLED) {
+                            HorizontalDivider(
+                                Modifier.padding(start = 56.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            )
                             SettingsItem(
                                 icon = if (isCheckingUpdate) Icons.Outlined.Sync else Icons.Outlined.Update,
                                 title = stringResource(R.string.check_for_updates),
@@ -1254,17 +1230,7 @@ fun SettingsScreen(
                                     },
                                 onClick = onCheckForUpdatesClick,
                             )
-                            HorizontalDivider(
-                                Modifier.padding(start = 56.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            )
                         }
-                        SettingsItem(
-                            icon = Icons.Outlined.VolunteerActivism,
-                            title = stringResource(R.string.settings_item_support),
-                            subtitle = stringResource(R.string.settings_item_support_subtitle),
-                            onClick = onNavigateToDonations,
-                        )
                     }
                 }
             }

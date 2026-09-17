@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.yt.R
 import com.yt.data.local.PlayerOverlayPreferences
+import com.yt.data.local.DEFAULT_AUTOPLAY_COUNTDOWN_SECONDS
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.VideoCodec
 import com.yt.data.lyrics.LyricsProviderRegistry
@@ -171,7 +172,8 @@ fun PlayerSettingsScreen(onNavigateBack: () -> Unit) {
 
     val autoplayEnabled by playerPreferences.autoplayEnabled.collectAsState(initial = true)
     val queueAutoplayEnabled by playerPreferences.queueAutoplayEnabled.collectAsState(initial = true)
-    val autoplayCountdownSeconds by playerPreferences.autoplayCountdownSeconds.collectAsState(initial = 0)
+    val autoplayCountdownSeconds by playerPreferences.autoplayCountdownSeconds
+        .collectAsState(initial = DEFAULT_AUTOPLAY_COUNTDOWN_SECONDS)
     val skipSilenceEnabled by playerPreferences.skipSilenceEnabled.collectAsState(initial = false)
     val manualPipButtonEnabled by playerPreferences.manualPipButtonEnabled.collectAsState(initial = true)
     val backgroundPlayEnabled by playerPreferences.backgroundPlayEnabled.collectAsState(initial = false)

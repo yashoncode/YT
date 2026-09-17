@@ -1069,6 +1069,8 @@
     <string name="player_settings_autoplay_countdown_dialog_body">Show a countdown before automatically switching to the next video. During the countdown you can restart the current video, cancel the switch, or play the next one right away.</string>
     <string name="autoplay_countdown_up_next">Up next</string>
     <string name="autoplay_countdown_next_video">Next video</string>
+    <string name="autoplay_countdown_pause">Pause</string>
+    <string name="autoplay_countdown_resume">Resume</string>
     <string name="autoplay_countdown_cancel">Cancel</string>
     <string name="autoplay_countdown_restart">Restart</string>
     <string name="autoplay_countdown_play_now">Play now</string>
@@ -1555,6 +1557,9 @@
     <string name="error_changelog_load">Could not load changelog file.</string>
     <string name="app_logo_desc">App Logo</string>
     <string name="v_version_template">v%1$s (%2$s)</string>
+    <string name="about_built_by">Built by Yashwanth</string>
+    <string name="music_switch_song">Song</string>
+    <string name="music_switch_video">Video</string>
     <string name="manufacturer_label">Manufacturer: %1$s</string>
     <string name="model_label">Model: %1$s</string>
     <string name="board_label">Board: %1$s</string>

@@ -142,6 +142,33 @@ class AutoplayCountdownControllerTest {
         }
 
     @Test
+    fun `pausing holds the countdown until it is resumed`() =
+        runTest {
+            var advances = 0
+            val controller = AutoplayCountdownController(backgroundScope, onElapsed = { advances++ })
+
+            controller.start(totalSeconds = 5, nextVideo = video())
+            runCurrent()
+            advanceTimeBy(2_000)
+            runCurrent()
+            assertThat(controller.state.value.secondsRemaining).isEqualTo(3)
+
+            controller.setPaused(true)
+            advanceTimeBy(30_000)
+            runCurrent()
+
+            assertThat(controller.state.value.secondsRemaining).isEqualTo(3)
+            assertThat(controller.state.value.isPaused).isTrue()
+            assertThat(advances).isEqualTo(0)
+
+            controller.setPaused(false)
+            advanceTimeBy(3_000)
+            runCurrent()
+
+            assertThat(advances).isEqualTo(1)
+        }
+
+    @Test
     fun `a zero second countdown advances immediately`() =
         runTest {
             var advances = 0

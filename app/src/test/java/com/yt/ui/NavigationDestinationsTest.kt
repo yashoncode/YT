@@ -9,17 +9,17 @@ import org.junit.Test
 class NavigationDestinationsTest {
     @Test
     fun hiddenHomeFallsBackToFirstVisibleDestination() {
-        val visibility = NavigationVisibility(home = false, shorts = false, music = false)
+        val visibility = NavigationVisibility(home = false, shorts = false, music = true)
 
         val resolved =
             resolveDefaultNavTabIndex(
                 preferredIndex = 0,
-                order = listOf(0, 4, 3, 1, 2, 5, 6),
+                order = listOf(0, 2, 1, 5, 6),
                 visibility = visibility,
             )
 
-        assertEquals(4, resolved)
-        assertFalse(visibleNavTabIndices(listOf(0, 4, 3), visibility).contains(0))
+        assertEquals(2, resolved)
+        assertFalse(visibleNavTabIndices(listOf(0, 2), visibility).contains(0))
     }
 
     @Test
@@ -27,7 +27,7 @@ class NavigationDestinationsTest {
         val resolved =
             resolveDefaultNavTabIndex(
                 preferredIndex = 0,
-                order = listOf(3, 0, 4),
+                order = listOf(2, 0, 1),
                 visibility = NavigationVisibility(home = true),
             )
 
@@ -80,23 +80,23 @@ class NavigationDestinationsTest {
     @Test
     fun channelRoutesEncodeCanonicalUrls() {
         assertEquals(
-            "channel?url=https%3A%2F%2Fwww.youtube.com%2F%40yt",
+            "channel?url=https%3A%2F%2Fwww.youtube.com%2F%40flow",
             youtubeChannelRoute("@flow"),
         )
     }
 
     /**
-     * Settings and Notifications live in the top bar of every root destination, which only works if
-     * a root destination always exists. Subscriptions (3) and Library (4) are unconditional in
-     * [visibleNavTabIndices] — this pins that down so hiding tabs can never orphan those screens.
+     * Settings, Subscriptions and Library live in the top bar of every root destination, which only
+     * works if a root destination always exists. Every tab is hideable now, so Home is the floor —
+     * this pins that down so no visibility combination can leave the shell with nowhere to start.
      */
     @Test
     fun everyVisibilityCombinationKeepsAnUnhideableRootDestination() {
         val orders =
             listOf(
                 DEFAULT_NAV_TAB_ORDER,
-                listOf(6, 5, 4, 3, 2, 1, 0),
-                listOf(4, 3),
+                listOf(6, 5, 2, 1, 0),
+                listOf(2, 1),
                 emptyList(),
             )
 
@@ -116,8 +116,8 @@ class NavigationDestinationsTest {
                     "no visible tab for $visibility / $order",
                     visible.isNotEmpty(),
                 )
-                assertTrue(
-                    "no unhideable root destination for $visibility / $order",
+                assertFalse(
+                    "a hidden tab is still in the bar for $visibility / $order",
                     visible.contains(3) || visible.contains(4),
                 )
 

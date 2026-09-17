@@ -1627,6 +1627,10 @@ class EnhancedPlayerManager private constructor() {
         performAutoAdvance()
     }
 
+    fun setAutoplayCountdownPaused(paused: Boolean) {
+        autoplayCountdownController.setPaused(paused)
+    }
+
     fun cancelAutoplayCountdown() {
         if (!autoplayCountdownController.stop()) return
         releaseAdvanceWakeLock()

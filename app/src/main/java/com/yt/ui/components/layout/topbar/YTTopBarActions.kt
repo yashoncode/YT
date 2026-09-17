@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -32,7 +34,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yt.R
 
 /**
- * The Notifications and Settings actions every root destination gets.
+ * The shell actions every root destination gets.
+ *
+ * Only Notifications stays a button: Subscriptions, Library and Settings share one overflow so a
+ * screen with its own two actions still fits four icons in the bar.
  *
  * Renders nothing when the shell has not provided [LocalYTGlobalActions] — the case in previews
  * and in isolated Compose tests.
@@ -46,12 +51,26 @@ internal fun YTGlobalActionsRow() {
         unreadCount = unreadCount,
         onClick = actions.onOpenNotifications,
     )
-    IconButton(onClick = actions.onOpenSettings) {
-        Icon(
-            imageVector = Icons.Outlined.Settings,
-            contentDescription = stringResource(R.string.settings),
-        )
-    }
+    YTTopBarOverflow(
+        items =
+            listOf(
+                YTTopBarMenuItem(
+                    label = stringResource(R.string.nav_subs),
+                    icon = Icons.Outlined.Subscriptions,
+                    onClick = actions.onOpenSubscriptions,
+                ),
+                YTTopBarMenuItem(
+                    label = stringResource(R.string.nav_library),
+                    icon = Icons.Outlined.VideoLibrary,
+                    onClick = actions.onOpenLibrary,
+                ),
+                YTTopBarMenuItem(
+                    label = stringResource(R.string.settings),
+                    icon = Icons.Outlined.Settings,
+                    onClick = actions.onOpenSettings,
+                ),
+            ),
+    )
 }
 
 @Composable

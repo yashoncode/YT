@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Button
@@ -85,6 +88,7 @@ fun AutoplayCountdownOverlay(modifier: Modifier = Modifier) {
                         state = shown,
                         compactActions = maxWidth < 480.dp,
                         onCancel = { manager.cancelAutoplayCountdown() },
+                        onTogglePause = { manager.setAutoplayCountdownPaused(!state.isPaused) },
                         onRestart = { manager.restartFromAutoplayCountdown() },
                         onPlayNow = { manager.skipAutoplayCountdown() },
                         modifier = Modifier.align(Alignment.Center),
@@ -100,6 +104,7 @@ private fun CountdownCard(
     state: AutoplayCountdownState,
     compactActions: Boolean,
     onCancel: () -> Unit,
+    onTogglePause: () -> Unit,
     onRestart: () -> Unit,
     onPlayNow: () -> Unit,
     modifier: Modifier = Modifier,
@@ -127,7 +132,14 @@ private fun CountdownCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .clickable(onClick = onTogglePause),
+                ) {
                     CircularProgressIndicator(
                         progress = { progress.value },
                         modifier = Modifier.fillMaxSize(),
@@ -195,7 +207,9 @@ private fun CountdownCard(
 
             CountdownActions(
                 compact = compactActions,
+                isPaused = state.isPaused,
                 onCancel = onCancel,
+                onTogglePause = onTogglePause,
                 onRestart = onRestart,
                 onPlayNow = onPlayNow,
             )
@@ -206,11 +220,20 @@ private fun CountdownCard(
 @Composable
 private fun CountdownActions(
     compact: Boolean,
+    isPaused: Boolean,
     onCancel: () -> Unit,
+    onTogglePause: () -> Unit,
     onRestart: () -> Unit,
     onPlayNow: () -> Unit,
 ) {
     val cancelLabel = stringResource(R.string.autoplay_countdown_cancel)
+    val pauseLabel =
+        if (isPaused) {
+            stringResource(R.string.autoplay_countdown_resume)
+        } else {
+            stringResource(R.string.autoplay_countdown_pause)
+        }
+    val pauseIcon = if (isPaused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause
     val restartLabel = stringResource(R.string.autoplay_countdown_restart)
     val playNowLabel = stringResource(R.string.autoplay_countdown_play_now)
 
@@ -228,6 +251,9 @@ private fun CountdownActions(
             IconButton(onClick = onCancel) {
                 Icon(Icons.Rounded.Close, contentDescription = cancelLabel)
             }
+            OutlinedIconButton(onClick = onTogglePause) {
+                Icon(pauseIcon, contentDescription = pauseLabel)
+            }
             OutlinedIconButton(onClick = onRestart) {
                 Icon(Icons.Rounded.Replay, contentDescription = restartLabel)
             }
@@ -242,6 +268,12 @@ private fun CountdownActions(
             }
 
             Spacer(Modifier.weight(1f))
+
+            OutlinedButton(onClick = onTogglePause) {
+                Icon(pauseIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(pauseLabel, maxLines = 1)
+            }
 
             OutlinedButton(onClick = onRestart) {
                 Icon(Icons.Rounded.Replay, contentDescription = null, modifier = Modifier.size(18.dp))

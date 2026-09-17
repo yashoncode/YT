@@ -21,12 +21,12 @@ internal fun visibleNavTabIndices(
             if (visibility.home) add(0)
             if (visibility.shorts) add(1)
             if (visibility.music) add(2)
-            add(3)
-            add(4)
             if (visibility.search) add(5)
             if (visibility.categories) add(6)
         }
-    return (order + DEFAULT_NAV_TAB_ORDER).distinct().filter(enabled::contains)
+    // Home is the floor: with every tab switched off the bar would be empty and the shell would
+    // have no destination to start on.
+    return (order + DEFAULT_NAV_TAB_ORDER).distinct().filter(enabled::contains).ifEmpty { listOf(0) }
 }
 
 internal fun resolveDefaultNavTabIndex(

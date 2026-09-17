@@ -23,14 +23,14 @@ class NavigationComponentsTest {
                     selectedIndex = 0,
                     onItemSelected = {},
                     isHomeEnabled = true,
-                    isShortsEnabled = false,
-                    isMusicEnabled = false,
+                    isShortsEnabled = true,
+                    isMusicEnabled = true,
                 )
             }
         }
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val centers = listOf(R.string.nav_home, R.string.nav_subs, R.string.nav_library)
+        val centers = listOf(R.string.nav_home, R.string.nav_shorts, R.string.nav_music)
             .map { stringRes ->
                 val bounds = composeRule.onNodeWithText(context.getString(stringRes))
                     .getUnclippedBoundsInRoot()

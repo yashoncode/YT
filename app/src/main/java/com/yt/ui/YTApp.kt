@@ -63,6 +63,8 @@ import com.yt.ui.theme.CustomThemePalettes
 import com.yt.ui.theme.ThemeMode
 import com.yt.ui.theme.ThemeVariant
 import com.yt.ui.theme.isEffectivelyDark
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 
@@ -475,6 +477,8 @@ fun YTApp(
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
+            // What the translucent nav bar blurs: the shell records this frame, the bar reads it.
+            val hazeState = rememberHazeState()
             val shouldReserveMusicMiniPlayerSpace =
                 currentRoute.value.isLibraryOrSettingsRouteForMusicMiniPlayer()
             val isMusicMiniPlayerObscuringContent =
@@ -519,7 +523,7 @@ fun YTApp(
                 surfacesVisible = !musicPlayerSheetState.isExpanded && playerSheetState.currentValue != PlayerSheetValue.Expanded,
             ) {
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().hazeSource(hazeState),
                     containerColor =
                         if (isInPipMode) {
                             androidx.compose.ui.graphics.Color.Black
@@ -564,6 +568,8 @@ fun YTApp(
                                 unreadNotifications = notificationViewModel.unreadCount,
                                 onOpenNotifications = { navController.navigate("notifications") },
                                 onOpenSettings = { navController.navigate("settings") },
+                                onOpenSubscriptions = { navController.navigate("subscriptions") },
+                                onOpenLibrary = { navController.navigate("library") },
                             ) {
                                 NavHost(
                                     navController = navController,
@@ -651,6 +657,7 @@ fun YTApp(
                 barScale = bottomNavScale,
                 glass = bottomNavGlass,
                 hapticsEnabled = bottomNavHaptics,
+                hazeState = hazeState,
                 onItemSelected = { index ->
                     val route = navRouteForIndex(index)
 
@@ -744,6 +751,30 @@ fun YTApp(
                 onAlbumClick = { albumId ->
                     musicPlayerSheetState.collapse()
                     navController.navigate("musicPlaylist/${android.net.Uri.encode(albumId)}")
+                },
+                onSwitchToVideo = {
+                    // playVideo() stops the music session itself, so the sheet empties on its own;
+                    // the playhead has to be read before that happens.
+                    val track = currentMusicTrack
+                    val positionMs = EnhancedMusicPlayerManager.currentPosition.value
+                    if (track != null) {
+                        playerViewModel.playVideo(
+                            Video(
+                                id = track.videoId,
+                                title = track.title,
+                                channelName = track.artist,
+                                channelId = track.channelId,
+                                thumbnailUrl = track.highResThumbnailUrl,
+                                duration = track.duration,
+                                viewCount = track.views,
+                                likeCount = track.likes,
+                                uploadDate = "",
+                                isMusic = true,
+                            ),
+                            resumePositionMs = positionMs,
+                        )
+                        musicPlayerSheetState.dismiss()
+                    }
                 },
             )
         }

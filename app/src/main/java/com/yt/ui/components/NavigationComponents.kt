@@ -4,14 +4,13 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -27,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -42,6 +43,10 @@ import com.yt.R
 import com.yt.data.local.BOTTOM_NAV_SCALE_RANGE
 import com.yt.ui.components.layout.YTNavItemSpec
 import com.yt.ui.components.layout.rememberYTNavItems
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 
 private const val MAX_VISIBLE_NAV_ITEMS = 5
 
@@ -52,16 +57,26 @@ private val NAV_BAR_VERTICAL_PADDING = 4.dp
 private val NAV_LABEL_GAP = 2.dp
 private const val NAV_LABEL_SP = 11f
 private val NAV_LABEL_LINE_HEIGHT = 15.dp
-private const val GLASS_BAR_ALPHA = 0.72f
+
+// The bar floats: it is inset from the screen edges and rounded on every corner, so content
+// passing underneath stays visible around it.
+private val NAV_BAR_SIDE_MARGIN = 14.dp
+private val NAV_BAR_BOTTOM_MARGIN = 10.dp
+private val NAV_BAR_SHADOW = 10.dp
+private val NAV_BAR_CORNER = 28.dp
+private val NAV_BAR_BLUR_RADIUS = 28.dp
+private const val GLASS_TINT_ALPHA = 0.55f
+private const val GLASS_BORDER_ALPHA = 0.25f
 
 /**
- * Height of the bar's own content at [barScale], without the system navigation-bar inset. Callers
- * reserve this much space at the bottom of the screen so the bar never covers content.
+ * Height the bar occupies at [barScale], without the system navigation-bar inset. Callers reserve
+ * this much space at the bottom of the screen so the bar never covers content.
  */
 fun bottomNavContentHeight(barScale: Float): Dp {
     val scale = barScale.coerceIn(BOTTOM_NAV_SCALE_RANGE)
     return (NAV_BAR_VERTICAL_PADDING + NAV_ITEM_VERTICAL_PADDING) * 2 * scale +
-        (NAV_ICON_SIZE + NAV_LABEL_GAP + NAV_LABEL_LINE_HEIGHT) * scale
+        (NAV_ICON_SIZE + NAV_LABEL_GAP + NAV_LABEL_LINE_HEIGHT) * scale +
+        NAV_BAR_BOTTOM_MARGIN
 }
 
 @Composable
@@ -78,6 +93,7 @@ fun FloatingBottomNavBar(
     barScale: Float = 1f,
     glass: Boolean = false,
     hapticsEnabled: Boolean = true,
+    hazeState: HazeState? = null,
 ) {
     val scale = barScale.coerceIn(BOTTOM_NAV_SCALE_RANGE)
     val haptic = LocalHapticFeedback.current
@@ -108,96 +124,105 @@ fun FloatingBottomNavBar(
     val isOverflowSelected = overflowItems.any { it.index == selectedIndex }
     var showMoreMenu by remember { mutableStateOf(false) }
 
+    val shape = RoundedCornerShape(NAV_BAR_CORNER)
+    // Blurring the real backdrop needs the frame behind the bar, which only the shell can record;
+    // without a state to read it from, the glass setting degrades to a translucent bar.
+    val blurred = glass && hazeState != null
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val hazeStyle =
+        HazeStyle(
+            backgroundColor = surfaceColor,
+            tint = HazeTint(surfaceColor.copy(alpha = GLASS_TINT_ALPHA)),
+            blurRadius = NAV_BAR_BLUR_RADIUS,
+        )
+
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        // Translucent instead of blurred: a real backdrop blur needs a frame capture of whatever is
-        // behind the bar, which Compose cannot do on its own.
-        // ponytail: translucent glass, swap in a backdrop-blur library if it has to blur for real.
-        color =
-            if (glass) {
-                MaterialTheme.colorScheme.surface.copy(alpha = GLASS_BAR_ALPHA)
+        modifier =
+            modifier
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = NAV_BAR_SIDE_MARGIN)
+                .padding(bottom = NAV_BAR_BOTTOM_MARGIN)
+                .fillMaxWidth()
+                .shadow(elevation = NAV_BAR_SHADOW, shape = shape, clip = false)
+                .clip(shape)
+                .then(if (blurred) Modifier.hazeEffect(hazeState!!, hazeStyle) else Modifier),
+        shape = shape,
+        color = if (blurred) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
+        border =
+            if (blurred) {
+                BorderStroke(Dp.Hairline, MaterialTheme.colorScheme.outlineVariant.copy(alpha = GLASS_BORDER_ALPHA))
             } else {
-                MaterialTheme.colorScheme.surface
+                null
             },
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Translucency alone leaves the bar bleeding into the content scrolling under it.
-            if (glass) {
-                HorizontalDivider(
-                    thickness = Dp.Hairline,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = NAV_BAR_VERTICAL_PADDING * scale),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            visibleItems.forEach { spec ->
+                BottomNavItem(
+                    modifier = Modifier.weight(1f),
+                    icon = if (selectedIndex == spec.index) spec.filledIcon else spec.outlinedIcon,
+                    label = stringResource(spec.labelRes),
+                    selected = selectedIndex == spec.index,
+                    scale = scale,
+                    onClick = { selectTab(spec.index) },
                 )
             }
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(vertical = NAV_BAR_VERTICAL_PADDING * scale),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                visibleItems.forEach { spec ->
-                    BottomNavItem(
-                        modifier = Modifier.weight(1f),
-                        icon = if (selectedIndex == spec.index) spec.filledIcon else spec.outlinedIcon,
-                        label = stringResource(spec.labelRes),
-                        selected = selectedIndex == spec.index,
-                        scale = scale,
-                        onClick = { selectTab(spec.index) },
-                    )
-                }
 
-                if (overflowItems.isNotEmpty()) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        BottomNavItem(
-                            modifier = Modifier.fillMaxWidth(),
-                            icon = if (isOverflowSelected) Icons.Filled.MoreHoriz else Icons.Outlined.MoreHoriz,
-                            label = stringResource(R.string.nav_more),
-                            selected = isOverflowSelected,
-                            scale = scale,
-                            onClick = { showMoreMenu = true },
-                        )
-                        DropdownMenu(
-                            expanded = showMoreMenu,
-                            onDismissRequest = { showMoreMenu = false },
-                            offset = DpOffset(x = 0.dp, y = (-8).dp),
-                        ) {
-                            overflowItems.forEach { spec ->
-                                val isSelected = selectedIndex == spec.index
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = stringResource(spec.labelRes),
-                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                            color =
-                                                if (isSelected) {
-                                                    MaterialTheme.colorScheme.primary
-                                                } else {
-                                                    MaterialTheme.colorScheme.onSurface
-                                                },
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = if (isSelected) spec.filledIcon else spec.outlinedIcon,
-                                            contentDescription = stringResource(spec.labelRes),
-                                            tint =
-                                                if (isSelected) {
-                                                    MaterialTheme.colorScheme.primary
-                                                } else {
-                                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                                },
-                                        )
-                                    },
-                                    onClick = {
-                                        showMoreMenu = false
-                                        selectTab(spec.index)
-                                    },
-                                )
-                            }
+            if (overflowItems.isNotEmpty()) {
+                Box(modifier = Modifier.weight(1f)) {
+                    BottomNavItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        icon = if (isOverflowSelected) Icons.Filled.MoreHoriz else Icons.Outlined.MoreHoriz,
+                        label = stringResource(R.string.nav_more),
+                        selected = isOverflowSelected,
+                        scale = scale,
+                        onClick = { showMoreMenu = true },
+                    )
+                    DropdownMenu(
+                        expanded = showMoreMenu,
+                        onDismissRequest = { showMoreMenu = false },
+                        offset = DpOffset(x = 0.dp, y = (-8).dp),
+                    ) {
+                        overflowItems.forEach { spec ->
+                            val isSelected = selectedIndex == spec.index
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(spec.labelRes),
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        color =
+                                            if (isSelected) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            },
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isSelected) spec.filledIcon else spec.outlinedIcon,
+                                        contentDescription = stringResource(spec.labelRes),
+                                        tint =
+                                            if (isSelected) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            },
+                                    )
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    selectTab(spec.index)
+                                },
+                            )
                         }
                     }
                 }

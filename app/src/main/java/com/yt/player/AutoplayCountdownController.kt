@@ -42,6 +42,8 @@ class AutoplayCountdownController(
                 log("autoplay countdown start ${totalSeconds}s next=${nextVideo.id}")
                 while (remaining > 0) {
                     delay(1000L)
+                    // Held, not cancelled: the card stays up until the user picks an action.
+                    if (_state.value.isPaused) continue
                     remaining--
                     _state.value = _state.value.copy(secondsRemaining = remaining)
                 }
@@ -50,6 +52,13 @@ class AutoplayCountdownController(
                 log("autoplay countdown elapsed -> advance")
                 onElapsed()
             }
+    }
+
+    /** Holds the countdown where it stands, or lets it run on again. */
+    fun setPaused(paused: Boolean) {
+        if (!_state.value.isActive) return
+        _state.value = _state.value.copy(isPaused = paused)
+        log("autoplay countdown ${if (paused) "paused" else "resumed"}")
     }
 
     /**

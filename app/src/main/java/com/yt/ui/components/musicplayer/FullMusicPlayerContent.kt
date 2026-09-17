@@ -113,6 +113,7 @@ internal fun FullMusicPlayerContent(
     hideArtwork: Boolean,
     onArtistClick: (String) -> Unit,
     onAlbumClick: (String) -> Unit,
+    onSwitchToVideo: () -> Unit,
     viewModel: MusicPlayerViewModel = sharedMusicPlayerViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -447,6 +448,10 @@ internal fun FullMusicPlayerContent(
                     playingFrom = uiState.playingFrom,
                     modifier = Modifier.statusBarsPadding(),
                     contentColor = colorScheme.onSurface,
+                )
+                SongVideoSwitch(
+                    contentColor = colorScheme.onSurface,
+                    onSwitchToVideo = onSwitchToVideo,
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 // Under the immersive background the full-bleed art IS the artwork, so the card

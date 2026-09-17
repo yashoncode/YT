@@ -320,8 +320,14 @@ class VideoPlayerViewModel
         /**
          * Plays a video by immediately caching metadata and triggering stream load.
          * This ensures the UI shows video info immediately while streams are fetched.
+         *
+         * [resumePositionMs] starts playback part-way in — the music player hands over its
+         * playhead when the listener switches a song to its video.
          */
-        fun playVideo(video: Video) {
+        fun playVideo(
+            video: Video,
+            resumePositionMs: Long? = null,
+        ) {
             val isMiniPlayerCollapsed =
                 GlobalPlayerState.miniPlayerExpansionState.value == MiniPlayerExpansionState.COLLAPSED
             if (_uiState.value.shouldReopenInsteadOfPlaying(video.id, playerManager.playerState.value, isMiniPlayerCollapsed)) {
@@ -341,7 +347,12 @@ class VideoPlayerViewModel
             if (upcomingPremiere.applyCountdown(video)) {
                 return
             }
-            loadVideoInfo(video.id, isWifi = detectIsWifi(), forceRefresh = true)
+            loadVideoInfo(
+                video.id,
+                isWifi = detectIsWifi(),
+                forceRefresh = true,
+                resumePositionOverrideMs = resumePositionMs?.takeIf { it > 0L },
+            )
         }
 
         fun playLocalVideo(

@@ -31,7 +31,11 @@ const val DEFAULT_PORTRAIT_SEEKBAR_PADDING_DP = 16
 const val MAX_PORTRAIT_SEEKBAR_PADDING_DP = 64
 const val DEFAULT_FULLSCREEN_SEEKBAR_PADDING_DP = 48
 const val MAX_FULLSCREEN_SEEKBAR_PADDING_DP = 120
-val DEFAULT_NAV_TAB_ORDER = listOf(0, 1, 2, 3, 4, 5, 6)
+// 3 (Subscriptions) and 4 (Library) left the bar; they are reached from the top bar instead.
+// Seconds the "up next" card counts down before the next video starts, as YouTube does.
+const val DEFAULT_AUTOPLAY_COUNTDOWN_SECONDS = 10
+
+val DEFAULT_NAV_TAB_ORDER = listOf(0, 1, 2, 5, 6)
 
 /** How far the bottom navigation bar may be scaled from its default size. */
 val BOTTOM_NAV_SCALE_RANGE = 0.8f..1.5f
@@ -1302,7 +1306,7 @@ class PlayerPreferences(
     val autoplayCountdownSeconds: Flow<Int> =
         context.playerPreferencesDataStore.data
             .map { preferences ->
-                (preferences[Keys.AUTOPLAY_COUNTDOWN_SECONDS] ?: 0).coerceIn(0, 30)
+                (preferences[Keys.AUTOPLAY_COUNTDOWN_SECONDS] ?: DEFAULT_AUTOPLAY_COUNTDOWN_SECONDS).coerceIn(0, 30)
             }
 
     suspend fun setAutoplayCountdownSeconds(seconds: Int) {
@@ -1921,6 +1925,8 @@ class PlayerPreferences(
                 preferences[Keys.NAV_TAB_ORDER]
                     ?.split(",")
                     ?.mapNotNull { it.toIntOrNull() }
+                    // Orders stored before Subscriptions and Library left the bar still list them.
+                    ?.filter { it in DEFAULT_NAV_TAB_ORDER }
                     ?.takeIf { it.isNotEmpty() }
                     ?: DEFAULT_NAV_TAB_ORDER
             }
