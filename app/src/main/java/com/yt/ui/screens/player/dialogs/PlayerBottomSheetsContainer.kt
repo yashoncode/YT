@@ -45,7 +45,6 @@ internal fun PlayerBottomSheetsContainer(
     video: Video,
     completeVideo: Video,
     disableShortsPlayer: Boolean,
-    showShortsPlayerPrompt: Boolean,
     viewModel: VideoPlayerViewModel,
     playerState: EnhancedPlayerState,
     commentsUiState: PlayerCommentsUiState,
@@ -233,48 +232,5 @@ internal fun PlayerBottomSheetsContainer(
             onSheetProgressChange = onMediaSheetProgressChange,
         )
     }
-
-    // Shorts Suggestion Dialog
-    if (screenState.showShortsPrompt && !disableShortsPlayer && showShortsPlayerPrompt) {
-        ShortsSuggestionDialog(
-            onPlayAsShort = {
-                screenState.showShortsPrompt = false
-                onPlayAsShort(completeVideo.id)
-            },
-            onDismiss = { screenState.showShortsPrompt = false },
-        )
-    }
 }
 
-/**
- * Dialog suggesting to play a short video in the Shorts player.
- */
-@Composable
-private fun ShortsSuggestionDialog(
-    onPlayAsShort: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.SmartDisplay, null) },
-        title = {
-            Text(
-                text = stringResource(R.string.play_mode_suggestion_title),
-                style = MaterialTheme.typography.titleLarge,
-            )
-        },
-        text = {
-            Text(stringResource(R.string.play_mode_suggestion_body))
-        },
-        confirmButton = {
-            TextButton(onClick = onPlayAsShort) {
-                Text(stringResource(R.string.shorts_player))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.close))
-            }
-        },
-    )
-}

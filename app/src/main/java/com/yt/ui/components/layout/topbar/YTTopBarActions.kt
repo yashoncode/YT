@@ -1,16 +1,9 @@
 package com.yt.ui.components.layout.topbar
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Subscriptions
-import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -23,21 +16,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yt.R
 
 /**
- * The shell actions every root destination gets.
+ * The one shell action every root destination gets.
  *
- * Only Notifications stays a button: Subscriptions, Library and Settings share one overflow so a
- * screen with its own two actions still fits four icons in the bar.
+ * Settings is the only button left in the bar: Subscriptions, Library and Notifications live
+ * inside Settings now, so the bar can give its width to the search field instead.
  *
  * Renders nothing when the shell has not provided [LocalYTGlobalActions] — the case in previews
  * and in isolated Compose tests.
@@ -45,72 +33,12 @@ import com.yt.R
 @Composable
 internal fun YTGlobalActionsRow() {
     val actions = LocalYTGlobalActions.current ?: return
-    val unreadCount by actions.unreadNotifications.collectAsStateWithLifecycle()
 
-    YTNotificationsAction(
-        unreadCount = unreadCount,
-        onClick = actions.onOpenNotifications,
-    )
-    YTTopBarOverflow(
-        items =
-            listOf(
-                YTTopBarMenuItem(
-                    label = stringResource(R.string.nav_subs),
-                    icon = Icons.Outlined.Subscriptions,
-                    onClick = actions.onOpenSubscriptions,
-                ),
-                YTTopBarMenuItem(
-                    label = stringResource(R.string.nav_library),
-                    icon = Icons.Outlined.VideoLibrary,
-                    onClick = actions.onOpenLibrary,
-                ),
-                YTTopBarMenuItem(
-                    label = stringResource(R.string.settings),
-                    icon = Icons.Outlined.Settings,
-                    onClick = actions.onOpenSettings,
-                ),
-            ),
-    )
-}
-
-@Composable
-private fun YTNotificationsAction(
-    unreadCount: Int,
-    onClick: () -> Unit,
-) {
-    IconButton(onClick = onClick) {
-        Box(contentAlignment = Alignment.TopEnd) {
-            Icon(
-                imageVector = Icons.Outlined.Notifications,
-                contentDescription = stringResource(R.string.notifications),
-            )
-            if (unreadCount > 0) {
-                Box(
-                    modifier =
-                        Modifier
-                            .offset(x = 6.dp, y = (-4).dp)
-                            .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
-                            .size(16.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text =
-                            if (unreadCount > 9) {
-                                stringResource(R.string.notification_badge_9_plus)
-                            } else {
-                                unreadCount.toString()
-                            },
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style =
-                            MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 9.sp,
-                            ),
-                    )
-                }
-            }
-        }
+    IconButton(onClick = actions.onOpenSettings) {
+        Icon(
+            imageVector = Icons.Outlined.Settings,
+            contentDescription = stringResource(R.string.settings),
+        )
     }
 }
 

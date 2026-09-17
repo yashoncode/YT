@@ -77,6 +77,9 @@ fun SettingsScreen(
     onNavigateToAppearance: () -> Unit,
     onNavigateToPlayerAppearance: () -> Unit,
     onNavigateToDonations: () -> Unit,
+    onNavigateToSubscriptions: () -> Unit,
+    onNavigateToLibrary: () -> Unit,
+    onNavigateToNotificationInbox: () -> Unit,
     onNavigateToPersonality: () -> Unit,
     onNavigateToDownloads: () -> Unit,
     onNavigateToTimeManagement: () -> Unit,
@@ -89,7 +92,6 @@ fun SettingsScreen(
     onNavigateToDateTimeSettings: () -> Unit,
     onNavigateToBufferSettings: () -> Unit,
     onNavigateToSearchHistory: () -> Unit,
-    onNavigateToAbout: () -> Unit,
     onNavigateToUserPreferences: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToAppIconPicker: () -> Unit,
@@ -124,10 +126,6 @@ fun SettingsScreen(
     var showRegionDialog by remember { mutableStateOf(false) }
     var showAppLanguageDialog by remember { mutableStateOf(false) }
     var showResetBrainDialog by remember { mutableStateOf(false) }
-    // Update checker state (github flavor only)
-    var isCheckingUpdate by remember { mutableStateOf(false) }
-    // null = no dialog; non-null = tag string of the available update
-    var updateAvailableTag by remember { mutableStateOf<String?>(null) }
 
     // Player preferences states
     val currentRegion by playerPreferences.trendingRegion.collectAsState(initial = "US")
@@ -192,76 +190,6 @@ fun SettingsScreen(
         searchQuery = ""
     }
 
-    val onCheckForUpdatesClick: () -> Unit = {
-        if (BuildConfig.UPDATER_ENABLED && !isCheckingUpdate) {
-            isCheckingUpdate = true
-            coroutineScope.launch(Dispatchers.IO) {
-                try {
-                    val client = AppProxyManager.applyTo(OkHttpClient.Builder()).build()
-                    val request =
-                        Request
-                            .Builder()
-                            .url("https://api.github.com/repos/A-EDev/Flow/releases/latest")
-                            .header("Accept", "application/vnd.github.v3+json")
-                            .build()
-                    val response = client.newCall(request).execute()
-                    withContext(Dispatchers.Main) {
-                        isCheckingUpdate = false
-                        if (response.isSuccessful) {
-                            val body = response.body?.string()
-                            if (body != null) {
-                                val json = JsonParser.parseString(body).asJsonObject
-                                val latestTag = json.get("tag_name").asString
-                                val cleanLatest = latestTag.removePrefix("v")
-                                val cleanCurrent = BuildConfig.VERSION_NAME.removePrefix("v")
-                                val latestParts = cleanLatest.split(".").mapNotNull { it.toIntOrNull() }
-                                val currentParts = cleanCurrent.split(".").mapNotNull { it.toIntOrNull() }
-                                var isNewer = false
-                                val size = maxOf(latestParts.size, currentParts.size)
-                                for (i in 0 until size) {
-                                    val l = latestParts.getOrNull(i) ?: 0
-                                    val c = currentParts.getOrNull(i) ?: 0
-                                    if (l > c) {
-                                        isNewer = true
-                                        break
-                                    }
-                                    if (l < c) break
-                                }
-                                if (isNewer) {
-                                    updateAvailableTag = latestTag
-                                } else {
-                                    android.widget.Toast
-                                        .makeText(
-                                            context,
-                                            context.getString(R.string.yt_is_up_to_date),
-                                            android.widget.Toast.LENGTH_SHORT,
-                                        ).show()
-                                }
-                            }
-                        } else {
-                            android.widget.Toast
-                                .makeText(
-                                    context,
-                                    context.getString(R.string.update_check_failed),
-                                    android.widget.Toast.LENGTH_SHORT,
-                                ).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        isCheckingUpdate = false
-                        android.widget.Toast
-                            .makeText(
-                                context,
-                                context.getString(R.string.update_check_failed),
-                                android.widget.Toast.LENGTH_SHORT,
-                            ).show()
-                    }
-                }
-            }
-        }
-    }
-
     // Section label strings for the search index
     val secYTEngine = stringResource(R.string.settings_yt_engine_header)
     val secAppearance = stringResource(R.string.settings_header_appearance)
@@ -270,8 +198,31 @@ fun SettingsScreen(
     val secDataManagement = stringResource(R.string.settings_header_data_management)
     val secAbout = stringResource(R.string.settings_header_about)
 
+    val secYourStuff = stringResource(R.string.settings_header_your_stuff)
+
     val allSettingsEntries =
         listOf(
+            SettingSearchEntry(
+                Icons.Outlined.Subscriptions,
+                stringResource(R.string.nav_subs),
+                stringResource(R.string.settings_item_subscriptions_subtitle),
+                secYourStuff,
+                onNavigateToSubscriptions,
+            ),
+            SettingSearchEntry(
+                Icons.Outlined.VideoLibrary,
+                stringResource(R.string.nav_library),
+                stringResource(R.string.settings_item_library_subtitle),
+                secYourStuff,
+                onNavigateToLibrary,
+            ),
+            SettingSearchEntry(
+                Icons.Outlined.Notifications,
+                stringResource(R.string.notifications),
+                stringResource(R.string.settings_item_notification_inbox_subtitle),
+                secYourStuff,
+                onNavigateToNotificationInbox,
+            ),
             SettingSearchEntry(
                 Icons.Outlined.Psychology,
                 stringResource(R.string.yt_control_center),
@@ -444,27 +395,7 @@ fun SettingsScreen(
                 secDataManagement,
                 onNavigateToSyncDevices,
             ),
-            SettingSearchEntry(
-                Icons.Outlined.Info,
-                stringResource(R.string.settings_item_about_yt),
-                stringResource(R.string.settings_item_about_yt_subtitle),
-                secAbout,
-                onNavigateToAbout,
-            ),
-        ) +
-            if (BuildConfig.UPDATER_ENABLED) {
-                listOf(
-                    SettingSearchEntry(
-                        Icons.Outlined.Update,
-                        stringResource(R.string.check_for_updates),
-                        stringResource(R.string.check_for_updates_subtitle),
-                        secAbout,
-                        onCheckForUpdatesClick,
-                    ),
-                )
-            } else {
-                emptyList()
-            }
+        )
     val filteredEntries =
         if (searchQuery.isBlank()) {
             emptyList()
@@ -936,6 +867,41 @@ fun SettingsScreen(
                 }
 
                 // =================================================
+                // YOUR STUFF
+                // =================================================
+                item { SectionHeader(text = stringResource(R.string.settings_header_your_stuff)) }
+                item {
+                    SettingsGroup {
+                        SettingsItem(
+                            icon = Icons.Outlined.Subscriptions,
+                            title = stringResource(R.string.nav_subs),
+                            subtitle = stringResource(R.string.settings_item_subscriptions_subtitle),
+                            onClick = onNavigateToSubscriptions,
+                        )
+                        HorizontalDivider(
+                            Modifier.padding(start = 56.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        )
+                        SettingsItem(
+                            icon = Icons.Outlined.VideoLibrary,
+                            title = stringResource(R.string.nav_library),
+                            subtitle = stringResource(R.string.settings_item_library_subtitle),
+                            onClick = onNavigateToLibrary,
+                        )
+                        HorizontalDivider(
+                            Modifier.padding(start = 56.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        )
+                        SettingsItem(
+                            icon = Icons.Outlined.Notifications,
+                            title = stringResource(R.string.notifications),
+                            subtitle = stringResource(R.string.settings_item_notification_inbox_subtitle),
+                            onClick = onNavigateToNotificationInbox,
+                        )
+                    }
+                }
+
+                // =================================================
                 // APPEARANCE
                 // =================================================
                 item { SectionHeader(text = stringResource(R.string.settings_header_appearance)) }
@@ -1202,37 +1168,8 @@ fun SettingsScreen(
                     }
                 }
 
-                // =================================================
-                // ABOUT
-                // =================================================
                 item { SectionHeader(text = stringResource(R.string.settings_header_about)) }
-                item {
-                    SettingsGroup {
-                        SettingsItem(
-                            icon = Icons.Outlined.Info,
-                            title = stringResource(R.string.settings_item_about_yt),
-                            subtitle = stringResource(R.string.settings_item_about_yt_subtitle),
-                            onClick = onNavigateToAbout,
-                        )
-                        if (BuildConfig.UPDATER_ENABLED) {
-                            HorizontalDivider(
-                                Modifier.padding(start = 56.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            )
-                            SettingsItem(
-                                icon = if (isCheckingUpdate) Icons.Outlined.Sync else Icons.Outlined.Update,
-                                title = stringResource(R.string.check_for_updates),
-                                subtitle =
-                                    if (isCheckingUpdate) {
-                                        stringResource(R.string.checking_for_updates)
-                                    } else {
-                                        stringResource(R.string.check_for_updates_subtitle)
-                                    },
-                                onClick = onCheckForUpdatesClick,
-                            )
-                        }
-                    }
-                }
+                item { AboutCreditCard() }
             }
         }
     }
@@ -1324,38 +1261,6 @@ fun SettingsScreen(
                 TextButton(onClick = { showResetBrainDialog = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
-    }
-
-    // Update Available Dialog (github flavor only)
-    if (BuildConfig.UPDATER_ENABLED) {
-        val tag = updateAvailableTag
-        if (tag != null) {
-            AlertDialog(
-                onDismissRequest = { updateAvailableTag = null },
-                icon = { Icon(Icons.Outlined.Update, null, tint = MaterialTheme.colorScheme.primary) },
-                title = { Text(stringResource(R.string.new_update_available), fontWeight = FontWeight.Bold) },
-                text = {
-                    Text(
-                        stringResource(R.string.update_available_template, tag),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                },
-                confirmButton = {
-                    Button(onClick = {
-                        updateAvailableTag = null
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/A-EDev/Flow/releases/latest"))
-                        context.startActivity(intent)
-                    }) {
-                        Text(stringResource(R.string.download))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { updateAvailableTag = null }) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                },
-            )
-        }
     }
 
     if (showAppLanguageDialog) {

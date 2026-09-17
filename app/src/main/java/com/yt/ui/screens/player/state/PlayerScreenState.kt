@@ -69,10 +69,6 @@ class PlayerScreenState {
     var isSpeedBoostActive by mutableStateOf(false)
     var normalSpeed by mutableFloatStateOf(1.0f)
 
-    // Shorts/Music Prompt
-    var showShortsPrompt by mutableStateOf(false)
-    var hasShownShortsPrompt by mutableStateOf(false)
-
     fun resetForNewVideo() {
         lastInteractionTimestamp = System.currentTimeMillis()
         showControls = true
@@ -91,8 +87,6 @@ class PlayerScreenState {
         showVolumeOverlay = false
         showSeekBackAnimation = false
         showSeekForwardAnimation = false
-        hasShownShortsPrompt = false
-        showShortsPrompt = false
         activeSheet = PlayerSheet.None
         showLiveChatPanel = true
         zoomScale = 1f

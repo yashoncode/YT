@@ -5,26 +5,15 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import kotlinx.coroutines.flow.StateFlow
-
 /**
  * App-shell destinations that must stay reachable from every root screen.
  *
- * Before this existed, `notifications` had a single entry point — the Home top bar — so turning
- * Home off in navigation settings orphaned the screen entirely. Subscriptions and Library are here
- * for the same reason: they left the bottom bar, and the top bar of every backless destination is
- * now their only entry point.
- *
- * [unreadNotifications] is the flow rather than the current value so that a new notification
- * invalidates only the badge that collects it, instead of the whole shell that provides it.
+ * Settings is the last of them. Subscriptions, Library and Notifications used to need a shell
+ * entry point of their own; they are rows inside Settings now, so reaching Settings reaches them.
  */
 @Immutable
 data class YTGlobalActions(
-    val unreadNotifications: StateFlow<Int>,
-    val onOpenNotifications: () -> Unit,
     val onOpenSettings: () -> Unit,
-    val onOpenSubscriptions: () -> Unit,
-    val onOpenLibrary: () -> Unit,
 )
 
 /**
@@ -39,22 +28,12 @@ val LocalYTGlobalActions = staticCompositionLocalOf<YTGlobalActions?> { null }
  */
 @Composable
 fun ProvideYTGlobalActions(
-    unreadNotifications: StateFlow<Int>,
-    onOpenNotifications: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenSubscriptions: () -> Unit,
-    onOpenLibrary: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val actions =
-        remember(unreadNotifications, onOpenNotifications, onOpenSettings, onOpenSubscriptions, onOpenLibrary) {
-            YTGlobalActions(
-                unreadNotifications = unreadNotifications,
-                onOpenNotifications = onOpenNotifications,
-                onOpenSettings = onOpenSettings,
-                onOpenSubscriptions = onOpenSubscriptions,
-                onOpenLibrary = onOpenLibrary,
-            )
+        remember(onOpenSettings) {
+            YTGlobalActions(onOpenSettings = onOpenSettings)
         }
     CompositionLocalProvider(LocalYTGlobalActions provides actions, content = content)
 }

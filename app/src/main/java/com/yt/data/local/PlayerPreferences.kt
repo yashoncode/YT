@@ -921,7 +921,7 @@ class PlayerPreferences(
     // When ON, the bottom navigation bar is translucent so content shows through it.
     val bottomNavGlass: Flow<Boolean> =
         context.playerPreferencesDataStore.data
-            .map { preferences -> preferences[Keys.BOTTOM_NAV_GLASS] ?: false }
+            .map { preferences -> preferences[Keys.BOTTOM_NAV_GLASS] ?: true }
 
     suspend fun setBottomNavGlass(enabled: Boolean) {
         context.playerPreferencesDataStore.edit { preferences ->
@@ -2095,18 +2095,6 @@ class PlayerPreferences(
     suspend fun setDisableShortsPlayer(enabled: Boolean) {
         context.playerPreferencesDataStore.edit { preferences ->
             preferences[Keys.DISABLE_SHORTS_PLAYER] = enabled
-        }
-    }
-
-    val showShortsPlayerPrompt: Flow<Boolean> =
-        context.playerPreferencesDataStore.data
-            .map { preferences ->
-                preferences[Keys.SHOW_SHORTS_PLAYER_PROMPT] ?: true
-            }
-
-    suspend fun setShowShortsPlayerPrompt(enabled: Boolean) {
-        context.playerPreferencesDataStore.edit { preferences ->
-            preferences[Keys.SHOW_SHORTS_PLAYER_PROMPT] = enabled
         }
     }
 

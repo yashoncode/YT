@@ -120,7 +120,7 @@ fun YTApp(
     val subscriptionRefreshOnStartup by preferences.subscriptionRefreshOnStartup.collectAsState(initial = false)
     val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = true)
     val bottomNavScale by preferences.bottomNavScale.collectAsState(initial = 1f)
-    val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = false)
+    val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = true)
     val bottomNavHaptics by preferences.bottomNavHaptics.collectAsState(initial = true)
     val sleepTimerCloseAppOnExpiry by preferences.sleepTimerCloseAppOnExpiry.collectAsState(
         initial = SleepTimerManager.preferredCloseAppOnExpiry,
@@ -372,6 +372,10 @@ fun YTApp(
         }
 
         val currentMusicTrack by EnhancedMusicPlayerManager.currentTrack.collectAsStateWithLifecycle()
+        // What the translucent nav bar and the music mini bar blur: the shell records this frame,
+        // both of them read it.
+        val hazeState = rememberHazeState()
+
         var suppressMusicMiniAfterVideo by remember { mutableStateOf(false) }
         var handledMusicPlayerRequest by remember { mutableIntStateOf(0) }
 
@@ -384,6 +388,15 @@ fun YTApp(
         LaunchedEffect(currentMusicTrack?.videoId) {
             if (currentMusicTrack == null) {
                 suppressMusicMiniAfterVideo = false
+                return@LaunchedEffect
+            }
+            // Music takes over from video the way video takes over from music. Without this the
+            // music sheet stays hidden behind a paused video that nobody closed: it only renders
+            // while no video is loaded.
+            suppressMusicMiniAfterVideo = false
+            if (playerUiState.cachedVideo != null || playerUiState.streamInfo != null) {
+                playerVisible = false
+                playerViewModel.clearVideo()
             }
         }
 
@@ -477,8 +490,6 @@ fun YTApp(
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // What the translucent nav bar blurs: the shell records this frame, the bar reads it.
-            val hazeState = rememberHazeState()
             val shouldReserveMusicMiniPlayerSpace =
                 currentRoute.value.isLibraryOrSettingsRouteForMusicMiniPlayer()
             val isMusicMiniPlayerObscuringContent =
@@ -565,11 +576,7 @@ fun YTApp(
                             }
 
                             ProvideYTGlobalActions(
-                                unreadNotifications = notificationViewModel.unreadCount,
-                                onOpenNotifications = { navController.navigate("notifications") },
                                 onOpenSettings = { navController.navigate("settings") },
-                                onOpenSubscriptions = { navController.navigate("subscriptions") },
-                                onOpenLibrary = { navController.navigate("library") },
                             ) {
                                 NavHost(
                                     navController = navController,
@@ -752,6 +759,7 @@ fun YTApp(
                     musicPlayerSheetState.collapse()
                     navController.navigate("musicPlaylist/${android.net.Uri.encode(albumId)}")
                 },
+                hazeState = hazeState,
                 onSwitchToVideo = {
                     // playVideo() stops the music session itself, so the sheet empties on its own;
                     // the playhead has to be read before that happens.

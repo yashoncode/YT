@@ -34,7 +34,7 @@ class MusicBrainLeakGuardTest {
     @Test
     fun `music brain sources never reference the video engine`() {
         // Unit tests run with the app module as the working directory.
-        val dir = File("src/main/java/io/github/aedev/flow/data/recommendation/music")
+        val dir = File("src/main/java/com/yt/data/recommendation/music")
         assertWithMessage("music brain package missing at ${dir.absolutePath}").that(dir.isDirectory).isTrue()
 
         val violations = mutableListOf<String>()

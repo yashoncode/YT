@@ -1558,6 +1558,10 @@
     <string name="app_logo_desc">App Logo</string>
     <string name="v_version_template">v%1$s (%2$s)</string>
     <string name="about_built_by">Built by Yashwanth</string>
+    <string name="settings_header_your_stuff">Your stuff</string>
+    <string name="settings_item_subscriptions_subtitle">Channels you follow</string>
+    <string name="settings_item_library_subtitle">Downloads, playlists and history</string>
+    <string name="settings_item_notification_inbox_subtitle">What your channels posted</string>
     <string name="music_switch_song">Song</string>
     <string name="music_switch_video">Video</string>
     <string name="manufacturer_label">Manufacturer: %1$s</string>

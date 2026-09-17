@@ -1,10 +1,7 @@
 package com.yt.ui.components.musicplayer
 
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -22,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,13 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,23 +55,12 @@ import kotlinx.coroutines.launch
 internal fun MiniPlayerContent(
     track: MusicTrack,
     modifier: Modifier = Modifier,
-    // False while the expanded player covers the (alpha-0) mini bar: the waveform, marquee
-    // and smooth progress ring stop forcing frames nobody can see. Values still update.
+    // False while the expanded player covers the (alpha-0) mini bar: the waveform and marquee
+    // stop forcing frames nobody can see. Values still update.
     animationsEnabled: Boolean = true,
 ) {
     val playerState by EnhancedMusicPlayerManager.playerState.collectAsState()
     val scope = rememberCoroutineScope()
-
-    val animatedProgress by animateFloatAsState(
-        targetValue =
-            if (playerState.duration > 0) {
-                (playerState.position.toFloat() / playerState.duration.toFloat()).coerceIn(0f, 1f)
-            } else {
-                0f
-            },
-        animationSpec = if (animationsEnabled) tween(900, easing = LinearEasing) else snap(),
-        label = "miniProgress",
-    )
 
     var playPauseScale by remember { mutableFloatStateOf(1f) }
     val animatedScale by animateFloatAsState(
@@ -101,68 +83,34 @@ internal fun MiniPlayerContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val ringTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-                val ringFillColor = MaterialTheme.colorScheme.primary
                 Box(
                     modifier =
                         Modifier
-                            .size(52.dp)
-                            .drawBehind {
-                                val stroke = 2.5.dp.toPx()
-                                val inset = stroke / 2f
-                                val arcSize = Size(size.width - stroke, size.height - stroke)
-                                drawArc(
-                                    color = ringTrackColor,
-                                    startAngle = -90f,
-                                    sweepAngle = 360f,
-                                    useCenter = false,
-                                    topLeft = Offset(inset, inset),
-                                    size = arcSize,
-                                    style = Stroke(width = stroke, cap = StrokeCap.Round),
-                                )
-                                if (animatedProgress > 0f) {
-                                    drawArc(
-                                        color = ringFillColor,
-                                        startAngle = -90f,
-                                        sweepAngle = 360f * animatedProgress,
-                                        useCenter = false,
-                                        topLeft = Offset(inset, inset),
-                                        size = arcSize,
-                                        style = Stroke(width = stroke, cap = StrokeCap.Round),
-                                    )
-                                }
-                            },
-                    contentAlignment = Alignment.Center,
+                            .size(50.dp)
+                            .clip(CircleShape),
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(43.dp)
-                                .clip(CircleShape),
-                    ) {
-                        AsyncImage(
-                            model = track.listThumbnailUrl,
-                            contentDescription = stringResource(R.string.album_art),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
+                    AsyncImage(
+                        model = track.listThumbnailUrl,
+                        contentDescription = stringResource(R.string.album_art),
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
 
-                        if (playerState.isPlaying && animationsEnabled) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(Color.Black.copy(alpha = 0.35f)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                PlayingWaveform(
-                                    color = Color.White.copy(alpha = 0.9f),
-                                    barCount = 3,
-                                    barWidth = 2.5.dp,
-                                    barSpacing = 1.5.dp,
-                                    staggerMillis = 120,
-                                )
-                            }
+                    if (playerState.isPlaying && animationsEnabled) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.35f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            PlayingWaveform(
+                                color = Color.White.copy(alpha = 0.9f),
+                                barCount = 3,
+                                barWidth = 2.5.dp,
+                                barSpacing = 1.5.dp,
+                                staggerMillis = 120,
+                            )
                         }
                     }
                 }
@@ -208,16 +156,28 @@ internal fun MiniPlayerContent(
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                IconButton(
+                    onClick = { EnhancedMusicPlayerManager.playPrevious() },
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SkipPrevious,
+                        contentDescription = stringResource(R.string.previous),
+                        modifier = Modifier.size(26.dp),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
                 Box(
                     modifier =
                         Modifier
-                            .size(44.dp)
+                            .size(48.dp)
                             .scale(animatedScale)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f))
                             .clickable {
                                 playPauseScale = 0.85f
                                 EnhancedMusicPlayerManager.togglePlayPause()
@@ -232,7 +192,7 @@ internal fun MiniPlayerContent(
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     } else {
                         Icon(
@@ -248,21 +208,21 @@ internal fun MiniPlayerContent(
                                 } else {
                                     stringResource(R.string.play)
                                 },
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(26.dp),
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
 
                 IconButton(
                     onClick = { EnhancedMusicPlayerManager.playNext() },
-                    modifier = Modifier.size(38.dp),
+                    modifier = Modifier.size(40.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Filled.SkipNext,
                         contentDescription = stringResource(R.string.next),
-                        modifier = Modifier.size(22.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(26.dp),
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }

@@ -65,6 +65,10 @@ import com.yt.ui.components.musicplayer.motion.musicSheetSettleSpring
 import com.yt.ui.components.musicplayer.motion.musicSheetVerticalDragGesture
 import com.yt.ui.components.musicplayer.motion.rememberMiniPlayerDismissGestureHandler
 import com.yt.ui.components.shared.rememberMediaPalette
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
@@ -75,6 +79,8 @@ val MusicMiniPlayerHeight = 64.dp
 val MusicMiniPlayerBottomSpacer = 8.dp
 private val CollapsedHorizontalPadding = 12.dp
 private val CollapsedCornerRadius = 32.dp
+private val MINI_BAR_BLUR_RADIUS = 28.dp
+private const val MINI_BAR_GLASS_ALPHA = 0.62f
 
 private val SheetDefaultSpring =
     spring<Float>(
@@ -100,6 +106,7 @@ fun UnifiedMusicPlayerSheet(
     onAlbumClick: (String) -> Unit,
     onSwitchToVideo: () -> Unit,
     modifier: Modifier = Modifier,
+    hazeState: HazeState? = null,
 ) {
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -358,7 +365,17 @@ fun UnifiedMusicPlayerSheet(
         colorScheme = playerScheme,
         motionScheme = MotionScheme.expressive(),
     ) {
-        val cardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        // The mini bar floats over the feed, so it blurs what scrolls under it; the full player
+        // paints its own background over the same card and needs neither the blur nor the alpha.
+        val blurMiniBar = hazeState != null && state.isCollapsed
+        val baseCardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        val cardColor = if (blurMiniBar) baseCardColor.copy(alpha = MINI_BAR_GLASS_ALPHA) else baseCardColor
+        val miniBarHazeStyle =
+            HazeStyle(
+                backgroundColor = baseCardColor,
+                tint = HazeTint(baseCardColor.copy(alpha = MINI_BAR_GLASS_ALPHA)),
+                blurRadius = MINI_BAR_BLUR_RADIUS,
+            )
 
         Box(
             modifier =
@@ -408,8 +425,10 @@ fun UnifiedMusicPlayerSheet(
                             elevation = cardShadowElevation,
                             shape = cardShape,
                             clip = false,
+                        ).clip(cardShape)
+                        .then(
+                            if (blurMiniBar) Modifier.hazeEffect(hazeState!!, miniBarHazeStyle) else Modifier,
                         ).background(cardColor, cardShape)
-                        .clip(cardShape)
                         .layout { measurable, constraints ->
                             val fullHeightPx = containerHeightPx.roundToInt()
                             val fraction = state.expansionFraction.value

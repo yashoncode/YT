@@ -71,7 +71,7 @@ class PlaybackPreparerTest {
     }
 
     @Test
-    fun `merged streams are initialised, pushed at the resumed position and played`() =
+    fun `merged streams are initialised, pushed at the requested resume position and played`() =
         runTest(testDispatcher) {
             every { playerPreferences.rememberPlaybackSpeed } returns flowOf(true)
             every { playerPreferences.playbackSpeed } returns flowOf(1.75f)
@@ -90,7 +90,7 @@ class PlaybackPreparerTest {
                 offlineSegments = null,
                 hlsUrl = null,
                 isAdaptiveMode = true,
-                resumeOverrideRequested = false,
+                resumeOverrideRequested = true,
                 isCurrent = { true },
                 preferredVideoCodec = "vp9",
             )
@@ -151,7 +151,9 @@ class PlaybackPreparerTest {
                     videoId = VIDEO_ID,
                     filePath = "/downloads/vid.mp4",
                     savedSegments = null,
-                    preservePosition = 30_000L,
+                    // No resume was requested, so the saved position is ignored and the file
+                    // starts from the beginning.
+                    preservePosition = null,
                     subtitles = stored,
                 )
                 playerManager.play()
@@ -236,7 +238,7 @@ class PlaybackPreparerTest {
         }
 
     @Test
-    fun `the InnerTube VOD path pushes the converted streams at the resumed position`() =
+    fun `the InnerTube VOD path pushes the converted streams at the requested resume position`() =
         runTest(testDispatcher) {
             preparer.prepareVodStreams(
                 videoId = VIDEO_ID,
@@ -247,7 +249,7 @@ class PlaybackPreparerTest {
                 subtitles = emptyList(),
                 durationSeconds = 600L,
                 savedPositionMs = 90_000L,
-                resumeOverrideRequested = false,
+                resumeOverrideRequested = true,
                 isAdaptiveMode = false,
                 sabrInfo = null,
                 itVideoFormats = emptyList(),
@@ -283,7 +285,7 @@ class PlaybackPreparerTest {
         }
 
     @Test
-    fun `local media is initialised, resumed from the saved position and played`() =
+    fun `local media is initialised, started from the top and played`() =
         runTest(testDispatcher) {
             preparer.prepareLocalMedia(
                 videoId = VIDEO_ID,
@@ -300,7 +302,8 @@ class PlaybackPreparerTest {
                     videoId = VIDEO_ID,
                     filePath = "/movies/clip.mp4",
                     savedSegments = null,
-                    preservePosition = 12_000L,
+                    // Replays start fresh: prepareLocalMedia has no resume override to honour.
+                    preservePosition = null,
                     subtitles = emptyList(),
                 )
                 playerManager.play()

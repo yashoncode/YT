@@ -20,7 +20,6 @@ import com.yt.data.model.Video
 import com.yt.ui.components.ShortsShelf
 import com.yt.ui.components.VideoCardFullWidth
 import com.yt.ui.components.VideoCardHorizontal
-import com.yt.ui.components.home.ContinueWatchingShelf
 import com.yt.ui.components.shared.YTFeedProgress
 
 private const val FEED_FOOTER_MIN_VIDEOS = 100
@@ -34,8 +33,6 @@ internal fun HomeFeedGrid(
     onVideoClick: (Video) -> Unit,
     onChannelClick: (String) -> Unit,
     onEnrichChannelMetadata: (Video) -> Unit,
-    onContinueWatchingClick: (VideoHistoryEntry) -> Unit,
-    onContinueWatchingRemove: (String) -> Unit,
     onShortClick: (List<Video>, Video) -> Unit,
     onSeeAllHistory: () -> Unit,
     onOpenShortsFeed: () -> Unit,
@@ -70,25 +67,6 @@ internal fun HomeFeedGrid(
                 onChannelClick = onChannelClick,
                 onEnrichChannelMetadata = onEnrichChannelMetadata,
             )
-
-            if (uiState.continueWatchingVideos.isNotEmpty()) {
-                item(
-                    span = { GridItemSpan(maxLineSpan) },
-                    key = "continue_watching_shelf",
-                ) {
-                    ContinueWatchingShelf(
-                        entries = uiState.continueWatchingVideos,
-                        onVideoClick = { videoId ->
-                            uiState.continueWatchingVideos
-                                .find { it.videoId == videoId }
-                                ?.let(onContinueWatchingClick)
-                        },
-                        onRemove = onContinueWatchingRemove,
-                        onSeeAllClick = onSeeAllHistory,
-                        modifier = Modifier.testTag("home_continue_watching_shelf"),
-                    )
-                }
-            }
 
             if (uiState.shorts.isNotEmpty()) {
                 item(

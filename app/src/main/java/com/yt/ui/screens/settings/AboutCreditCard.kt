@@ -3,18 +3,12 @@ package com.yt.ui.screens.settings
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -30,14 +24,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.Spacer
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.yt.R
-import com.yt.ui.components.layout.topbar.YTTopBar
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The whole About section: the animation, who built the app, and the version. It sits inline in
+ * the settings list because there is nothing else left to put on a page of its own.
+ */
 @Composable
-fun AboutScreen(onNavigateBack: () -> Unit) {
+internal fun AboutCreditCard() {
     val context = LocalContext.current
     val packageInfo =
         remember {
@@ -56,22 +53,12 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
             packageInfo?.versionCode?.toString() ?: "0"
         }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            YTTopBar(
-                title = stringResource(R.string.about_title),
-                onBack = onNavigateBack,
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { paddingValues ->
+    SettingsGroup {
         Column(
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(PaddingValues(horizontal = 24.dp, vertical = 32.dp)),
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -89,10 +76,10 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                     Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(28.dp)),
+                        .clip(RoundedCornerShape(24.dp)),
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Text(
                 text = stringResource(R.string.about_built_by),
@@ -101,21 +88,21 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                         fontFamily = FontFamily.Cursive,
                         fontStyle = FontStyle.Italic,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 34.sp,
-                        lineHeight = 42.sp,
+                        fontSize = 30.sp,
+                        lineHeight = 38.sp,
                     ),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = stringResource(R.string.v_version_template, versionName, versionCode),
                 style =
-                    MaterialTheme.typography.titleMedium.copy(
+                    MaterialTheme.typography.titleSmall.copy(
                         fontFamily = FontFamily.Cursive,
-                        letterSpacing = 2.sp,
+                        letterSpacing = 1.5.sp,
                     ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

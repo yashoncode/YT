@@ -69,7 +69,6 @@ internal fun VideoPlayerDialogs(
         video = video,
         completeVideo = completeVideo,
         disableShortsPlayer = prefs.disableShortsPlayer,
-        showShortsPlayerPrompt = prefs.showShortsPlayerPrompt,
         viewModel = playerViewModel,
         playerState = playerState,
         commentsUiState = commentsUiState,

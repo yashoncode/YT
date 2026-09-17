@@ -94,7 +94,6 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
     val isMusicNavigationEnabled by preferences.musicNavigationEnabled.collectAsState(initial = true)
     val isSearchNavigationEnabled by preferences.searchNavigationEnabled.collectAsState(initial = false)
     val isCategoriesNavigationEnabled by preferences.categoriesNavigationEnabled.collectAsState(initial = false)
-    val isContinueWatchingEnabled by preferences.continueWatchingEnabled.collectAsState(initial = true)
     val showRestoredMusicMiniPlayer by preferences.showRestoredMusicMiniPlayer.collectAsState(initial = true)
     val showRelatedVideos by preferences.showRelatedVideos.collectAsState(initial = true)
 
@@ -118,11 +117,10 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
     var showWatchedThresholdDialog by remember { mutableStateOf(false) }
     val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = true)
     val bottomNavScale by preferences.bottomNavScale.collectAsState(initial = 1f)
-    val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = false)
+    val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = true)
     val bottomNavHaptics by preferences.bottomNavHaptics.collectAsState(initial = true)
     val shareWithoutText by preferences.shareWithoutText.collectAsState(initial = false)
     val disableShortsPlayer by preferences.disableShortsPlayer.collectAsState(initial = false)
-    val showShortsPlayerPrompt by preferences.showShortsPlayerPrompt.collectAsState(initial = true)
     val showRegionPickerInExplore by preferences.showRegionPickerInExplore.collectAsState(initial = true)
     val videoTitleMaxLines by preferences.videoTitleMaxLines.collectAsState(initial = 1)
     val videoCardActionsEnabled by preferences.videoCardActionsEnabled.collectAsState(initial = false)
@@ -581,19 +579,6 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
                             }
                         },
                     )
-                    HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    SettingsSwitchItem(
-                        icon = Icons.Outlined.SmartDisplay,
-                        title = stringResource(R.string.content_settings_shorts_player_prompt_title),
-                        subtitle = stringResource(R.string.content_settings_shorts_player_prompt_subtitle),
-                        checked = showShortsPlayerPrompt && shortsContentEnabled && !disableShortsPlayer,
-                        enabled = shortsContentEnabled && !disableShortsPlayer,
-                        onCheckedChange = { enabled ->
-                            coroutineScope.launch {
-                                preferences.setShowShortsPlayerPrompt(enabled)
-                            }
-                        },
-                    )
                 }
             }
 
@@ -609,18 +594,6 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
             item {
                 SectionHeader(text = stringResource(R.string.content_settings_header_content_components))
                 SettingsGroup {
-                    SettingsSwitchItem(
-                        icon = Icons.Outlined.ViewAgenda,
-                        title = stringResource(R.string.settings_continue_watching_title),
-                        subtitle = stringResource(R.string.settings_continue_watching_subtitle),
-                        checked = isContinueWatchingEnabled,
-                        onCheckedChange = { enabled ->
-                            coroutineScope.launch {
-                                preferences.setContinueWatchingEnabled(enabled)
-                            }
-                        },
-                    )
-                    HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     SettingsSwitchItem(
                         icon = Icons.Outlined.MusicNote,
                         title = stringResource(R.string.content_settings_restored_music_mini_player_title),

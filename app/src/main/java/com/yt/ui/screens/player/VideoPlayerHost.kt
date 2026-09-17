@@ -356,15 +356,6 @@ fun VideoPlayerHost(
         viewModel = playerViewModel,
     )
 
-    // Short video prompt
-    ShortVideoPromptEffect(
-        videoDuration = completeVideo.duration,
-        screenState = screenState,
-        isInQueue = playerState.queueSize > 1,
-        disableShortsPlayer = prefs.disableShortsPlayer,
-        showShortsPlayerPrompt = prefs.showShortsPlayerPrompt,
-    )
-
     SponsorSkipEffect(context)
 
     SubtitleLoadErrorEffect(context, screenState)

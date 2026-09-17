@@ -50,8 +50,6 @@ class PlayerScreenStateTest {
             "exitDragProgress" to 0f,
             "isSpeedBoostActive" to false,
             "normalSpeed" to 1.0f,
-            "showShortsPrompt" to false,
-            "hasShownShortsPrompt" to false,
         )
 
     private val resetForNewVideoTouches =
@@ -72,8 +70,6 @@ class PlayerScreenStateTest {
             "showVolumeOverlay",
             "showSeekBackAnimation",
             "showSeekForwardAnimation",
-            "hasShownShortsPrompt",
-            "showShortsPrompt",
             "activeSheet",
             "showLiveChatPanel",
             "zoomScale",
@@ -154,8 +150,6 @@ class PlayerScreenStateTest {
             "exitDragProgress" to exitDragProgress,
             "isSpeedBoostActive" to isSpeedBoostActive,
             "normalSpeed" to normalSpeed,
-            "showShortsPrompt" to showShortsPrompt,
-            "hasShownShortsPrompt" to hasShownShortsPrompt,
         )
 
     /** Moves every property off its default so an untouched field is detectable after a mutator. */
@@ -196,8 +190,6 @@ class PlayerScreenStateTest {
         exitDragProgress = 0.4f
         isSpeedBoostActive = true
         normalSpeed = 1.5f
-        showShortsPrompt = true
-        hasShownShortsPrompt = true
     }
 
     @Test

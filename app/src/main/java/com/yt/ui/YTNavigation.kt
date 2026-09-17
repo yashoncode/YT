@@ -365,7 +365,9 @@ fun NavGraphBuilder.flowAppGraph(
             onNavigateToDateTimeSettings = { navController.navigate("settings/datetime") },
             onNavigateToBufferSettings = { navController.navigate("settings/buffer") },
             onNavigateToSearchHistory = { navController.navigate("settings/search_history") },
-            onNavigateToAbout = { navController.navigate("settings/about") },
+            onNavigateToSubscriptions = { navController.navigate("subscriptions") },
+            onNavigateToLibrary = { navController.navigate("library") },
+            onNavigateToNotificationInbox = { navController.navigate("notifications") },
             onNavigateToUserPreferences = { navController.navigate("settings/user_preferences") },
             onNavigateToNotifications = { navController.navigate("settings/notifications") },
             onNavigateToAppIconPicker = { navController.navigate("settings/app_icon") },
@@ -501,14 +503,6 @@ fun NavGraphBuilder.flowAppGraph(
         currentRoute.value = "settings/time_management"
         showBottomNav.value = false
         com.yt.ui.screens.settings.TimeManagementScreen(
-            onNavigateBack = { navController.popBackStack() },
-        )
-    }
-
-    composable("settings/about") {
-        currentRoute.value = "settings/about"
-        showBottomNav.value = false
-        com.yt.ui.screens.settings.AboutScreen(
             onNavigateBack = { navController.popBackStack() },
         )
     }

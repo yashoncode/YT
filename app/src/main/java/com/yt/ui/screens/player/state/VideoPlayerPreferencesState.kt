@@ -33,7 +33,6 @@ internal class VideoPlayerPreferencesState(
     val doubleTapSeekSeconds: Int,
     val longPressPlaybackSpeed: Float,
     val disableShortsPlayer: Boolean,
-    val showShortsPlayerPrompt: Boolean,
     val savedSubtitleStyle: SubtitleStyle,
     val rememberPlaybackSpeed: Boolean,
     val ambientModeEnabled: Boolean,
@@ -66,7 +65,6 @@ internal fun rememberVideoPlayerPreferences(context: Context): VideoPlayerPrefer
     val doubleTapSeekSeconds by playerPreferences.doubleTapSeekSeconds.collectAsState(initial = 10)
     val longPressPlaybackSpeed by playerPreferences.longPressPlaybackSpeed.collectAsState(initial = 2.0f)
     val disableShortsPlayer by playerPreferences.effectiveDisableShortsPlayer.collectAsState(initial = false)
-    val showShortsPlayerPrompt by playerPreferences.showShortsPlayerPrompt.collectAsState(initial = true)
     val savedSubtitleStyle by playerPreferences.subtitleStyle.collectAsState(initial = SubtitleStyle())
     val rememberPlaybackSpeed by playerPreferences.rememberPlaybackSpeed.collectAsState(initial = false)
     val ambientModeEnabled by playerPreferences.videoAmbientModeEnabled.collectAsState(initial = false)
@@ -97,7 +95,6 @@ internal fun rememberVideoPlayerPreferences(context: Context): VideoPlayerPrefer
         doubleTapSeekSeconds = doubleTapSeekSeconds,
         longPressPlaybackSpeed = longPressPlaybackSpeed,
         disableShortsPlayer = disableShortsPlayer,
-        showShortsPlayerPrompt = showShortsPlayerPrompt,
         savedSubtitleStyle = savedSubtitleStyle,
         rememberPlaybackSpeed = rememberPlaybackSpeed,
         ambientModeEnabled = ambientModeEnabled,

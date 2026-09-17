@@ -158,10 +158,9 @@ internal class PlaybackPreparer(
             PlaybackResumePolicy.resolveStartPosition(
                 savedPosition = savedPosition,
                 durationMs = durationMs,
-                resumeAllowed =
-                    !isLiveStream &&
-                        hlsUrl.isNullOrEmpty() &&
-                        (resumeOverrideRequested || !playerManager.isCurrentQueueVideo(videoId)),
+                // Replays start from the top: only an explicit request (the music player handing
+                // over its playhead, a session recovered after process death) resumes part-way.
+                resumeAllowed = !isLiveStream && hlsUrl.isNullOrEmpty() && resumeOverrideRequested,
             )
 
         if (localFilePath != null) {
@@ -270,7 +269,7 @@ internal class PlaybackPreparer(
             PlaybackResumePolicy.resolveStartPosition(
                 savedPosition = savedPositionMs,
                 durationMs = durationSeconds * 1000L,
-                resumeAllowed = resumeOverrideRequested || !playerManager.isCurrentQueueVideo(videoId),
+                resumeAllowed = resumeOverrideRequested,
             )
         val directMaxHeight = videoStreams.maxOfOrNull { VideoCodecUtils.qualityHeightFromStream(it) } ?: 0
         val preferSabr =
@@ -317,7 +316,7 @@ internal class PlaybackPreparer(
             PlaybackResumePolicy.resolveStartPosition(
                 savedPosition = savedPosition,
                 durationMs = 0L,
-                resumeAllowed = !playerManager.isCurrentQueueVideo(videoId),
+                resumeAllowed = false,
             )
         playerManager.playLocalFile(
             videoId = videoId,

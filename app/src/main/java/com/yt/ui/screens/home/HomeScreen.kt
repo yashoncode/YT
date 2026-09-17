@@ -43,6 +43,7 @@ import com.yt.data.shorts.queue.ShortsQueueSource
 import com.yt.player.DeepYTManager
 import com.yt.ui.TabScrollEventBus
 import com.yt.ui.components.layout.topbar.YTTopBar
+import com.yt.ui.components.layout.topbar.YTTopBarSearchField
 import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.YTPullToRefreshBox
 import kotlinx.coroutines.FlowPreview
@@ -136,13 +137,9 @@ fun HomeScreen(
         topBar = {
             YTTopBar(
                 title = {
-                    Text(
-                        stringResource(R.string.app_name_uppercase),
-                        style =
-                            MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                letterSpacing = 1.sp,
-                            ),
+                    YTTopBarSearchField(
+                        onClick = onSearchClick,
+                        modifier = Modifier.padding(end = 4.dp),
                     )
                 },
                 leading =
@@ -161,14 +158,6 @@ fun HomeScreen(
                     } else {
                         null
                     },
-                actions = {
-                    IconButton(onClick = onSearchClick) {
-                        Icon(
-                            Icons.Outlined.Search,
-                            contentDescription = stringResource(R.string.search),
-                        )
-                    }
-                },
             )
         },
     ) { padding ->
@@ -204,9 +193,7 @@ fun HomeScreen(
 
                     else -> {
                         ReportDrawnWhen {
-                            uiState.videos.isNotEmpty() ||
-                                uiState.shorts.isNotEmpty() ||
-                                uiState.continueWatchingVideos.isNotEmpty()
+                            uiState.videos.isNotEmpty() || uiState.shorts.isNotEmpty()
                         }
 
                         HomeFeedGrid(
@@ -217,8 +204,6 @@ fun HomeScreen(
                             onVideoClick = onVideoClick,
                             onChannelClick = onChannelClick,
                             onEnrichChannelMetadata = viewModel::enrichChannelMetadataIfMissing,
-                            onContinueWatchingClick = { entry -> onVideoClick(entry.toResumeVideo()) },
-                            onContinueWatchingRemove = viewModel::removeContinueWatchingEntry,
                             onShortClick = { shelf, tapped ->
                                 onShortClick(viewModel.shortsShelfSource(shelf, tapped))
                             },
