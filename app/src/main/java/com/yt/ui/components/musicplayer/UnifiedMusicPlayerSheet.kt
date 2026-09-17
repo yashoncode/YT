@@ -497,7 +497,14 @@ fun UnifiedMusicPlayerSheet(
                                 }
                             }.zIndex(miniZIndex),
                 ) {
-                    MiniPlayerContent(track = displayTrack, animationsEnabled = miniAnimationsEnabled)
+                    MiniPlayerContent(
+                        track = displayTrack,
+                        onClose = {
+                            state.dismiss()
+                            onDismiss()
+                        },
+                        animationsEnabled = miniAnimationsEnabled,
+                    )
                 }
 
                 if (shouldRenderFullPlayer) {

@@ -31,6 +31,7 @@ const val DEFAULT_PORTRAIT_SEEKBAR_PADDING_DP = 16
 const val MAX_PORTRAIT_SEEKBAR_PADDING_DP = 64
 const val DEFAULT_FULLSCREEN_SEEKBAR_PADDING_DP = 48
 const val MAX_FULLSCREEN_SEEKBAR_PADDING_DP = 120
+
 // 3 (Subscriptions) and 4 (Library) left the bar; they are reached from the top bar instead.
 // Seconds the "up next" card counts down before the next video starts, as YouTube does.
 const val DEFAULT_AUTOPLAY_COUNTDOWN_SECONDS = 10
@@ -896,7 +897,7 @@ class PlayerPreferences(
     val bottomNavHideOnScroll: Flow<Boolean> =
         context.playerPreferencesDataStore.data
             .map { preferences ->
-                preferences[Keys.BOTTOM_NAV_HIDE_ON_SCROLL] ?: true
+                preferences[Keys.BOTTOM_NAV_HIDE_ON_SCROLL] ?: false
             }
 
     suspend fun setBottomNavHideOnScroll(enabled: Boolean) {

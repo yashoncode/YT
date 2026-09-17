@@ -19,8 +19,8 @@ android {
         applicationId = "com.yt"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20
-        versionName = "3.15.25"
+        versionCode = 21
+        versionName = "3.21.15"
 
         testInstrumentationRunner = "com.yt.HiltTestRunner"
         vectorDrawables {
@@ -139,7 +139,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        isCoreLibraryDesugaringEnabled = true // Enable desugaring
     }
 
     packaging {
@@ -303,7 +302,6 @@ dependencies {
     baselineProfile(project(":benchmark"))
 
     // Desugaring for older Android versions
-    coreLibraryDesugaring(libs.desugar.jdk.libs.nio)
 
     // --- Testing ---
     testImplementation(libs.junit)

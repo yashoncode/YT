@@ -32,13 +32,13 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material.icons.outlined.StickyNote2
-import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.outlined.Straighten
+import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.ViewAgenda
-import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.ViewQuilt
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -115,7 +115,7 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
         initial = com.yt.data.local.WatchedThreshold.ALMOST_FINISHED,
     )
     var showWatchedThresholdDialog by remember { mutableStateOf(false) }
-    val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = true)
+    val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = false)
     val bottomNavScale by preferences.bottomNavScale.collectAsState(initial = 1f)
     val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = true)
     val bottomNavHaptics by preferences.bottomNavHaptics.collectAsState(initial = true)

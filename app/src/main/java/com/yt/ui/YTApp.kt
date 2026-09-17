@@ -43,6 +43,7 @@ import com.yt.player.EnhancedPlayerManager
 import com.yt.player.GlobalPlayerState
 import com.yt.player.SleepTimerManager
 import com.yt.ui.components.DonationPromptHost
+import com.yt.ui.components.FadingBlurScrim
 import com.yt.ui.components.bottomNavContentHeight
 import com.yt.ui.components.layout.YTNavigationChrome
 import com.yt.ui.components.layout.flowUsesNavigationRail
@@ -118,7 +119,7 @@ fun YTApp(
     val navTabOrder by preferences.navTabOrder.collectAsState(initial = com.yt.data.local.DEFAULT_NAV_TAB_ORDER)
     val defaultNavTabIndex by preferences.defaultNavTabIndex.collectAsState(initial = 0)
     val subscriptionRefreshOnStartup by preferences.subscriptionRefreshOnStartup.collectAsState(initial = false)
-    val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = true)
+    val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = false)
     val bottomNavScale by preferences.bottomNavScale.collectAsState(initial = 1f)
     val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = true)
     val bottomNavHaptics by preferences.bottomNavHaptics.collectAsState(initial = true)
@@ -648,6 +649,17 @@ fun YTApp(
                         }
                     }
                 }
+            }
+
+            // A blurred band under the floating bar, so the feed dissolves into the bottom edge
+            // instead of running sharply into it and out the other side of the bar.
+            if (!usesNavigationRail && !isInPipMode && showBottomNav.value && !isShortsPlayerRoute) {
+                FadingBlurScrim(
+                    hazeState = hazeState,
+                    height = bottomNavContentHeightDp + with(density) { navBarBottomInset.toDp() },
+                    atTop = false,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
             }
 
             YTNavigationChrome(

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yt.data.local.VideoHistoryEntry
 import com.yt.data.model.Video
@@ -38,6 +39,7 @@ internal fun HomeFeedGrid(
     onOpenShortsFeed: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    topContentPadding: Dp = 0.dp,
 ) {
     LazyVerticalGrid(
         columns = if (isListView) GridCells.Fixed(1) else layoutConfig.cells,
@@ -50,7 +52,7 @@ internal fun HomeFeedGrid(
             PaddingValues(
                 start = if (isListView) 0.dp else layoutConfig.contentPadding,
                 end = if (isListView) 0.dp else layoutConfig.contentPadding,
-                top = 4.dp,
+                top = topContentPadding + 4.dp,
                 bottom = 80.dp,
             ),
         horizontalArrangement = Arrangement.spacedBy(if (isListView) 0.dp else layoutConfig.cardSpacing),

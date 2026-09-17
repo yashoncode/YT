@@ -23,6 +23,12 @@ class QualityManager(
         private const val TAG = "QualityManager"
         private const val MIN_QUALITY_SWITCH_INTERVAL_MS = 10_000L
 
+        /**
+         * How long after a switch buffering is treated as the switch settling rather than as
+         * evidence the quality is still too high.
+         */
+        private const val QUALITY_SWITCH_SETTLE_MS = 8_000L
+
         fun normalizeQualityHeight(rawHeight: Int): Int = VideoCodecUtils.normalizeQualityHeight(rawHeight)
     }
 
@@ -345,9 +351,10 @@ class QualityManager(
         // Only upgrade if target is significantly higher than current
         if (targetHeight > currentHeight) {
             val nextHigherStream =
-                getWorkingStreams()
-                    .filter { qualityHeight(it) > currentHeight && qualityHeight(it) <= targetHeight }
-                    .minByOrNull { qualityHeight(it) }
+                preferCurrentCodec(
+                    getWorkingStreams()
+                        .filter { qualityHeight(it) > currentHeight && qualityHeight(it) <= targetHeight },
+                ).minByOrNull { qualityHeight(it) }
 
             if (nextHigherStream != null) {
                 val nextHeight = qualityHeight(nextHigherStream)
@@ -375,8 +382,7 @@ class QualityManager(
         val estimatedBandwidth = bandwidthMeter?.bitrateEstimate ?: 1_000_000L
 
         val nextLowerStream =
-            getWorkingStreams()
-                .filter { qualityHeight(it) < currentHeight }
+            preferCurrentCodec(getWorkingStreams().filter { qualityHeight(it) < currentHeight })
                 .maxByOrNull { qualityHeight(it) }
 
         if (nextLowerStream != null) {
@@ -486,6 +492,20 @@ class QualityManager(
         }
     }
 
+    /**
+     * Narrows [candidates] to the codec that is already playing, where that codec offers this
+     * resolution at all.
+     *
+     * An adaptive switch re-prepares the source at the current position; changing codec on the way
+     * adds a decoder teardown to that, so a player that was merely short of bandwidth stalls twice.
+     * Every quality in the list is usually published in several codecs, so holding the codec steady
+     * costs nothing — and when it is not, the plain pick still applies.
+     */
+    private fun preferCurrentCodec(candidates: List<VideoStream>): List<VideoStream> {
+        val currentCodec = currentVideoStream?.let(VideoCodecUtils::codecKeyFromStream) ?: return candidates
+        return candidates.filter { VideoCodecUtils.codecKeyFromStream(it) == currentCodec }.ifEmpty { candidates }
+    }
+
     private fun streamKey(stream: VideoStream): String = stream.getContent().takeIf { it.isNotBlank() } ?: stream.hashCode().toString()
 
     private fun failureVariantKey(stream: VideoStream): String {
@@ -501,10 +521,19 @@ class QualityManager(
      * Increment buffering count for adaptive quality tracking.
      */
     fun incrementBufferingCount() {
-        if (isAdaptiveQualityEnabled) {
-            consecutiveBufferingCount++
+        if (!isAdaptiveQualityEnabled) return
+        // A switch re-prepares the source, and a re-prepare always rebuffers. Counting that stall is
+        // what turned one downgrade into the next: the player flapped down the quality ladder
+        // instead of settling on the quality it had just chosen.
+        if (isSettlingAfterQualitySwitch()) {
+            Log.d(TAG, "Adaptive: ignoring buffering while the last quality switch settles")
+            return
         }
+        consecutiveBufferingCount++
     }
+
+    private fun isSettlingAfterQualitySwitch(): Boolean =
+        lastQualitySwitchTime > 0L && System.currentTimeMillis() - lastQualitySwitchTime < QUALITY_SWITCH_SETTLE_MS
 
     /**
      * Reset buffering count (called when playback is smooth).

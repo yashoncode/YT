@@ -1,6 +1,7 @@
 package com.yt.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -61,12 +64,13 @@ private val NAV_LABEL_LINE_HEIGHT = 15.dp
 // The bar floats: it is inset from the screen edges and rounded on every corner, so content
 // passing underneath stays visible around it.
 private val NAV_BAR_SIDE_MARGIN = 14.dp
-private val NAV_BAR_BOTTOM_MARGIN = 10.dp
+private val NAV_BAR_BOTTOM_MARGIN = 6.dp
 private val NAV_BAR_SHADOW = 10.dp
 private val NAV_BAR_CORNER = 28.dp
 private val NAV_BAR_BLUR_RADIUS = 28.dp
 private const val GLASS_TINT_ALPHA = 0.55f
 private const val GLASS_BORDER_ALPHA = 0.25f
+private const val NAV_BAR_WOBBLE_SQUASH = 0.94f
 
 /**
  * Height the bar occupies at [barScale], without the system navigation-bar inset. Callers reserve
@@ -124,6 +128,22 @@ fun FloatingBottomNavBar(
     val isOverflowSelected = overflowItems.any { it.index == selectedIndex }
     var showMoreMenu by remember { mutableStateOf(false) }
 
+    // Squash and spring back on every tab change. Skipped for the first composition, which is a
+    // selection too but not a switch, and would otherwise wobble the bar on every cold start.
+    val wobble = remember { Animatable(1f) }
+    var wobbleArmed by remember { mutableStateOf(false) }
+    LaunchedEffect(selectedIndex) {
+        if (!wobbleArmed) {
+            wobbleArmed = true
+            return@LaunchedEffect
+        }
+        wobble.snapTo(NAV_BAR_WOBBLE_SQUASH)
+        wobble.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(dampingRatio = 0.3f, stiffness = 900f),
+        )
+    }
+
     val shape = RoundedCornerShape(NAV_BAR_CORNER)
     // Blurring the real backdrop needs the frame behind the bar, which only the shell can record;
     // without a state to read it from, the glass setting degrades to a translucent bar.
@@ -139,13 +159,16 @@ fun FloatingBottomNavBar(
     Surface(
         modifier =
             modifier
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .graphicsLayer {
+                    scaleX = wobble.value
+                    scaleY = 1f + (1f - wobble.value) * 0.7f
+                }.windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(horizontal = NAV_BAR_SIDE_MARGIN)
                 .padding(bottom = NAV_BAR_BOTTOM_MARGIN)
                 .fillMaxWidth()
                 .shadow(elevation = NAV_BAR_SHADOW, shape = shape, clip = false)
                 .clip(shape)
-                .then(if (blurred) Modifier.hazeEffect(hazeState!!, hazeStyle) else Modifier),
+                .then(if (hazeState != null && blurred) Modifier.hazeEffect(hazeState, hazeStyle) else Modifier),
         shape = shape,
         color = if (blurred) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
         border =

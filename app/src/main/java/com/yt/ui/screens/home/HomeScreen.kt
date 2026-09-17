@@ -46,6 +46,12 @@ import com.yt.ui.components.layout.topbar.YTTopBar
 import com.yt.ui.components.layout.topbar.YTTopBarSearchField
 import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.YTPullToRefreshBox
+import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -55,6 +61,8 @@ import kotlinx.coroutines.launch
 
 private const val IMPRESSION_DEBOUNCE_MS = 500L
 private const val MILLIS_PER_SECOND = 1000L
+private val TOP_BAR_BLUR_RADIUS = 24.dp
+private const val TOP_BAR_GLASS_ALPHA = 0.5f
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
@@ -131,11 +139,32 @@ fun HomeScreen(
             }
     }
 
+    // The feed runs full-bleed under the top bar; the bar blurs it rather than hiding it. The
+    // state is local to this screen because the shell's own state already contains this bar, and
+    // an effect may not sample a source it is part of.
+    val feedHazeState = rememberHazeState()
+    val backdrop = MaterialTheme.colorScheme.background
+    val topBarHazeStyle =
+        remember(backdrop) {
+            HazeStyle(
+                backgroundColor = backdrop,
+                tint = HazeTint(backdrop.copy(alpha = TOP_BAR_GLASS_ALPHA)),
+                blurRadius = TOP_BAR_BLUR_RADIUS,
+            )
+        }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             YTTopBar(
+                modifier =
+                    Modifier.hazeEffect(feedHazeState, topBarHazeStyle) {
+                        // Solid across the bar, gone by the time it meets the feed, so there is no
+                        // edge where the blur stops.
+                        progressive =
+                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                    },
                 title = {
                     YTTopBarSearchField(
                         onClick = onSearchClick,
@@ -168,8 +197,8 @@ fun HomeScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .background(MaterialTheme.colorScheme.background),
+                    .background(MaterialTheme.colorScheme.background)
+                    .hazeSource(feedHazeState),
         ) {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 val isListView = homeViewMode == HomeViewMode.LIST
@@ -210,6 +239,7 @@ fun HomeScreen(
                             onSeeAllHistory = onNavigateToHistory,
                             onOpenShortsFeed = onOpenShortsFeed,
                             onRefresh = { viewModel.refreshFeed() },
+                            topContentPadding = padding.calculateTopPadding(),
                         )
                     }
                 }

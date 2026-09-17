@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
@@ -54,6 +55,7 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun MiniPlayerContent(
     track: MusicTrack,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
     // False while the expanded player covers the (alpha-0) mini bar: the waveform and marquee
     // stop forcing frames nobody can see. Values still update.
@@ -74,7 +76,7 @@ internal fun MiniPlayerContent(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(start = 10.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                    .padding(start = 10.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -161,12 +163,12 @@ internal fun MiniPlayerContent(
             ) {
                 IconButton(
                     onClick = { EnhancedMusicPlayerManager.playPrevious() },
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Filled.SkipPrevious,
                         contentDescription = stringResource(R.string.previous),
-                        modifier = Modifier.size(26.dp),
+                        modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -216,13 +218,27 @@ internal fun MiniPlayerContent(
 
                 IconButton(
                     onClick = { EnhancedMusicPlayerManager.playNext() },
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Filled.SkipNext,
                         contentDescription = stringResource(R.string.next),
-                        modifier = Modifier.size(26.dp),
+                        modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                // The full player has its own way out; from the mini bar a swipe was the only one,
+                // and there is nothing on screen that says so.
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.close),
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
