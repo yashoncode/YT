@@ -12,10 +12,6 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.WorkerParameters
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import com.yt.data.local.ChannelSubscription
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.SubscriptionRepository
@@ -23,6 +19,10 @@ import com.yt.data.shorts.ChannelReelIndex
 import com.yt.data.subscriptions.ChannelRssClient
 import com.yt.data.subscriptions.ChannelRssParser
 import com.yt.data.subscriptions.SubscriptionFeedRepository
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

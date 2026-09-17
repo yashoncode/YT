@@ -10,7 +10,6 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import com.yt.R
-import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.WIDGET_HERO_CORNER_DP
 import com.yt.widget.core.WIDGET_HERO_HEIGHT_PX
 import com.yt.widget.core.WIDGET_HERO_WIDTH_PX
@@ -21,6 +20,7 @@ import com.yt.widget.core.WidgetDeepLink
 import com.yt.widget.core.WidgetImageLoader
 import com.yt.widget.core.WidgetVideoItem
 import com.yt.widget.core.WidgetVideoPanel
+import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.widgetColorsFlow
 import com.yt.widget.core.widgetEntryPoint
 import kotlinx.coroutines.Dispatchers

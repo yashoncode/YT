@@ -260,8 +260,12 @@ object YouTube {
             // into the single shelf the UI expects. Filtered searches still send a musicShelfRenderer.
             val looseItems =
                 sections
-                    .flatMap { it.itemSectionRenderer?.contents?.getItems().orEmpty() }
-                    .mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
+                    .flatMap {
+                        it.itemSectionRenderer
+                            ?.contents
+                            ?.getItems()
+                            .orEmpty()
+                    }.mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
                     .distinctBy { it.id }
             SearchSummaryPage(
                 summaries =
@@ -300,8 +304,14 @@ object YouTube {
                 items =
                     sections
                         .flatMap { section ->
-                            section.musicShelfRenderer?.contents?.getItems().orEmpty() +
-                                section.itemSectionRenderer?.contents?.getItems().orEmpty()
+                            section.musicShelfRenderer
+                                ?.contents
+                                ?.getItems()
+                                .orEmpty() +
+                                section.itemSectionRenderer
+                                    ?.contents
+                                    ?.getItems()
+                                    .orEmpty()
                         }.mapNotNull { SearchPage.toYTItem(it) },
                 continuation =
                     sections
@@ -1396,9 +1406,7 @@ object YouTube {
         )
     }
 
-    private fun com.yt.innertube.models.response.ChannelSearchResponse.VideoRenderer.channelAvatarUrls(
-        fallback: String,
-    ): List<String> {
+    private fun com.yt.innertube.models.response.ChannelSearchResponse.VideoRenderer.channelAvatarUrls(fallback: String): List<String> {
         val supported = channelThumbnailSupportedRenderers
         val stackAvatars =
             listOfNotNull(

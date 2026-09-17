@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.map
 private val Context.appUiModeDataStore: DataStore<Preferences> by safePreferencesDataStore(name = "app_ui_mode")
 
 /** Stores the interface override independently from playback preferences. */
-class AppUiModePreferences(context: Context) {
+class AppUiModePreferences(
+    context: Context,
+) {
     private val appContext = context.applicationContext
 
-    val mode: Flow<AppUiMode> = appContext.appUiModeDataStore.data.map { preferences ->
-        AppUiMode.fromStorage(preferences[MODE])
-    }
+    val mode: Flow<AppUiMode> =
+        appContext.appUiModeDataStore.data.map { preferences ->
+            AppUiMode.fromStorage(preferences[MODE])
+        }
 
     suspend fun setMode(mode: AppUiMode) {
         appContext.appUiModeDataStore.edit { preferences ->

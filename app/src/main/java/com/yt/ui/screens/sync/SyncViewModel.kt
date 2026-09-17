@@ -1,10 +1,10 @@
 package com.yt.ui.screens.sync
 
 import androidx.lifecycle.ViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.yt.sync.SyncManager
 import com.yt.sync.SyncState
 import com.yt.sync.protocol.SyncRole
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 

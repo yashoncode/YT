@@ -35,14 +35,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yt.R
 import com.yt.data.transcript.TranscriptCue
+import com.yt.ui.components.shared.MediaArtworkTint
 import com.yt.ui.components.shared.YTBottomSheet
 import com.yt.ui.components.shared.YTLoadingIndicator
 import com.yt.ui.components.shared.YTSearchField
 import com.yt.ui.components.shared.YTSheetHeader
-import com.yt.ui.components.shared.MediaArtworkTint
 import com.yt.ui.components.shared.defaultSheetExpandedHeight
-import com.yt.ui.components.shared.rememberYTBottomSheetState
 import com.yt.ui.components.shared.rememberMediaArtworkTint
+import com.yt.ui.components.shared.rememberYTBottomSheetState
 import com.yt.utils.formatDurationMillis
 
 private val TimestampWidth = 52.dp

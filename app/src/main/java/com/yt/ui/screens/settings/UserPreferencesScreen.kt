@@ -40,9 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yt.R
 import com.yt.data.local.PlayerPreferences
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.NeuroTopicCatalog
 import com.yt.data.recommendation.TopicCategory
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.ui.components.layout.topbar.YTTopBar
 import com.yt.ui.components.topicCategoryIcon
 import com.yt.ui.theme.extendedColors

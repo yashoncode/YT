@@ -22,10 +22,10 @@ import com.yt.R
 import com.yt.innertube.pages.MoodAndGenres
 import com.yt.ui.components.layout.topbar.YTTopBar
 import com.yt.ui.components.music.section.MoodCategorySection
-import com.yt.ui.components.shared.YTEmptyState
-import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.ShimmerHost
 import com.yt.ui.components.shared.ShimmerMoodButton
+import com.yt.ui.components.shared.YTEmptyState
+import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.flowGridColumns
 
 @OptIn(ExperimentalMaterial3Api::class)

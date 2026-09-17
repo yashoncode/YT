@@ -17,7 +17,6 @@ import kotlin.math.pow
 @UnstableApi
 @SuppressWarnings("Deprecated")
 class CustomEqualizerAudioProcessor : AudioProcessor {
-
     private var sampleRate = 0
     private var channelCount = 0
     private var encoding = C.ENCODING_INVALID
@@ -31,6 +30,7 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
     private var filters: List<BiquadFilter> = emptyList()
     private var preampGain: Double = 1.0
     private var pendingProfile: ParametricEQ? = null
+
     @Volatile
     private var lastAppliedProfile: ParametricEQ? = null
 
@@ -90,17 +90,18 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
             return
         }
 
-        filters = bands
-            .filter { it.enabled && it.frequency < sampleRate / 2.0 }
-            .map { band ->
-                BiquadFilter(
-                    sampleRate = sampleRate,
-                    frequency = band.frequency,
-                    gain = band.gain,
-                    q = band.q,
-                    filterType = band.filterType
-                )
-            }
+        filters =
+            bands
+                .filter { it.enabled && it.frequency < sampleRate / 2.0 }
+                .map { band ->
+                    BiquadFilter(
+                        sampleRate = sampleRate,
+                        frequency = band.frequency,
+                        gain = band.gain,
+                        q = band.q,
+                        filterType = band.filterType,
+                    )
+                }
 
         Log.d(TAG, "Created ${filters.size} biquad filters from ${bands.size} bands (PK/LSC/HSC)")
     }
@@ -122,7 +123,6 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
         }
 
         if (encoding != C.ENCODING_PCM_16BIT || channelCount > 2) {
-
             Log.w(TAG, "Unsupported format for EQ (encoding=$encoding, channels=$channelCount) — bypassing")
             isActive = false
             return AudioProcessor.AudioFormat.NOT_SET
@@ -166,6 +166,7 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
             C.ENCODING_PCM_16BIT -> {
                 processAudioBuffer16Bit(inputBuffer, outputBuffer)
             }
+
             else -> {
                 outputBuffer.put(inputBuffer)
             }
@@ -177,9 +178,11 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
     /**
      * Process 16-bit PCM audio through all biquad filters
      */
-    private fun processAudioBuffer16Bit(input: ByteBuffer, output: ByteBuffer) {
-
-        val sampleCount = input.remaining() / 2 
+    private fun processAudioBuffer16Bit(
+        input: ByteBuffer,
+        output: ByteBuffer,
+    ) {
+        val sampleCount = input.remaining() / 2
 
         repeat(sampleCount / channelCount) {
             when (channelCount) {
@@ -200,6 +203,7 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
                     val outputSample = (processed * 32768.0).coerceIn(-32768.0, 32767.0).toInt().toShort()
                     output.putShort(outputSample)
                 }
+
                 2 -> {
                     // Stereo
                     val leftSample = input.getShort().toDouble() / 32768.0
@@ -226,6 +230,7 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
                     output.putShort(outputLeft)
                     output.putShort(outputRight)
                 }
+
                 else -> {
                     repeat(channelCount) {
                         output.putShort(input.getShort())
@@ -241,9 +246,7 @@ class CustomEqualizerAudioProcessor : AudioProcessor {
         return buffer
     }
 
-    override fun isEnded(): Boolean {
-        return inputEnded && outputBuffer.remaining() == 0
-    }
+    override fun isEnded(): Boolean = inputEnded && outputBuffer.remaining() == 0
 
     @Deprecated("Deprecated in Java")
     override fun flush() {

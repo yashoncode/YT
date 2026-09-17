@@ -1,14 +1,14 @@
 package com.yt.di
 
 import android.content.Context
+import com.yt.data.local.PlayerPreferences
+import com.yt.data.repository.YouTubeRepository
+import com.yt.data.shorts.ChannelReelIndex
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import com.yt.data.local.PlayerPreferences
-import com.yt.data.repository.YouTubeRepository
-import com.yt.data.shorts.ChannelReelIndex
 import javax.inject.Singleton
 
 @Module

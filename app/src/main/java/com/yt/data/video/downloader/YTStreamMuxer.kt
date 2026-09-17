@@ -11,7 +11,7 @@ import java.nio.ByteBuffer
 
 object YTStreamMuxer {
     private const val TAG = "YTStreamMuxer"
-    private const val BUFFER_SIZE = 8 * 1024 * 1024  // 8 MB — handles large frames at 4K/8K
+    private const val BUFFER_SIZE = 8 * 1024 * 1024 // 8 MB — handles large frames at 4K/8K
 
     /**
      * Muxes video and audio streams into a single MP4 file.
@@ -25,7 +25,7 @@ object YTStreamMuxer {
         videoPath: String,
         audioPath: String,
         outputPath: String,
-        onProgress: ((Float) -> Unit)? = null
+        onProgress: ((Float) -> Unit)? = null,
     ): Boolean {
         var videoExtractor: MediaExtractor? = null
         var audioExtractor: MediaExtractor? = null
@@ -59,11 +59,13 @@ object YTStreamMuxer {
             val videoFormat = videoExtractor.getTrackFormat(videoTrackIndex)
             val videoMime = videoFormat.getString(MediaFormat.KEY_MIME) ?: ""
 
-            val useWebM = videoMime.contains("vp9", ignoreCase = true) ||
-                          videoMime.contains("vp8", ignoreCase = true) ||
-                          videoMime.contains("vp09", ignoreCase = true)
-            val isAv1   = videoMime.contains("av01", ignoreCase = true) ||
-                          videoMime.contains("av1", ignoreCase = true)
+            val useWebM =
+                videoMime.contains("vp9", ignoreCase = true) ||
+                    videoMime.contains("vp8", ignoreCase = true) ||
+                    videoMime.contains("vp09", ignoreCase = true)
+            val isAv1 =
+                videoMime.contains("av01", ignoreCase = true) ||
+                    videoMime.contains("av1", ignoreCase = true)
 
             val audioTrackIndex = selectTrack(audioExtractor, "audio/")
             if (audioTrackIndex < 0) {
@@ -74,8 +76,9 @@ object YTStreamMuxer {
             val audioFormat = audioExtractor.getTrackFormat(audioTrackIndex)
             val audioMime = audioFormat.getString(MediaFormat.KEY_MIME) ?: ""
 
-            val isOpusOrVorbisAudio = audioMime.contains("opus", ignoreCase = true) ||
-                                      audioMime.contains("vorbis", ignoreCase = true)
+            val isOpusOrVorbisAudio =
+                audioMime.contains("opus", ignoreCase = true) ||
+                    audioMime.contains("vorbis", ignoreCase = true)
 
             // ── AV1 and VP9/VP8 routing → YTMkvMuxer ───────────────────────────────
             // AV1 requires MKV on API < 34. VP9/VP8 routes here too because Android's
@@ -87,16 +90,21 @@ object YTStreamMuxer {
             }
 
             if (!useWebM && !isAv1 && isOpusOrVorbisAudio) {
-                Log.e(TAG, "INCOMPATIBLE audio codec for MP4 container: '$audioMime'. " +
-                    "Require AAC (audio/mp4a-latm) for H264/H265/HEVC video. " +
-                    "Audio path: $audioPath")
+                Log.e(
+                    TAG,
+                    "INCOMPATIBLE audio codec for MP4 container: '$audioMime'. " +
+                        "Require AAC (audio/mp4a-latm) for H264/H265/HEVC video. " +
+                        "Audio path: $audioPath",
+                )
                 return false
             }
 
-            val muxerFormat = if (useWebM)
-                MediaMuxer.OutputFormat.MUXER_OUTPUT_WEBM
-            else
-                MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
+            val muxerFormat =
+                if (useWebM) {
+                    MediaMuxer.OutputFormat.MUXER_OUTPUT_WEBM
+                } else {
+                    MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
+                }
 
             Log.d(TAG, "Video codec: $videoMime → ${if (useWebM) "WebM" else "MPEG-4"} container")
             muxer = MediaMuxer(outputPath, muxerFormat)
@@ -132,7 +140,6 @@ object YTStreamMuxer {
             onProgress?.invoke(1f)
             Log.d(TAG, "Muxing successful: $outputPath (${File(outputPath).length()} bytes)")
             return true
-
         } catch (e: Exception) {
             Log.e(TAG, "Muxing failed", e)
             try {
@@ -142,9 +149,18 @@ object YTStreamMuxer {
             }
             return false
         } finally {
-            try { videoExtractor?.release() } catch (_: Exception) {}
-            try { audioExtractor?.release() } catch (_: Exception) {}
-            try { muxer?.release() } catch (_: Exception) {}
+            try {
+                videoExtractor?.release()
+            } catch (_: Exception) {
+            }
+            try {
+                audioExtractor?.release()
+            } catch (_: Exception) {
+            }
+            try {
+                muxer?.release()
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -152,7 +168,10 @@ object YTStreamMuxer {
      * Extracts just the audio from a video file (no transcoding — raw copy).
      * Useful for audio-only downloads from a combined source.
      */
-    fun extractAudio(inputPath: String, outputPath: String): Boolean {
+    fun extractAudio(
+        inputPath: String,
+        outputPath: String,
+    ): Boolean {
         var extractor: MediaExtractor? = null
         var muxer: MediaMuxer? = null
 
@@ -180,15 +199,27 @@ object YTStreamMuxer {
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Audio extraction failed", e)
-            try { File(outputPath).takeIf { it.exists() }?.delete() } catch (_: Exception) {}
+            try {
+                File(outputPath).takeIf { it.exists() }?.delete()
+            } catch (_: Exception) {
+            }
             return false
         } finally {
-            try { extractor?.release() } catch (_: Exception) {}
-            try { muxer?.release() } catch (_: Exception) {}
+            try {
+                extractor?.release()
+            } catch (_: Exception) {
+            }
+            try {
+                muxer?.release()
+            } catch (_: Exception) {
+            }
         }
     }
 
-    private fun selectTrack(extractor: MediaExtractor, mimePrefix: String): Int {
+    private fun selectTrack(
+        extractor: MediaExtractor,
+        mimePrefix: String,
+    ): Int {
         for (i in 0 until extractor.trackCount) {
             val format = extractor.getTrackFormat(i)
             val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
@@ -205,12 +236,12 @@ object YTStreamMuxer {
         muxerTrackIndex: Int,
         buffer: ByteBuffer,
         bufferInfo: MediaCodec.BufferInfo,
-        onSample: ((Long) -> Unit)? = null
+        onSample: ((Long) -> Unit)? = null,
     ) {
         extractor.seekTo(0, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
         while (true) {
             if (Thread.interrupted()) throw InterruptedException("Mux cancelled")
-            
+
             bufferInfo.offset = 0
             bufferInfo.size = extractor.readSampleData(buffer, 0)
             if (bufferInfo.size < 0) break
@@ -223,11 +254,13 @@ object YTStreamMuxer {
         }
     }
 
-    private fun MediaFormat.getLongOrDefault(key: String, default: Long): Long {
-        return try {
+    private fun MediaFormat.getLongOrDefault(
+        key: String,
+        default: Long,
+    ): Long =
+        try {
             getLong(key)
         } catch (_: Exception) {
             default
         }
-    }
 }

@@ -4,15 +4,13 @@ import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.R
 import com.yt.data.engagement.VideoEngagementUseCase
 import com.yt.data.local.PlaylistRepository
 import com.yt.data.local.entity.DownloadItemStatus
 import com.yt.data.model.Video
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.InteractionType
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.repository.YouTubeRepository
 import com.yt.data.video.VideoDownloadManager
 import com.yt.innertube.YouTube
@@ -22,6 +20,8 @@ import com.yt.player.sabr.integration.SabrUrlResolver
 import com.yt.player.stream.AudioStreamSelector
 import com.yt.player.stream.VideoCodecUtils
 import com.yt.utils.ThumbnailUrlResolver
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

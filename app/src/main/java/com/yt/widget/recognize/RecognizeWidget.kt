@@ -22,10 +22,10 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.size
 import com.yt.R
-import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.ShapeDecor
 import com.yt.widget.core.WidgetDeepLink
 import com.yt.widget.core.WidgetShape
+import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.widgetColorsFlow
 import com.yt.widget.core.widgetSurface
 import kotlinx.coroutines.flow.first
@@ -35,8 +35,10 @@ import kotlinx.coroutines.flow.first
  * primary-container block with the launcher's corner radius and a single mic glyph.
  */
 class RecognizeWidget : GlanceAppWidget() {
-
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
+    override suspend fun provideGlance(
+        context: Context,
+        id: GlanceId,
+    ) {
         val colorsFlow = widgetColorsFlow(context)
         val initialColors = colorsFlow.first()
         provideContent {
@@ -52,10 +54,11 @@ class RecognizeWidget : GlanceAppWidget() {
 private fun RecognizeContent() {
     val context = LocalContext.current
     Box(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .widgetSurface(GlanceTheme.colors.primaryContainer)
-            .clickable(actionStartActivity(WidgetDeepLink.openRoute(context, WidgetDeepLink.ROUTE_RECOGNIZE))),
+        modifier =
+            GlanceModifier
+                .fillMaxSize()
+                .widgetSurface(GlanceTheme.colors.primaryContainer)
+                .clickable(actionStartActivity(WidgetDeepLink.openRoute(context, WidgetDeepLink.ROUTE_RECOGNIZE))),
         contentAlignment = Alignment.Center,
     ) {
         // Sunny decor from the expressive shape library carries the mic glyph

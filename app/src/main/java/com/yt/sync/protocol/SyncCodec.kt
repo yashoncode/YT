@@ -18,7 +18,6 @@ import java.util.zip.GZIPOutputStream
  * the protocol layer ([SyncProtocol]).
  */
 object SyncCodec {
-
     const val VERSION: Byte = 0x01
     const val HEADER_LEN = 10 // ver(1) + frame_type(1) + seq(8)
     const val AAD_LEN = 26 // ver(1) + session_id(16) + frame_type(1) + seq(8)
@@ -32,12 +31,15 @@ object SyncCodec {
         return bos.toByteArray()
     }
 
-    fun gunzip(data: ByteArray): ByteArray =
-        GZIPInputStream(ByteArrayInputStream(data)).use { it.readBytes() }
+    fun gunzip(data: ByteArray): ByteArray = GZIPInputStream(ByteArrayInputStream(data)).use { it.readBytes() }
 
     // --- AAD ---
 
-    fun buildAad(sessionId: ByteArray, frameType: Byte, seq: Long): ByteArray {
+    fun buildAad(
+        sessionId: ByteArray,
+        frameType: Byte,
+        seq: Long,
+    ): ByteArray {
         require(sessionId.size == SyncCrypto.SESSION_ID_LEN) { "session id must be 16 bytes" }
         val aad = ByteArray(AAD_LEN)
         aad[0] = VERSION
@@ -50,7 +52,13 @@ object SyncCodec {
     // --- seal / open ---
 
     /** Build a full wire message: `gzip(plaintext)` → AES-256-GCM → `header ∥ nonce ∥ ct∥tag`. */
-    fun seal(sealKey: ByteArray, sessionId: ByteArray, frameType: Byte, seq: Long, plaintext: ByteArray): ByteArray {
+    fun seal(
+        sealKey: ByteArray,
+        sessionId: ByteArray,
+        frameType: Byte,
+        seq: Long,
+        plaintext: ByteArray,
+    ): ByteArray {
         val compressed = gzip(plaintext)
         val nonce = SyncCrypto.randomNonce()
         val aad = buildAad(sessionId, frameType, seq)
@@ -65,14 +73,22 @@ object SyncCodec {
         return out
     }
 
-    data class Opened(val frameType: Byte, val seq: Long, val plaintext: ByteArray)
+    data class Opened(
+        val frameType: Byte,
+        val seq: Long,
+        val plaintext: ByteArray,
+    )
 
     /**
      * Parse + decrypt + gunzip a wire message. Throws [IllegalArgumentException] for a malformed
      * envelope and [javax.crypto.AEADBadTagException] when authentication fails (caller drops the
      * socket). Does NOT enforce the expected sequence — that is the protocol layer's job.
      */
-    fun open(openKey: ByteArray, sessionId: ByteArray, message: ByteArray): Opened {
+    fun open(
+        openKey: ByteArray,
+        sessionId: ByteArray,
+        message: ByteArray,
+    ): Opened {
         require(message.size >= MIN_FRAME_LEN) { "frame too short: ${message.size}" }
         require(message[0] == VERSION) { "unsupported frame version: ${message[0]}" }
         val frameType = message[1]
@@ -87,7 +103,11 @@ object SyncCodec {
 
     // --- big-endian u64 helpers ---
 
-    fun writeLongBE(buf: ByteArray, offset: Int, value: Long) {
+    fun writeLongBE(
+        buf: ByteArray,
+        offset: Int,
+        value: Long,
+    ) {
         buf[offset] = (value ushr 56).toByte()
         buf[offset + 1] = (value ushr 48).toByte()
         buf[offset + 2] = (value ushr 40).toByte()
@@ -98,7 +118,10 @@ object SyncCodec {
         buf[offset + 7] = value.toByte()
     }
 
-    fun readLongBE(buf: ByteArray, offset: Int): Long {
+    fun readLongBE(
+        buf: ByteArray,
+        offset: Int,
+    ): Long {
         var v = 0L
         for (i in 0 until 8) {
             v = (v shl 8) or (buf[offset + i].toLong() and 0xFF)

@@ -2,7 +2,6 @@ package com.yt.player.stream
 
 import android.content.Context
 import android.util.Log
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.VideoQuality
 import com.yt.data.local.ViewHistory
@@ -18,6 +17,7 @@ import com.yt.player.PlaybackStartupPolicy
 import com.yt.player.awaitFirstPlaybackResolver
 import com.yt.player.error.PlayerDiagnostics
 import com.yt.utils.NetworkState
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

@@ -9,10 +9,10 @@ package com.yt.ui.screens.home
 import com.google.common.truth.Truth.assertThat
 import com.yt.data.local.VideoHistoryEntry
 import com.yt.data.model.Video
-import com.yt.data.recommendation.YTPersona
 import com.yt.data.recommendation.GraphSeedInput
 import com.yt.data.recommendation.GraphSeedSource
 import com.yt.data.recommendation.UserBrain
+import com.yt.data.recommendation.YTPersona
 import org.junit.Test
 
 /** I-10: behavioral coverage for the home-feed consumer logic (R-2 seeds, I-1 impressions). */

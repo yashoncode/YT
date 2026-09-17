@@ -1,6 +1,6 @@
-//==================================================================================================
-//This implementation was based on metrolist's (https://github.com/MetrolistGroup/Metrolist)
-//==================================================================================================
+// ==================================================================================================
+// This implementation was based on metrolist's (https://github.com/MetrolistGroup/Metrolist)
+// ==================================================================================================
 
 package com.yt.data.lyrics
 
@@ -16,13 +16,14 @@ class PaxsenixLyricsProvider : LyricsProvider {
         title: String,
         artist: String,
         duration: Int,
-        album: String?
-    ): Result<List<LyricsEntry>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val context = com.yt.YTApplication.appContext
-            Paxsenix.init(context)
-            val lrc = Paxsenix.getLyrics(title, artist, duration, album).getOrThrow()
-            LyricsUtils.parseLyrics(lrc)
+        album: String?,
+    ): Result<List<LyricsEntry>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val context = com.yt.YTApplication.appContext
+                Paxsenix.init(context)
+                val lrc = Paxsenix.getLyrics(title, artist, duration, album).getOrThrow()
+                LyricsUtils.parseLyrics(lrc)
+            }
         }
-    }
 }

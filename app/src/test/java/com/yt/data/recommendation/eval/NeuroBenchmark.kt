@@ -9,7 +9,6 @@ package com.yt.data.recommendation.eval
 
 import com.yt.data.recommendation.ContentVector
 import com.yt.data.recommendation.FeedEntry
-import com.yt.data.recommendation.YTPersona
 import com.yt.data.recommendation.NeuroDiscovery
 import com.yt.data.recommendation.NeuroScoring
 import com.yt.data.recommendation.NeuroTokenizer
@@ -18,6 +17,7 @@ import com.yt.data.recommendation.ScoredVideo
 import com.yt.data.recommendation.TopicEvidence
 import com.yt.data.recommendation.UserBrain
 import com.yt.data.recommendation.WatchEntry
+import com.yt.data.recommendation.YTPersona
 import java.util.Random
 
 /**

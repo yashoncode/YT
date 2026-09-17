@@ -42,9 +42,10 @@ fun TvSponsorSkipButton(
     }
 
     activeSegment?.let { segment ->
-        val label = segment.category.replaceFirstChar {
-            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-        }
+        val label =
+            segment.category.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+            }
         TvButton(
             text = stringResource(R.string.tv_player_skip_segment, label),
             onClick = { onSkipTo((segment.endTime * 1_000L).toLong()) },

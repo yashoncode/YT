@@ -37,9 +37,9 @@ import com.yt.data.model.Channel
 import com.yt.data.model.Video
 import com.yt.ui.components.ChannelAvatarImage
 import com.yt.ui.components.VideoCardFullWidth
+import com.yt.ui.components.shared.MediaArtworkTint
 import com.yt.ui.components.shared.YTSubscribeButton
 import com.yt.ui.components.shared.YTSubscribeButtonSize
-import com.yt.ui.components.shared.MediaArtworkTint
 import com.yt.ui.components.shared.rememberMediaArtworkTint
 import com.yt.utils.formatSubscriberCount
 

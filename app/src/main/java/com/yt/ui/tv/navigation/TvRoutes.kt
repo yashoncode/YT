@@ -24,8 +24,7 @@ object TvRoutes {
 
     fun playlist(playlistId: String): String = "playlist/${Uri.encode(playlistId)}"
 
-    fun musicCollection(collectionId: String): String =
-        "musicCollection/${Uri.encode(collectionId)}"
+    fun musicCollection(collectionId: String): String = "musicCollection/${Uri.encode(collectionId)}"
 
     fun musicArtist(channelId: String): String = "musicArtist/${Uri.encode(channelId)}"
 }

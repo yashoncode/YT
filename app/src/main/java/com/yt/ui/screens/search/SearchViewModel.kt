@@ -9,8 +9,6 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.data.local.SearchFilter
 import com.yt.data.model.Video
 import com.yt.data.paging.SearchPagingSource
@@ -22,6 +20,8 @@ import com.yt.data.shorts.queue.ShortsQueueHandoff
 import com.yt.data.shorts.queue.ShortsQueueSource
 import com.yt.innertube.pages.search.SearchHeader
 import com.yt.innertube.pages.search.SearchSuggestion
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

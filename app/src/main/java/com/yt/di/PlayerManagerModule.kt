@@ -1,11 +1,11 @@
 package com.yt.di
 
+import com.yt.player.EnhancedPlayerManager
+import com.yt.utils.PerformanceDispatcher
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import com.yt.player.EnhancedPlayerManager
-import com.yt.utils.PerformanceDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Qualifier
 

@@ -48,9 +48,9 @@ import com.yt.ui.components.music.section.musicHomeFeed
 import com.yt.ui.components.music.sheet.MusicCollectionActionItem
 import com.yt.ui.components.music.sheet.MusicCollectionQuickActionsSheet
 import com.yt.ui.components.music.sheet.MusicQuickActionsSheet
+import com.yt.ui.components.shared.MusicScreenShimmerLoading
 import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.YTPullToRefreshBox
-import com.yt.ui.components.shared.MusicScreenShimmerLoading
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import java.util.Random

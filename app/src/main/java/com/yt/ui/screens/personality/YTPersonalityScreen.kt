@@ -40,9 +40,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yt.R
+import com.yt.data.recommendation.UserBrain
 import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.YTPersona
-import com.yt.data.recommendation.UserBrain
 import com.yt.data.repository.YouTubeRepository
 import com.yt.ui.components.layout.topbar.YTTopBar
 import kotlinx.coroutines.Dispatchers

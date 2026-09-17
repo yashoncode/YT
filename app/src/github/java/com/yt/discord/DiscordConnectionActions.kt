@@ -3,9 +3,10 @@ package com.yt.discord
 internal suspend fun retryDiscordConnection(
     transport: DiscordPresenceTransport,
     loadTokens: () -> DiscordAuthTokens?,
-): DiscordLinkResult = loadTokens()?.let { tokens ->
-    transport.connect(tokens)
-} ?: transport.link()
+): DiscordLinkResult =
+    loadTokens()?.let { tokens ->
+        transport.connect(tokens)
+    } ?: transport.link()
 
 internal suspend fun unlinkDiscordConnection(
     transport: DiscordPresenceTransport,

@@ -49,7 +49,7 @@ import kotlinx.coroutines.delay
 @Composable
 internal fun InterestsStep(
     selectedTopics: Set<String>,
-    onTopicToggle: (String) -> Unit
+    onTopicToggle: (String) -> Unit,
 ) {
     val categories = NeuroTopicCatalog.TOPIC_CATEGORIES
     var visibleSections by remember { mutableIntStateOf(0) }
@@ -65,15 +65,17 @@ internal fun InterestsStep(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(28.dp)
+        verticalArrangement = Arrangement.spacedBy(28.dp),
     ) {
         item {
             StepHeader(
                 title = stringResource(R.string.onboarding_interests_title),
-                subtitle = if (remaining > 0)
-                    stringResource(R.string.onboarding_interests_hint, MIN_TOPICS, remaining)
-                else
-                    stringResource(R.string.onboarding_interests_ready)
+                subtitle =
+                    if (remaining > 0) {
+                        stringResource(R.string.onboarding_interests_hint, MIN_TOPICS, remaining)
+                    } else {
+                        stringResource(R.string.onboarding_interests_ready)
+                    },
             )
         }
 
@@ -81,12 +83,12 @@ internal fun InterestsStep(
             AnimatedVisibility(
                 visible = index < visibleSections,
                 enter = fadeIn(tween(280)) + slideInVertically(tween(320)) { it / 6 },
-                modifier = Modifier.animateItem()
+                modifier = Modifier.animateItem(),
             ) {
                 InterestCategorySection(
                     category = category,
                     selectedTopics = selectedTopics,
-                    onTopicToggle = onTopicToggle
+                    onTopicToggle = onTopicToggle,
                 )
             }
         }
@@ -100,27 +102,27 @@ internal fun InterestsStep(
 private fun InterestCategorySection(
     category: TopicCategory,
     selectedTopics: Set<String>,
-    onTopicToggle: (String) -> Unit
+    onTopicToggle: (String) -> Unit,
 ) {
     val selectedCount = category.topics.count(selectedTopics::contains)
 
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 imageVector = topicCategoryIcon(category.icon),
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = stringResource(getCategoryNameResId(category.name)).uppercase(),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.5.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (selectedCount > 0) {
                 Text(
@@ -128,23 +130,24 @@ private fun InterestCategorySection(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                    modifier =
+                        Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
                 )
             }
         }
 
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             category.topics.forEach { topic ->
                 TopicPill(
                     label = topic,
                     selected = selectedTopics.contains(topic),
-                    onClick = { onTopicToggle(topic) }
+                    onClick = { onTopicToggle(topic) },
                 )
             }
         }
@@ -155,7 +158,7 @@ private fun InterestCategorySection(
 private fun TopicPill(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     FilterChip(
         selected = selected,
@@ -165,41 +168,47 @@ private fun TopicPill(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         },
-        leadingIcon = if (selected) {
-            {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                )
-            }
-        } else null,
+        leadingIcon =
+            if (selected) {
+                {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(FilterChipDefaults.IconSize),
+                    )
+                }
+            } else {
+                null
+            },
         shape = CircleShape,
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.primary,
-            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = MaterialTheme.colorScheme.outlineVariant
-        )
+        colors =
+            FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+        border =
+            FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = selected,
+                borderColor = MaterialTheme.colorScheme.outlineVariant,
+            ),
     )
 }
 
-private fun getCategoryNameResId(categoryName: String): Int = when {
-    categoryName.contains("Gaming") -> R.string.category_gaming
-    categoryName.contains("Music") -> R.string.category_music
-    categoryName.contains("Technology") -> R.string.category_technology
-    categoryName.contains("Entertainment") -> R.string.category_entertainment
-    categoryName.contains("Education") -> R.string.category_education
-    categoryName.contains("Health & Fitness") -> R.string.category_health_fitness
-    categoryName.contains("Lifestyle") -> R.string.category_lifestyle
-    categoryName.contains("Creative") -> R.string.category_creative
-    categoryName.contains("Science & Nature") -> R.string.category_science_nature
-    else -> R.string.category_news_current_events
-}
+private fun getCategoryNameResId(categoryName: String): Int =
+    when {
+        categoryName.contains("Gaming") -> R.string.category_gaming
+        categoryName.contains("Music") -> R.string.category_music
+        categoryName.contains("Technology") -> R.string.category_technology
+        categoryName.contains("Entertainment") -> R.string.category_entertainment
+        categoryName.contains("Education") -> R.string.category_education
+        categoryName.contains("Health & Fitness") -> R.string.category_health_fitness
+        categoryName.contains("Lifestyle") -> R.string.category_lifestyle
+        categoryName.contains("Creative") -> R.string.category_creative
+        categoryName.contains("Science & Nature") -> R.string.category_science_nature
+        else -> R.string.category_news_current_events
+    }

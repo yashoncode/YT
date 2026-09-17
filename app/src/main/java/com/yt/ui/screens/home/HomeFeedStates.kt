@@ -13,10 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yt.R
-import com.yt.ui.components.shared.YTEmptyState
 import com.yt.ui.components.shared.ShimmerGridVideoCard
 import com.yt.ui.components.shared.ShimmerVideoCardFullWidth
 import com.yt.ui.components.shared.ShimmerVideoCardHorizontal
+import com.yt.ui.components.shared.YTEmptyState
 
 private const val SHIMMER_CARD_COUNT = 12
 

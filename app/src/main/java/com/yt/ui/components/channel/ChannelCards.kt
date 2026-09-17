@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.yt.data.model.Channel
 import com.yt.data.model.Video
+import com.yt.ui.components.shared.ShortWatchedIndicator
 import com.yt.ui.components.shared.YTSubscribeButton
 import com.yt.ui.components.shared.YTSubscribeButtonSize
-import com.yt.ui.components.shared.ShortWatchedIndicator
 import com.yt.ui.theme.extendedColors
 import com.yt.utils.formatSubscriberCount
 import com.yt.utils.formatViewCount

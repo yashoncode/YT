@@ -60,11 +60,11 @@ import com.yt.ui.components.music.item.MusicTrackItem
 import com.yt.ui.components.music.section.MusicCollectionShelf
 import com.yt.ui.components.music.sheet.MusicQuickActionsSheet
 import com.yt.ui.components.shared.CollectionTarget
-import com.yt.ui.components.shared.YTFeedProgress
-import com.yt.ui.components.shared.YTSegmentedGap
 import com.yt.ui.components.shared.MergeIntoCollectionSheet
 import com.yt.ui.components.shared.ReorderHandle
 import com.yt.ui.components.shared.ThumbnailWatchProgress
+import com.yt.ui.components.shared.YTFeedProgress
+import com.yt.ui.components.shared.YTSegmentedGap
 import com.yt.ui.components.shared.flowSegmentShape
 import com.yt.ui.components.shared.rememberReorderableLazyListState
 import com.yt.ui.theme.Dimensions

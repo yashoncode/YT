@@ -33,8 +33,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.yt.R
-import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.WidgetDeepLink
+import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.widgetColorsFlow
 import com.yt.widget.core.widgetSurface
 import kotlinx.coroutines.flow.first
@@ -44,8 +44,10 @@ import kotlinx.coroutines.flow.first
  * shortcut circles (M3 Expressive multi-tonal color blocking). Pure deep links.
  */
 class QuickActionsWidget : GlanceAppWidget() {
-
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
+    override suspend fun provideGlance(
+        context: Context,
+        id: GlanceId,
+    ) {
         val colorsFlow = widgetColorsFlow(context)
         val initialColors = colorsFlow.first()
         provideContent {
@@ -99,12 +101,13 @@ private fun QuickActionsContent() {
 private fun SearchPill(modifier: GlanceModifier) {
     val context = LocalContext.current
     Row(
-        modifier = modifier
-            .height(46.dp)
-            .background(GlanceTheme.colors.primaryContainer)
-            .cornerRadius(23.dp)
-            .padding(horizontal = 14.dp)
-            .clickable(actionStartActivity(WidgetDeepLink.openRoute(context, WidgetDeepLink.ROUTE_SEARCH))),
+        modifier =
+            modifier
+                .height(46.dp)
+                .background(GlanceTheme.colors.primaryContainer)
+                .cornerRadius(23.dp)
+                .padding(horizontal = 14.dp)
+                .clickable(actionStartActivity(WidgetDeepLink.openRoute(context, WidgetDeepLink.ROUTE_SEARCH))),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
@@ -116,11 +119,12 @@ private fun SearchPill(modifier: GlanceModifier) {
         Spacer(modifier = GlanceModifier.width(10.dp))
         Text(
             text = context.getString(R.string.search_in_yt),
-            style = TextStyle(
-                color = GlanceTheme.colors.onPrimaryContainer,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-            ),
+            style =
+                TextStyle(
+                    color = GlanceTheme.colors.onPrimaryContainer,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
             maxLines = 1,
         )
     }

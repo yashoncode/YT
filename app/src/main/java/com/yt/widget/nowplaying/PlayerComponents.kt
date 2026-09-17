@@ -45,9 +45,10 @@ internal fun ShapedArtwork(
     centerHole: Boolean = false,
 ) {
     val context = LocalContext.current
-    val clickModifier = GlanceModifier
-        .size(sizeDp)
-        .clickable(actionStartActivity(WidgetDeepLink.openMusicPlayer(context)))
+    val clickModifier =
+        GlanceModifier
+            .size(sizeDp)
+            .clickable(actionStartActivity(WidgetDeepLink.openMusicPlayer(context)))
     Box(modifier = clickModifier, contentAlignment = Alignment.Center) {
         if (artwork != null) {
             Image(
@@ -67,10 +68,11 @@ internal fun ShapedArtwork(
         }
         if (centerHole && artwork != null) {
             Box(
-                modifier = GlanceModifier
-                    .size(sizeDp * 0.14f)
-                    .background(GlanceTheme.colors.widgetBackground)
-                    .cornerRadius(sizeDp * 0.07f),
+                modifier =
+                    GlanceModifier
+                        .size(sizeDp * 0.14f)
+                        .background(GlanceTheme.colors.widgetBackground)
+                        .cornerRadius(sizeDp * 0.07f),
             ) {}
         }
     }
@@ -92,22 +94,23 @@ internal fun PlaybackSegment(
     iconSize: Dp = heightDp * 0.5f,
 ) {
     Box(
-        modifier = modifier
-            .height(heightDp)
-            .background(
-                if (filled) GlanceTheme.colors.primary else GlanceTheme.colors.secondaryContainer,
-            )
-            .cornerRadius(heightDp / 2)
-            .clickable(onClick),
+        modifier =
+            modifier
+                .height(heightDp)
+                .background(
+                    if (filled) GlanceTheme.colors.primary else GlanceTheme.colors.secondaryContainer,
+                ).cornerRadius(heightDp / 2)
+                .clickable(onClick),
         contentAlignment = Alignment.Center,
     ) {
         Image(
             provider = ImageProvider(iconRes),
             contentDescription = contentDescription,
             modifier = GlanceModifier.size(iconSize),
-            colorFilter = ColorFilter.tint(
-                if (filled) GlanceTheme.colors.onPrimary else GlanceTheme.colors.onSecondaryContainer,
-            ),
+            colorFilter =
+                ColorFilter.tint(
+                    if (filled) GlanceTheme.colors.onPrimary else GlanceTheme.colors.onSecondaryContainer,
+                ),
         )
     }
 }
@@ -156,9 +159,10 @@ internal fun WidePlayPauseButton(
     val context = LocalContext.current
     PlaybackSegment(
         iconRes = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
-        contentDescription = context.getString(
-            if (isPlaying) R.string.widget_pause else R.string.widget_play,
-        ),
+        contentDescription =
+            context.getString(
+                if (isPlaying) R.string.widget_pause else R.string.widget_play,
+            ),
         onClick = actionRunCallback<PlayPauseAction>(),
         modifier = modifier,
         filled = true,
@@ -172,22 +176,23 @@ internal fun WidePlayPauseButton(
 internal fun LikeButton(isLiked: Boolean) {
     val context = LocalContext.current
     Box(
-        modifier = GlanceModifier
-            .size(36.dp)
-            .background(
-                if (isLiked) GlanceTheme.colors.primaryContainer else GlanceTheme.colors.widgetBackground,
-            )
-            .cornerRadius(18.dp)
-            .clickable(actionRunCallback<ToggleLikeAction>()),
+        modifier =
+            GlanceModifier
+                .size(36.dp)
+                .background(
+                    if (isLiked) GlanceTheme.colors.primaryContainer else GlanceTheme.colors.widgetBackground,
+                ).cornerRadius(18.dp)
+                .clickable(actionRunCallback<ToggleLikeAction>()),
         contentAlignment = Alignment.Center,
     ) {
         Image(
             provider = ImageProvider(if (isLiked) R.drawable.ic_like_filled else R.drawable.ic_like),
             contentDescription = context.getString(R.string.widget_like),
             modifier = GlanceModifier.size(20.dp),
-            colorFilter = ColorFilter.tint(
-                if (isLiked) GlanceTheme.colors.onPrimaryContainer else GlanceTheme.colors.onSurfaceVariant,
-            ),
+            colorFilter =
+                ColorFilter.tint(
+                    if (isLiked) GlanceTheme.colors.onPrimaryContainer else GlanceTheme.colors.onSurfaceVariant,
+                ),
         )
     }
 }

@@ -30,8 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.yt.R
-import com.yt.data.local.PlayerOverlayPreferences
 import com.yt.data.local.DEFAULT_AUTOPLAY_COUNTDOWN_SECONDS
+import com.yt.data.local.PlayerOverlayPreferences
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.VideoCodec
 import com.yt.data.lyrics.LyricsProviderRegistry

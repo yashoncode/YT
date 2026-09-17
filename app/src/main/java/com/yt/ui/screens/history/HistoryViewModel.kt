@@ -2,7 +2,6 @@ package com.yt.ui.screens.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.yt.data.local.VideoHistoryEntry
 import com.yt.data.local.ViewHistory
 import com.yt.data.local.dao.VideoDao
@@ -16,6 +15,7 @@ import com.yt.data.shorts.queue.ShortsQueueHandoff
 import com.yt.data.shorts.queue.ShortsQueueSource
 import com.yt.utils.PerformanceDispatcher
 import com.yt.utils.ThumbnailUrlResolver
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

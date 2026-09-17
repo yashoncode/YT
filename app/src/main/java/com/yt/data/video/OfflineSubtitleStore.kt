@@ -2,10 +2,10 @@ package com.yt.data.video
 
 import android.content.Context
 import android.util.Log
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.innertube.YouTube
 import com.yt.innertube.models.YouTubeClient
 import com.yt.player.stream.CaptionTrackResolver
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient

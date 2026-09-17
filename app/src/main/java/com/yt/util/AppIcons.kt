@@ -8,15 +8,16 @@ object AppIcons {
     const val DEFAULT_SUFFIX = ".IconYTRed"
 
     /** Every launcher alias suffix, in manifest declaration order. */
-    val ALL_SUFFIXES = listOf(
-        ".IconYTRed",
-        ".IconYTLight",
-        ".IconYTPlay",
-        ".IconAmoled",
-        ".IconMonochrome",
-        ".IconGhost",
-        ".IconDynamic",
-        ".IconMaterialSky",
-        ".IconMaterialMint"
-    )
+    val ALL_SUFFIXES =
+        listOf(
+            ".IconYTRed",
+            ".IconYTLight",
+            ".IconYTPlay",
+            ".IconAmoled",
+            ".IconMonochrome",
+            ".IconGhost",
+            ".IconDynamic",
+            ".IconMaterialSky",
+            ".IconMaterialMint",
+        )
 }

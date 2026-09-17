@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.R
 import com.yt.data.local.ChannelSubscription
 import com.yt.data.local.PlayerPreferences
@@ -26,6 +24,8 @@ import com.yt.innertube.pages.renderer.CommunityPost
 import com.yt.innertube.pages.renderer.FeedItemOwner
 import com.yt.ui.youtubeChannelBrowseId
 import com.yt.utils.PerformanceDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

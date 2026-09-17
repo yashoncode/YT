@@ -34,11 +34,11 @@ import com.yt.ui.components.music.item.MusicItemDensity
 import com.yt.ui.components.music.item.MusicTrackItem
 import com.yt.ui.components.music.section.MusicShelf
 import com.yt.ui.components.music.section.MusicTrackShelf
-import com.yt.ui.components.shared.YTEmptyState
-import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.ShimmerGridItem
 import com.yt.ui.components.shared.ShimmerHost
 import com.yt.ui.components.shared.ShimmerSectionTitle
+import com.yt.ui.components.shared.YTEmptyState
+import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.flowArtistShape
 import com.yt.ui.components.shared.flowLaneItemWidth
 

@@ -31,21 +31,24 @@ fun InterfaceModeDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 AppUiMode.entries.forEach { mode ->
-                    val title = when (mode) {
-                        AppUiMode.AUTOMATIC -> stringResource(R.string.interface_mode_automatic)
-                        AppUiMode.MOBILE -> stringResource(R.string.interface_mode_mobile)
-                        AppUiMode.TV -> stringResource(R.string.interface_mode_tv)
-                    }
-                    val summary = when (mode) {
-                        AppUiMode.AUTOMATIC -> stringResource(R.string.interface_mode_automatic_summary)
-                        AppUiMode.MOBILE -> stringResource(R.string.interface_mode_mobile_summary)
-                        AppUiMode.TV -> stringResource(R.string.interface_mode_tv_summary)
-                    }
+                    val title =
+                        when (mode) {
+                            AppUiMode.AUTOMATIC -> stringResource(R.string.interface_mode_automatic)
+                            AppUiMode.MOBILE -> stringResource(R.string.interface_mode_mobile)
+                            AppUiMode.TV -> stringResource(R.string.interface_mode_tv)
+                        }
+                    val summary =
+                        when (mode) {
+                            AppUiMode.AUTOMATIC -> stringResource(R.string.interface_mode_automatic_summary)
+                            AppUiMode.MOBILE -> stringResource(R.string.interface_mode_mobile_summary)
+                            AppUiMode.TV -> stringResource(R.string.interface_mode_tv_summary)
+                        }
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelected(mode) }
-                            .padding(vertical = 10.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelected(mode) }
+                                .padding(vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {

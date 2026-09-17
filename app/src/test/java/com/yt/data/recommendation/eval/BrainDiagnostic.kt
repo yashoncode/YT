@@ -7,7 +7,6 @@
 
 package com.yt.data.recommendation.eval
 
-import com.yt.data.recommendation.YTPersona
 import com.yt.data.recommendation.NeuroClusters
 import com.yt.data.recommendation.NeuroDiscovery
 import com.yt.data.recommendation.NeuroMaintenance
@@ -16,6 +15,7 @@ import com.yt.data.recommendation.NeuroStorage
 import com.yt.data.recommendation.NeuroTokenizer
 import com.yt.data.recommendation.NeuroTopicCatalog
 import com.yt.data.recommendation.UserBrain
+import com.yt.data.recommendation.YTPersona
 import com.yt.data.recommendation.toUserBrain
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString

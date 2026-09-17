@@ -8,11 +8,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class ParametricEQBand(
-    val frequency: Double,                     
-    val gain: Double,                          
-    val q: Double = 1.41,                       
-    val filterType: FilterType = FilterType.PK, 
-    val enabled: Boolean = true                 
+    val frequency: Double,
+    val gain: Double,
+    val q: Double = 1.41,
+    val filterType: FilterType = FilterType.PK,
+    val enabled: Boolean = true,
 )
 
 /**
@@ -20,18 +20,17 @@ data class ParametricEQBand(
  */
 @Serializable
 data class ParametricEQ(
-    val preamp: Double,                        
-    val bands: List<ParametricEQBand>,          
-    val metadata: Map<String, String> = emptyMap() 
+    val preamp: Double,
+    val bands: List<ParametricEQBand>,
+    val metadata: Map<String, String> = emptyMap(),
 ) {
     companion object {
-        const val MAX_BANDS = 20 
-        
-        fun createFlat(): ParametricEQ {
-            return ParametricEQ(
+        const val MAX_BANDS = 20
+
+        fun createFlat(): ParametricEQ =
+            ParametricEQ(
                 preamp = 0.0,
-                bands = emptyList()
+                bands = emptyList(),
             )
-        }
     }
 }

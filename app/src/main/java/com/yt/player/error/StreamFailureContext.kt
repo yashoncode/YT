@@ -9,36 +9,47 @@ internal data class StreamFailureContext(
     val videoItag: String? = null,
     val videoMimeType: String? = null,
     val audioItag: String? = null,
-    val audioMimeType: String? = null
+    val audioMimeType: String? = null,
 ) {
-    val variantKey: String = listOfNotNull(
-        videoHeight?.let { "${it}p" },
-        videoCodec?.takeIf { it.isNotBlank() },
-        videoItag?.takeIf { it.isNotBlank() }?.let { "v=$it" },
-        audioItag?.takeIf { it.isNotBlank() }?.let { "a=$it" }
-    ).joinToString("|").ifBlank { url.orEmpty() }
+    val variantKey: String =
+        listOfNotNull(
+            videoHeight?.let { "${it}p" },
+            videoCodec?.takeIf { it.isNotBlank() },
+            videoItag?.takeIf { it.isNotBlank() }?.let { "v=$it" },
+            audioItag?.takeIf { it.isNotBlank() }?.let { "a=$it" },
+        ).joinToString("|").ifBlank { url.orEmpty() }
 
-    fun toLogString(): String = buildList {
-        add("reason=$reason")
-        httpCode?.let { add("http=$it") }
-        videoHeight?.let { add("video=${it}p") }
-        videoCodec?.takeIf { it.isNotBlank() }?.let { add("codec=$it") }
-        videoItag?.takeIf { it.isNotBlank() }?.let { add("videoItag=$it") }
-        videoMimeType?.takeIf { it.isNotBlank() }?.let { add("videoMime=$it") }
-        audioItag?.takeIf { it.isNotBlank() }?.let { add("audioItag=$it") }
-        audioMimeType?.takeIf { it.isNotBlank() }?.let { add("audioMime=$it") }
-    }.joinToString(" ")
+    fun toLogString(): String =
+        buildList {
+            add("reason=$reason")
+            httpCode?.let { add("http=$it") }
+            videoHeight?.let { add("video=${it}p") }
+            videoCodec?.takeIf { it.isNotBlank() }?.let { add("codec=$it") }
+            videoItag?.takeIf { it.isNotBlank() }?.let { add("videoItag=$it") }
+            videoMimeType?.takeIf { it.isNotBlank() }?.let { add("videoMime=$it") }
+            audioItag?.takeIf { it.isNotBlank() }?.let { add("audioItag=$it") }
+            audioMimeType?.takeIf { it.isNotBlank() }?.let { add("audioMime=$it") }
+        }.joinToString(" ")
 }
 
 internal class StreamExpiryRetryLimiter(
     private val maxConsecutiveFailures: Int,
     private val debounceMs: Long,
-    private val clockMs: () -> Long = { System.currentTimeMillis() }
+    private val clockMs: () -> Long = { System.currentTimeMillis() },
 ) {
     sealed class Decision {
-        data class Retry(val attempt: Int, val limit: Int) : Decision()
-        data class GiveUp(val attempts: Int, val limit: Int) : Decision()
+        data class Retry(
+            val attempt: Int,
+            val limit: Int,
+        ) : Decision()
+
+        data class GiveUp(
+            val attempts: Int,
+            val limit: Int,
+        ) : Decision()
+
         object Debounced : Decision()
+
         object AlreadyAbandoned : Decision()
     }
 
@@ -59,12 +70,13 @@ internal class StreamExpiryRetryLimiter(
         }
         lastTriggerMs = now
 
-        consecutiveFailureCount = if (variantKey == lastVariantKey) {
-            consecutiveFailureCount + 1
-        } else {
-            lastVariantKey = variantKey
-            1
-        }
+        consecutiveFailureCount =
+            if (variantKey == lastVariantKey) {
+                consecutiveFailureCount + 1
+            } else {
+                lastVariantKey = variantKey
+                1
+            }
 
         return if (consecutiveFailureCount > maxConsecutiveFailures) {
             abandonedVariantKey = variantKey

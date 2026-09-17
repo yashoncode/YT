@@ -6,10 +6,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
 import com.yt.R
-import kotlin.math.abs
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.math.abs
 
 class NavigationComponentsTest {
     @get:Rule
@@ -30,12 +30,15 @@ class NavigationComponentsTest {
         }
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val centers = listOf(R.string.nav_home, R.string.nav_shorts, R.string.nav_music)
-            .map { stringRes ->
-                val bounds = composeRule.onNodeWithText(context.getString(stringRes))
-                    .getUnclippedBoundsInRoot()
-                (bounds.left.value + bounds.right.value) / 2f
-            }
+        val centers =
+            listOf(R.string.nav_home, R.string.nav_shorts, R.string.nav_music)
+                .map { stringRes ->
+                    val bounds =
+                        composeRule
+                            .onNodeWithText(context.getString(stringRes))
+                            .getUnclippedBoundsInRoot()
+                    (bounds.left.value + bounds.right.value) / 2f
+                }
 
         assertTrue(abs((centers[1] - centers[0]) - (centers[2] - centers[1])) < 1f)
     }

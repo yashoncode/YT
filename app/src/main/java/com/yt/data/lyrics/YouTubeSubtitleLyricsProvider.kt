@@ -1,6 +1,6 @@
-//==================================================================================================
-//This implementation was based on metrolist's (https://github.com/MetrolistGroup/Metrolist)
-//==================================================================================================
+// ==================================================================================================
+// This implementation was based on metrolist's (https://github.com/MetrolistGroup/Metrolist)
+// ==================================================================================================
 
 package com.yt.data.lyrics
 
@@ -15,11 +15,15 @@ class YouTubeSubtitleLyricsProvider : LyricsProvider {
         title: String,
         artist: String,
         duration: Int,
-        album: String?
-    ): Result<List<LyricsEntry>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val lrc = com.yt.innertube.YouTube.transcript(id).getOrThrow()
-            LyricsUtils.parseLyrics(lrc)
+        album: String?,
+    ): Result<List<LyricsEntry>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val lrc =
+                    com.yt.innertube.YouTube
+                        .transcript(id)
+                        .getOrThrow()
+                LyricsUtils.parseLyrics(lrc)
+            }
         }
-    }
 }

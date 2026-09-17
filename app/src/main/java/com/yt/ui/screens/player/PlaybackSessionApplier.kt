@@ -6,8 +6,8 @@ import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.ViewHistory
 import com.yt.data.model.SponsorBlockSegment
 import com.yt.data.model.Video
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.InteractionType
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.repository.SponsorBlockRepository
 import com.yt.data.repository.YouTubeRepository
 import com.yt.data.video.OfflineSubtitleStore

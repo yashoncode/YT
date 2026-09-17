@@ -1,7 +1,6 @@
 package com.yt.sync
 
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.R
 import com.yt.sync.apply.PeerInfo
 import com.yt.sync.apply.ReceivedCollection
@@ -26,6 +25,7 @@ import com.yt.sync.transport.SyncConnection
 import com.yt.sync.transport.SyncForegroundService
 import com.yt.sync.transport.WsClient
 import com.yt.sync.transport.WsServer
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

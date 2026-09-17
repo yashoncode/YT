@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.yt.data.local.ChannelSubscription
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.SubscriptionRepository
@@ -26,6 +25,7 @@ import com.yt.utils.PerformanceDispatcher
 import com.yt.utils.ThumbnailUrlResolver
 import com.yt.utils.formatYouTubeRelativeTime
 import com.yt.utils.premiereDateText
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable

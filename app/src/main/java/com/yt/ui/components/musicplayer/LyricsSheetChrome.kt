@@ -101,10 +101,10 @@ import com.yt.data.local.LYRICS_ALIGN_LEFT
 import com.yt.data.local.LYRICS_ALIGN_RIGHT
 import com.yt.data.lyrics.LyricsCandidate
 import com.yt.data.lyrics.LyricsEntry
+import com.yt.ui.components.PlayingWaveform
 import com.yt.ui.components.YTMenuGroup
 import com.yt.ui.components.YTMenuItemData
 import com.yt.ui.components.YTMenuSectionHeader
-import com.yt.ui.components.PlayingWaveform
 import com.yt.ui.components.shared.rememberYTSheetState
 import java.util.Locale
 

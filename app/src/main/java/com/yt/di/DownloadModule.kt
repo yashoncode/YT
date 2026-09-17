@@ -5,14 +5,14 @@ import androidx.media3.database.DatabaseProvider
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import com.yt.data.local.PlayerPreferences
+import com.yt.player.cache.SharedPlayerCacheProvider
+import com.yt.player.config.PlayerConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import com.yt.data.local.PlayerPreferences
-import com.yt.player.cache.SharedPlayerCacheProvider
-import com.yt.player.config.PlayerConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.io.File

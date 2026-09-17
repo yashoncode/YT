@@ -1,12 +1,12 @@
 package com.yt.widget.core
 
 import android.content.Context
+import com.yt.data.recommendation.music.MusicBrainEngine
+import com.yt.data.video.VideoDownloadManager
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
-import com.yt.data.recommendation.music.MusicBrainEngine
-import com.yt.data.video.VideoDownloadManager
 
 /**
  * Glance widgets can't use constructor injection (the framework instantiates them),

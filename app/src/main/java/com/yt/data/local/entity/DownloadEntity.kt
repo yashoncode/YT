@@ -19,5 +19,5 @@ data class DownloadEntity(
     val thumbnailPath: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     /** JSON-serialized List<SponsorBlockSegment>; null if not yet fetched. */
-    val sponsorBlockSegmentsJson: String? = null
+    val sponsorBlockSegmentsJson: String? = null,
 )

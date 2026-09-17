@@ -16,7 +16,6 @@ import kotlinx.serialization.json.Json
  * **no IV/nonce** (nonces are per-frame and random).
  */
 object QrCodec {
-
     const val PROTOCOL_VERSION = 1
     const val DEFAULT_TTL_SECONDS = 120L
     const val WS_PATH = "/flow-sync"
@@ -31,10 +30,11 @@ object QrCodec {
     const val ROLE_RECEIVER = "receiver"
     private const val LEASE_HOST_SESSION = "host"
 
-    private val json = Json {
-        encodeDefaults = true
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            encodeDefaults = true
+            ignoreUnknownKeys = true
+        }
 
     @Serializable
     private data class QrPayload(
@@ -71,8 +71,13 @@ object QrCodec {
     enum class QrError { MALFORMED, WRONG_VERSION, EXPIRED, BAD_SESSION, BAD_KEY, BAD_ADDRESS }
 
     sealed class Result {
-        data class Ok(val qr: ParsedQr) : Result()
-        data class Err(val error: QrError) : Result()
+        data class Ok(
+            val qr: ParsedQr,
+        ) : Result()
+
+        data class Err(
+            val error: QrError,
+        ) : Result()
     }
 
     /** Serialize a QR payload to compact JSON. */
@@ -88,40 +93,47 @@ object QrCodec {
     ): String {
         require(sessionId.size == 16) { "session id must be 16 bytes" }
         require(masterKey.size == 32) { "master key must be 32 bytes" }
-        val payload = QrPayload(
-            sid = SyncBytes.b64urlEncode(sessionId),
-            key = SyncBytes.b64urlEncode(masterKey),
-            ip = ip,
-            port = port,
-            deviceName = deviceName.take(64),
-            exp = expEpochSeconds,
-            role = if (role == ROLE_RECEIVER) ROLE_RECEIVER else ROLE_SENDER,
-            lease = LEASE_HOST_SESSION.takeIf { sessionBound },
-        )
+        val payload =
+            QrPayload(
+                sid = SyncBytes.b64urlEncode(sessionId),
+                key = SyncBytes.b64urlEncode(masterKey),
+                ip = ip,
+                port = port,
+                deviceName = deviceName.take(64),
+                exp = expEpochSeconds,
+                role = if (role == ROLE_RECEIVER) ROLE_RECEIVER else ROLE_SENDER,
+                lease = LEASE_HOST_SESSION.takeIf { sessionBound },
+            )
         return json.encodeToString(QrPayload.serializer(), payload)
     }
 
     /** Parse + validate scanned/pasted QR text. [nowEpochSeconds] is injectable for tests. */
-    fun parse(text: String, nowEpochSeconds: Long = System.currentTimeMillis() / 1000): Result {
-        val payload = try {
-            json.decodeFromString(QrPayload.serializer(), text.trim())
-        } catch (e: Exception) {
-            return Result.Err(QrError.MALFORMED)
-        }
+    fun parse(
+        text: String,
+        nowEpochSeconds: Long = System.currentTimeMillis() / 1000,
+    ): Result {
+        val payload =
+            try {
+                json.decodeFromString(QrPayload.serializer(), text.trim())
+            } catch (e: Exception) {
+                return Result.Err(QrError.MALFORMED)
+            }
         if (payload.version != PROTOCOL_VERSION) return Result.Err(QrError.WRONG_VERSION)
 
-        val sid = try {
-            SyncBytes.b64urlDecode(payload.sid)
-        } catch (e: Exception) {
-            return Result.Err(QrError.BAD_SESSION)
-        }
+        val sid =
+            try {
+                SyncBytes.b64urlDecode(payload.sid)
+            } catch (e: Exception) {
+                return Result.Err(QrError.BAD_SESSION)
+            }
         if (sid.size != 16) return Result.Err(QrError.BAD_SESSION)
 
-        val key = try {
-            SyncBytes.b64urlDecode(payload.key)
-        } catch (e: Exception) {
-            return Result.Err(QrError.BAD_KEY)
-        }
+        val key =
+            try {
+                SyncBytes.b64urlDecode(payload.key)
+            } catch (e: Exception) {
+                return Result.Err(QrError.BAD_KEY)
+            }
         if (key.size != 32) return Result.Err(QrError.BAD_KEY)
 
         if (payload.ip.isBlank() || payload.port !in 1..65535) return Result.Err(QrError.BAD_ADDRESS)
@@ -139,7 +151,7 @@ object QrCodec {
                 payload.exp,
                 role,
                 isSessionBound,
-            )
+            ),
         )
     }
 }

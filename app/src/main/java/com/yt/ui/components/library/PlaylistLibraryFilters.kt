@@ -23,8 +23,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yt.R
 import com.yt.data.model.PlaylistInfo
-import com.yt.ui.components.shared.YTFilterChip
 import com.yt.ui.components.shared.MediaKind
+import com.yt.ui.components.shared.YTFilterChip
 
 private val FilterRowPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 private val MenuIconSize = 16.dp

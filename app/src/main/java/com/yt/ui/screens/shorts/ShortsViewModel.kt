@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.R
 import com.yt.data.comments.CommentsPager
 import com.yt.data.engagement.VideoEngagementUseCase
@@ -15,8 +13,8 @@ import com.yt.data.local.ViewHistory
 import com.yt.data.model.Comment
 import com.yt.data.model.ShortVideo
 import com.yt.data.model.toVideo
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.InteractionType
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.repository.YouTubeRepository
 import com.yt.data.shorts.ShortWatchClassifier
 import com.yt.data.shorts.ShortsRepository
@@ -30,6 +28,8 @@ import com.yt.innertube.pages.VideoCommentSort
 import com.yt.player.stream.StreamSizeEstimator
 import com.yt.ui.components.FeedInvalidationBus
 import com.yt.utils.PerformanceDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

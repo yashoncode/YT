@@ -6,8 +6,6 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.R
 import com.yt.data.local.LYRICS_ALIGN_CENTER
 import com.yt.data.local.LikedVideoInfo
@@ -27,6 +25,8 @@ import com.yt.data.recommendation.music.MusicBrainEngine
 import com.yt.player.EnhancedMusicPlayerManager
 import com.yt.player.RepeatMode
 import com.yt.utils.PerformanceDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -181,11 +181,12 @@ private fun TvAboutIdentity() {
                     style = MaterialTheme.typography.headlineMedium,
                 )
                 Text(
-                    text = stringResource(
-                        R.string.v_version_template,
-                        BuildConfig.VERSION_NAME,
-                        BuildConfig.VERSION_CODE.toString(),
-                    ),
+                    text =
+                        stringResource(
+                            R.string.v_version_template,
+                            BuildConfig.VERSION_NAME,
+                            BuildConfig.VERSION_CODE.toString(),
+                        ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -203,13 +204,15 @@ private fun TvAboutSectionHeader(title: String) {
 }
 
 private fun Context.openUrl(url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val intent =
+        Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { startActivity(intent) }
 }
 
 private fun Context.openDeviceInfo() {
-    val intent = Intent(Settings.ACTION_DEVICE_INFO_SETTINGS)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val intent =
+        Intent(Settings.ACTION_DEVICE_INFO_SETTINGS)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { startActivity(intent) }
 }

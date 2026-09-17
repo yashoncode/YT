@@ -84,8 +84,7 @@ class YTNeuroEngine(
                 }
             }
 
-        private fun requireInstance(): YTNeuroEngine =
-            instance ?: error("YTNeuroEngine not initialized. Call initialize(context) first.")
+        private fun requireInstance(): YTNeuroEngine = instance ?: error("YTNeuroEngine not initialized. Call initialize(context) first.")
 
         // ── Backward-compatible forwarding API ──
 

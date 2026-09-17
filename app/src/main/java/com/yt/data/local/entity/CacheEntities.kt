@@ -18,7 +18,7 @@ data class SubscriptionFeedEntity(
     val isShort: Boolean = false,
     val isLive: Boolean = false,
     val isUpcoming: Boolean = false,
-    val cachedAt: Long = System.currentTimeMillis()
+    val cachedAt: Long = System.currentTimeMillis(),
 )
 
 @Entity(tableName = "music_home_cache")
@@ -27,7 +27,7 @@ data class MusicHomeCacheEntity(
     val title: String,
     val subtitle: String?,
     val tracksJson: String, // Store list of tracks as JSON string
-    val orderBy: Int
+    val orderBy: Int,
 )
 
 @Entity(tableName = "music_home_chips_cache")
@@ -37,5 +37,5 @@ data class MusicHomeChipEntity(
     val params: String?,
     val deselectBrowseId: String?,
     val deselectParams: String?,
-    val orderBy: Int
+    val orderBy: Int,
 )

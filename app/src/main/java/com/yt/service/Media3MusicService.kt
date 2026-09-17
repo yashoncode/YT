@@ -34,7 +34,6 @@ import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import dagger.hilt.android.AndroidEntryPoint
 import com.yt.MainActivity
 import com.yt.R
 import com.yt.data.download.DownloadUtil
@@ -52,6 +51,7 @@ import com.yt.player.factory.LoadControlFactory
 import com.yt.player.sessionArtworkBitmapLoader
 import com.yt.utils.MusicPlayerUtils
 import com.yt.utils.NetworkConnectivityObserver
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

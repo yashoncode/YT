@@ -52,8 +52,8 @@ import com.yt.R
 import com.yt.data.local.AppUiModePreferences
 import com.yt.data.local.DEEP_YT_NEVER_EXPIRES_HOURS
 import com.yt.data.local.PlayerPreferences
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.UserBrain
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.discord.DiscordPresenceRuntime
 import com.yt.network.AppProxyManager
 import com.yt.platform.AppUiMode

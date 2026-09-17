@@ -19,7 +19,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.google.gson.Gson
-import dagger.hilt.android.AndroidEntryPoint
 import com.yt.MainActivity
 import com.yt.R
 import com.yt.data.local.PlayerPreferences
@@ -35,6 +34,7 @@ import com.yt.player.sabr.integration.SabrDownloadEngine
 import com.yt.player.sabr.integration.SabrStreamInfo
 import com.yt.player.stream.InnerTubeVideoStreamExtractor
 import com.yt.player.stream.VideoCodecUtils
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

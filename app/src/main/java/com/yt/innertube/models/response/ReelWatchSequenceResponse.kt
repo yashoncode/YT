@@ -3,15 +3,15 @@ package com.yt.innertube.models.response
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.contentOrNull
 
 @Serializable
 data class ReelWatchSequenceResponse(
     val entries: List<ReelEntry>?,
     val continuationEndpoint: ReelContinuationEndpoint?,
-    val continuation: String?
+    val continuation: String?,
 ) {
     /**
      * Extract the continuation token for pagination.
@@ -23,7 +23,12 @@ data class ReelWatchSequenceResponse(
             endpoint.reelWatchSequenceEndpoint?.sequenceParams?.let { return it }
             endpoint.continuationCommand?.token?.let { return it }
         }
-        entries?.lastOrNull()?.command?.reelWatchEndpoint?.sequenceParams?.let { return it }
+        entries
+            ?.lastOrNull()
+            ?.command
+            ?.reelWatchEndpoint
+            ?.sequenceParams
+            ?.let { return it }
         return null
     }
 }
@@ -31,27 +36,27 @@ data class ReelWatchSequenceResponse(
 @Serializable
 data class ReelContinuationEndpoint(
     val reelWatchSequenceEndpoint: ReelWatchSequenceContinuation? = null,
-    val continuationCommand: ContinuationCommand? = null
+    val continuationCommand: ContinuationCommand? = null,
 )
 
 @Serializable
 data class ReelWatchSequenceContinuation(
-    val sequenceParams: String? = null
+    val sequenceParams: String? = null,
 )
 
 @Serializable
 data class ContinuationCommand(
-    val token: String? = null
+    val token: String? = null,
 )
 
 @Serializable
 data class ReelEntry(
-    val command: ReelCommand?
+    val command: ReelCommand?,
 )
 
 @Serializable
 data class ReelCommand(
-    val reelWatchEndpoint: ReelWatchEndpoint?
+    val reelWatchEndpoint: ReelWatchEndpoint?,
 )
 
 @Serializable
@@ -61,22 +66,22 @@ data class ReelWatchEndpoint(
     val params: String?,
     val sequenceParams: String?,
     val overlay: ReelOverlay?,
-    val navigationEndpoint: ReelNavigationEndpoint? = null
+    val navigationEndpoint: ReelNavigationEndpoint? = null,
 )
 
 @Serializable
 data class ReelNavigationEndpoint(
-    val browseEndpoint: ReelBrowseEndpoint? = null
+    val browseEndpoint: ReelBrowseEndpoint? = null,
 )
 
 @Serializable
 data class ReelBrowseEndpoint(
-    val browseId: String? = null
+    val browseId: String? = null,
 )
 
 @Serializable
 data class ReelOverlay(
-    val reelPlayerOverlayRenderer: ReelPlayerOverlayRenderer?
+    val reelPlayerOverlayRenderer: ReelPlayerOverlayRenderer?,
 )
 
 @Serializable
@@ -87,37 +92,37 @@ data class ReelPlayerOverlayRenderer(
     val style: String? = null,
     val likeButton: ReelToggleButton? = null,
     val viewCountText: ReelText? = null,
-    val commentButton: ReelCommentButton? = null
+    val commentButton: ReelCommentButton? = null,
 )
 
 @Serializable
 data class ReelCommentButton(
     val buttonViewModel: ReelButtonViewModel? = null,
     val buttonRenderer: ReelButtonRendererWrapper? = null,
-    val reelCommentButtonRenderer: ReelCommentButtonRenderer? = null
+    val reelCommentButtonRenderer: ReelCommentButtonRenderer? = null,
 )
 
 @Serializable
 data class ReelCommentButtonRenderer(
     val commentCountText: ReelText? = null,
-    val commentCount: ReelText? = null
+    val commentCount: ReelText? = null,
 )
 
 @Serializable
 data class ReelButtonViewModel(
-    val title: String? = null
+    val title: String? = null,
 )
 
 @Serializable
 data class ReelButtonRendererWrapper(
-    val text: ReelText? = null
+    val text: ReelText? = null,
 )
 
 // ── Actual YouTube reel API header path ──
 
 @Serializable
 data class ReelPlayerHeaderSupportedRenderers(
-    val reelPlayerHeaderRenderer: ReelPlayerHeaderRenderer? = null
+    val reelPlayerHeaderRenderer: ReelPlayerHeaderRenderer? = null,
 )
 
 @Serializable
@@ -126,39 +131,39 @@ data class ReelPlayerHeaderRenderer(
     val channelNavigationEndpoint: ChannelNavigationEndpoint? = null,
     val channelThumbnail: ReelThumbnail? = null,
     val reelTitleOnExpandedStateRenderer: ReelTitleOnExpandedStateRenderer? = null,
-    val timestampText: ReelText? = null
+    val timestampText: ReelText? = null,
 )
 
 @Serializable
 data class ReelTitleOnExpandedStateRenderer(
     val dynamicTextContent: ReelText? = null,
-    val simpleTitleText: ReelText? = null
+    val simpleTitleText: ReelText? = null,
 )
 
 @Serializable
 data class ReelToggleButton(
-    val toggleButtonRenderer: ToggleButtonRenderer? = null
+    val toggleButtonRenderer: ToggleButtonRenderer? = null,
 )
 
 @Serializable
 data class ToggleButtonRenderer(
     val defaultText: ReelText? = null,
-    val accessibilityData: ReelAccessibilityWrapper? = null
+    val accessibilityData: ReelAccessibilityWrapper? = null,
 )
 
 @Serializable
 data class ReelAccessibilityWrapper(
-    val accessibilityData: ReelAccessibilityLabel? = null
+    val accessibilityData: ReelAccessibilityLabel? = null,
 )
 
 @Serializable
 data class ReelAccessibilityLabel(
-    val label: String? = null
+    val label: String? = null,
 )
 
 @Serializable
 data class ReelMetadata(
-    val reelMetadataRenderer: ReelMetadataRenderer?
+    val reelMetadataRenderer: ReelMetadataRenderer?,
 )
 
 @Serializable
@@ -166,31 +171,31 @@ data class ReelMetadataRenderer(
     val channelTitle: ReelText?,
     val viewCountText: ReelText?,
     val channelNavigationEndpoint: ChannelNavigationEndpoint? = null,
-    val channelThumbnail: ReelThumbnail? = null
+    val channelThumbnail: ReelThumbnail? = null,
 )
 
 @Serializable
 data class ChannelNavigationEndpoint(
-    val browseEndpoint: ReelBrowseEndpoint? = null
+    val browseEndpoint: ReelBrowseEndpoint? = null,
 )
 
 @Serializable
 data class ReelThumbnail(
-    val thumbnails: List<Thumbnail>? = null
+    val thumbnails: List<Thumbnail>? = null,
 )
 
 @Serializable
 data class Thumbnail(
     val url: String? = null,
     val width: Int? = null,
-    val height: Int? = null
+    val height: Int? = null,
 )
 
 @Serializable
 data class ReelText(
     val simpleText: String? = null,
     val runs: List<ReelRun>? = null,
-    val accessibility: ReelAccessibilityWrapper? = null
+    val accessibility: ReelAccessibilityWrapper? = null,
 ) {
     val text: String
         get() = simpleText ?: runs?.joinToString("") { it.text ?: "" } ?: ""
@@ -199,10 +204,10 @@ data class ReelText(
 @Serializable
 data class ReelRun(
     val text: String?,
-    val navigationEndpoint: ReelRunNavigationEndpoint? = null
+    val navigationEndpoint: ReelRunNavigationEndpoint? = null,
 )
 
 @Serializable
 data class ReelRunNavigationEndpoint(
-    val browseEndpoint: ReelBrowseEndpoint? = null
+    val browseEndpoint: ReelBrowseEndpoint? = null,
 )

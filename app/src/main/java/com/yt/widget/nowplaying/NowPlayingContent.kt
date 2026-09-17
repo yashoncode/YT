@@ -43,7 +43,10 @@ import com.yt.widget.core.widgetSurface
  * connected wide-segment playback group as the in-app player (PlayerControls.kt).
  */
 @Composable
-fun NowPlayingContent(snapshot: NowPlayingSnapshot?, artwork: Bitmap?) {
+fun NowPlayingContent(
+    snapshot: NowPlayingSnapshot?,
+    artwork: Bitmap?,
+) {
     Box(modifier = GlanceModifier.fillMaxSize().widgetSurface()) {
         if (snapshot == null) {
             EmptyState()
@@ -62,9 +65,10 @@ fun NowPlayingContent(snapshot: NowPlayingSnapshot?, artwork: Bitmap?) {
 private fun EmptyState() {
     val context = LocalContext.current
     Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .clickable(actionStartActivity(WidgetDeepLink.openApp(context))),
+        modifier =
+            GlanceModifier
+                .fillMaxSize()
+                .clickable(actionStartActivity(WidgetDeepLink.openApp(context))),
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -87,7 +91,10 @@ private fun EmptyState() {
 }
 
 @Composable
-private fun CompactLayout(snapshot: NowPlayingSnapshot, artwork: Bitmap?) {
+private fun CompactLayout(
+    snapshot: NowPlayingSnapshot,
+    artwork: Bitmap?,
+) {
     Row(
         modifier = GlanceModifier.fillMaxSize().padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -99,7 +106,10 @@ private fun CompactLayout(snapshot: NowPlayingSnapshot, artwork: Bitmap?) {
 }
 
 @Composable
-private fun WideLayout(snapshot: NowPlayingSnapshot, artwork: Bitmap?) {
+private fun WideLayout(
+    snapshot: NowPlayingSnapshot,
+    artwork: Bitmap?,
+) {
     val context = LocalContext.current
     Row(
         modifier = GlanceModifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -122,7 +132,10 @@ private fun WideLayout(snapshot: NowPlayingSnapshot, artwork: Bitmap?) {
 }
 
 @Composable
-private fun LargeLayout(snapshot: NowPlayingSnapshot, artwork: Bitmap?) {
+private fun LargeLayout(
+    snapshot: NowPlayingSnapshot,
+    artwork: Bitmap?,
+) {
     Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 12.dp)) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
@@ -164,11 +177,12 @@ private fun TrackText(
     ) {
         Text(
             text = snapshot.title,
-            style = TextStyle(
-                color = GlanceTheme.colors.onSurface,
-                fontSize = titleSize.sp,
-                fontWeight = FontWeight.Bold,
-            ),
+            style =
+                TextStyle(
+                    color = GlanceTheme.colors.onSurface,
+                    fontSize = titleSize.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
             maxLines = 1,
         )
         Spacer(modifier = GlanceModifier.height(2.dp))

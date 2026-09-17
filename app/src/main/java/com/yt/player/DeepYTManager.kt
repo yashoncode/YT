@@ -20,13 +20,13 @@ import kotlinx.coroutines.launch
 object DeepYTManager {
     private enum class DisableReason {
         Manual,
-        Timer
+        Timer,
     }
 
     private data class DeepYTSnapshot(
         val active: Boolean,
         val activatedAt: Long,
-        val expireHours: Int
+        val expireHours: Int,
     )
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -47,39 +47,40 @@ object DeepYTManager {
         observerJob?.cancel()
 
         val preferences = PlayerPreferences(appContext)
-        observerJob = scope.launch {
-            combine(
-                preferences.deepYTActive,
-                preferences.deepYTActivatedAt,
-                preferences.deepYTExpireHours
-            ) { active, activatedAt, expireHours ->
-                DeepYTSnapshot(active, activatedAt, expireHours)
-            }.collectLatest { snapshot ->
-                val previousActive = lastKnownActive
-                if (previousActive != null && previousActive != snapshot.active) {
-                    pauseCurrentVideoIfNeeded()
-                    _messages.emit(appContext.deepYTMessage(snapshot.active, pendingDisableReason))
-                    pendingDisableReason = null
-                }
-                lastKnownActive = snapshot.active
+        observerJob =
+            scope.launch {
+                combine(
+                    preferences.deepYTActive,
+                    preferences.deepYTActivatedAt,
+                    preferences.deepYTExpireHours,
+                ) { active, activatedAt, expireHours ->
+                    DeepYTSnapshot(active, activatedAt, expireHours)
+                }.collectLatest { snapshot ->
+                    val previousActive = lastKnownActive
+                    if (previousActive != null && previousActive != snapshot.active) {
+                        pauseCurrentVideoIfNeeded()
+                        _messages.emit(appContext.deepYTMessage(snapshot.active, pendingDisableReason))
+                        pendingDisableReason = null
+                    }
+                    lastKnownActive = snapshot.active
 
-                if (!snapshot.active || snapshot.activatedAt == 0L || snapshot.expireHours == DEEP_YT_NEVER_EXPIRES_HOURS) {
-                    return@collectLatest
-                }
+                    if (!snapshot.active || snapshot.activatedAt == 0L || snapshot.expireHours == DEEP_YT_NEVER_EXPIRES_HOURS) {
+                        return@collectLatest
+                    }
 
-                val expiresAt = snapshot.activatedAt + snapshot.expireHours * 3_600_000L
-                val remainingMs = expiresAt - System.currentTimeMillis()
-                if (remainingMs <= 0L) {
+                    val expiresAt = snapshot.activatedAt + snapshot.expireHours * 3_600_000L
+                    val remainingMs = expiresAt - System.currentTimeMillis()
+                    if (remainingMs <= 0L) {
+                        pendingDisableReason = DisableReason.Timer
+                        preferences.setDeepYTActive(false)
+                        return@collectLatest
+                    }
+
+                    delay(remainingMs)
                     pendingDisableReason = DisableReason.Timer
                     preferences.setDeepYTActive(false)
-                    return@collectLatest
                 }
-
-                delay(remainingMs)
-                pendingDisableReason = DisableReason.Timer
-                preferences.setDeepYTActive(false)
             }
-        }
     }
 
     suspend fun toggle(context: Context): Boolean {
@@ -89,7 +90,10 @@ object DeepYTManager {
         return nextEnabled
     }
 
-    suspend fun setEnabled(context: Context, enabled: Boolean): Boolean {
+    suspend fun setEnabled(
+        context: Context,
+        enabled: Boolean,
+    ): Boolean {
         val preferences = PlayerPreferences(context.applicationContext)
         val currentEnabled = preferences.deepYTActive.first()
         if (currentEnabled == enabled) return enabled
@@ -109,11 +113,13 @@ object DeepYTManager {
         }
     }
 
-    private fun Context.deepYTMessage(active: Boolean, disableReason: DisableReason?): String {
-        return when {
+    private fun Context.deepYTMessage(
+        active: Boolean,
+        disableReason: DisableReason?,
+    ): String =
+        when {
             active -> getString(R.string.deep_yt_enabled_message)
             disableReason == DisableReason.Timer -> getString(R.string.deep_yt_expired_message)
             else -> getString(R.string.deep_yt_disabled_message)
         }
-    }
 }

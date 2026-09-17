@@ -2,8 +2,8 @@ package com.yt.innertube.models.response
 
 import com.yt.innertube.models.AccountInfo
 import com.yt.innertube.models.Runs
-import com.yt.innertube.models.Thumbnails
 import com.yt.innertube.models.Thumbnail
+import com.yt.innertube.models.Thumbnails
 import kotlinx.serialization.Serializable
 
 @Serializable

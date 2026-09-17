@@ -8,7 +8,7 @@ internal fun findActiveShortQuality(
     currentVideoUrl: String?,
     activeVideoWidth: Int,
     activeVideoHeight: Int,
-    activeCodecKey: String?
+    activeCodecKey: String?,
 ): ShortVideoQuality? {
     currentVideoUrl
         ?.takeIf { it.isNotBlank() }
@@ -16,10 +16,12 @@ internal fun findActiveShortQuality(
         ?.let { return it }
 
     val dimensions = listOf(activeVideoWidth, activeVideoHeight).filter { it > 0 }
-    val activeHeightClass = dimensions.minOrNull()
-        ?.let(VideoCodecUtils::normalizeQualityHeight)
-        ?.takeIf { it > 0 }
-        ?: return null
+    val activeHeightClass =
+        dimensions
+            .minOrNull()
+            ?.let(VideoCodecUtils::normalizeQualityHeight)
+            ?.takeIf { it > 0 }
+            ?: return null
 
     return qualities.firstOrNull { quality ->
         quality.heightClass == activeHeightClass &&

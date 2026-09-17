@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
  * this is a raw transport layer used by SabrStreamController.
  */
 class SabrDataSource(
-    private val userAgent: String
+    private val userAgent: String,
 ) {
     companion object {
         private const val TAG = "SabrDataSource"
@@ -27,8 +27,9 @@ class SabrDataSource(
     private var currentResponse: Response? = null
     private var currentStream: InputStream? = null
 
-    private fun getClient(): OkHttpClient {
-        return client ?: AppProxyManager.applyTo(OkHttpClient.Builder())
+    private fun getClient(): OkHttpClient =
+        client ?: AppProxyManager
+            .applyTo(OkHttpClient.Builder())
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
@@ -37,7 +38,6 @@ class SabrDataSource(
             .retryOnConnectionFailure(true)
             .build()
             .also { client = it }
-    }
 
     /**
      * Opens a streaming POST request to the SABR endpoint.
@@ -47,26 +47,31 @@ class SabrDataSource(
      * @return InputStream for reading the UMP response, or null on failure
      */
     @Throws(IOException::class)
-    fun open(url: String, body: ByteArray, visitorId: String? = null): InputStream {
+    fun open(
+        url: String,
+        body: ByteArray,
+        visitorId: String? = null,
+    ): InputStream {
         close()
 
-        val request = Request.Builder()
-            .url(url)
-            // WEB SABR sends a binary body without a Content-Type header.
-            .post(body.toRequestBody(null))
-            .header("User-Agent", userAgent)
-            .header("Origin", "https://www.youtube.com")
-            .header("Referer", "https://www.youtube.com/")
-            .header("Sec-Fetch-Dest", "empty")
-            .header("Sec-Fetch-Mode", "cors")
-            .header("Sec-Fetch-Site", "cross-site")
-            .header("Accept", "*/*")
-            .apply {
-                // Sent on every SABR POST so GVS can link the request to the attested visitor
-                // session — the working desktop implementation does the same.
-                if (!visitorId.isNullOrEmpty()) header("X-Goog-Visitor-Id", visitorId)
-            }
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                // WEB SABR sends a binary body without a Content-Type header.
+                .post(body.toRequestBody(null))
+                .header("User-Agent", userAgent)
+                .header("Origin", "https://www.youtube.com")
+                .header("Referer", "https://www.youtube.com/")
+                .header("Sec-Fetch-Dest", "empty")
+                .header("Sec-Fetch-Mode", "cors")
+                .header("Sec-Fetch-Site", "cross-site")
+                .header("Accept", "*/*")
+                .apply {
+                    // Sent on every SABR POST so GVS can link the request to the attested visitor
+                    // session — the working desktop implementation does the same.
+                    if (!visitorId.isNullOrEmpty()) header("X-Goog-Visitor-Id", visitorId)
+                }.build()
 
         Log.d(TAG, "SABR POST: ${url.take(100)}... bodySize=${body.size}")
 

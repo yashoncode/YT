@@ -41,8 +41,8 @@ import com.yt.R
 import com.yt.data.model.Video
 import com.yt.ui.components.shared.YTBottomSheet
 import com.yt.ui.components.shared.defaultSheetExpandedHeight
-import com.yt.ui.components.shared.rememberYTBottomSheetState
 import com.yt.ui.components.shared.rememberReorderableLazyListState
+import com.yt.ui.components.shared.rememberYTBottomSheetState
 
 private class QueueDisplayItem(
     val key: String,

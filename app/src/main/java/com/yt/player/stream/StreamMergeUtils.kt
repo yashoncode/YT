@@ -10,38 +10,39 @@ import org.schabi.newpipe.extractor.stream.VideoStream
  * (engine-side queue/autoplay advances) and [VideoPlayerViewModel] (initial load)
  */
 object StreamMergeUtils {
-
     fun mergeVideoStreams(
         primary: List<VideoStream>,
-        fallback: List<VideoStream>
-    ): List<VideoStream> {
-        return (primary + fallback)
+        fallback: List<VideoStream>,
+    ): List<VideoStream> =
+        (primary + fallback)
             .filter { it.getContent().isNotBlank() }
             .distinctBy { stream ->
                 val url = stream.getContent()
-                if (url.isNotBlank()) url else "${VideoCodecUtils.qualityHeightFromStream(stream)}_${VideoCodecUtils.codecKeyFromStream(stream)}_${stream.bitrate}"
-            }
-            .sortedWith(
+                if (url.isNotBlank()) {
+                    url
+                } else {
+                    "${VideoCodecUtils.qualityHeightFromStream(
+                        stream,
+                    )}_${VideoCodecUtils.codecKeyFromStream(stream)}_${stream.bitrate}"
+                }
+            }.sortedWith(
                 compareByDescending<VideoStream> { QualityManager.normalizeQualityHeight(VideoCodecUtils.qualityHeightFromStream(it)) }
                     .thenBy { VideoCodecUtils.playbackCodecRank(it) }
-                    .thenByDescending { it.bitrate }
+                    .thenByDescending { it.bitrate },
             )
-    }
 
     fun mergeAudioStreams(
         primary: List<AudioStream>,
-        fallback: List<AudioStream>
-    ): List<AudioStream> {
-        return (primary + fallback)
+        fallback: List<AudioStream>,
+    ): List<AudioStream> =
+        (primary + fallback)
             .filter { it.getContent().isNotBlank() }
             .distinctBy { stream ->
                 listOf(
                     stream.getContent(),
                     stream.format?.mimeType.orEmpty(),
                     stream.audioTrackId.orEmpty(),
-                    stream.averageBitrate.takeIf { it > 0 } ?: stream.bitrate
+                    stream.averageBitrate.takeIf { it > 0 } ?: stream.bitrate,
                 ).joinToString("|")
-            }
-            .sortedByDescending { it.averageBitrate.takeIf { bitrate -> bitrate > 0 } ?: it.bitrate }
-    }
+            }.sortedByDescending { it.averageBitrate.takeIf { bitrate -> bitrate > 0 } ?: it.bitrate }
 }

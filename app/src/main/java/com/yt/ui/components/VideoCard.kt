@@ -66,12 +66,12 @@ import com.yt.data.model.distinctByNonBlankKey
 import com.yt.data.model.hasLikelyCollaborationByline
 import com.yt.data.model.needsCollaboratorResolution
 import com.yt.data.repository.VideoCollaboratorResolver
-import com.yt.ui.components.shared.YTSubscribeButton
 import com.yt.ui.components.shared.MediaTextBadge
 import com.yt.ui.components.shared.ShortWatchedIndicator
 import com.yt.ui.components.shared.VideoStatusBadge
 import com.yt.ui.components.shared.VideoThumbnailImage
 import com.yt.ui.components.shared.WatchProgressBar
+import com.yt.ui.components.shared.YTSubscribeButton
 import com.yt.ui.components.shared.pressScale
 import com.yt.ui.components.shared.rememberDateDisplaySettings
 import com.yt.ui.components.shared.thumbnailGradientOverlay

@@ -10,7 +10,6 @@ import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadService
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.data.download.DownloadUtil
 import com.yt.data.local.entity.DownloadItemStatus
 import com.yt.data.local.safePreferencesDataStore
@@ -21,6 +20,7 @@ import com.yt.data.video.VideoDownloadManager
 import com.yt.data.video.downloader.YTDownloadService
 import com.yt.service.ExoDownloadService
 import com.yt.utils.MusicPlayerUtils
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

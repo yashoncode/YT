@@ -1,15 +1,15 @@
 package com.yt.di
 
 import android.content.Context
+import com.yt.data.local.AppDatabase
+import com.yt.data.local.dao.NotificationDao
+import com.yt.data.local.dao.PlaylistDao
+import com.yt.data.local.dao.VideoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import com.yt.data.local.AppDatabase
-import com.yt.data.local.dao.NotificationDao
-import com.yt.data.local.dao.PlaylistDao
-import com.yt.data.local.dao.VideoDao
 import javax.inject.Singleton
 
 @Module
@@ -40,12 +40,10 @@ object DatabaseModule {
     fun provideDownloadDao(database: AppDatabase): com.yt.data.local.dao.DownloadDao = database.downloadDao()
 
     @Provides
-    fun provideRecognitionHistoryDao(database: AppDatabase): com.yt.data.local.dao.RecognitionHistoryDao =
-        database.recognitionHistoryDao()
+    fun provideRecognitionHistoryDao(database: AppDatabase): com.yt.data.local.dao.RecognitionHistoryDao = database.recognitionHistoryDao()
 
     @Provides
-    fun provideSubscriptionGroupDao(database: AppDatabase): com.yt.data.local.dao.SubscriptionGroupDao =
-        database.subscriptionGroupDao()
+    fun provideSubscriptionGroupDao(database: AppDatabase): com.yt.data.local.dao.SubscriptionGroupDao = database.subscriptionGroupDao()
 
     @Provides
     fun provideWatchHistoryDao(database: AppDatabase): com.yt.data.local.dao.WatchHistoryDao = database.watchHistoryDao()

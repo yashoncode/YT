@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 internal data class TopicInsight(
     val name: String,
     val score: Double,
-    val evidence: TopicEvidence?
+    val evidence: TopicEvidence?,
 )
 
 internal data class TimeBucketInsight(
@@ -18,7 +18,7 @@ internal data class TimeBucketInsight(
     val title: String,
     val window: String,
     val vector: ContentVector,
-    val isCurrent: Boolean
+    val isCurrent: Boolean,
 )
 
 internal fun UserBrain.topTopicInsights(limit: Int): List<TopicInsight> =
@@ -30,24 +30,19 @@ internal fun UserBrain.topTopicInsights(limit: Int): List<TopicInsight> =
             TopicInsight(
                 name = topic,
                 score = score,
-                evidence = topicEvidence[topic]
+                evidence = topicEvidence[topic],
             )
         }
 
-internal fun UserBrain.currentContextVector(): ContentVector =
-    timeVectors[TimeBucket.current()] ?: ContentVector()
+internal fun UserBrain.currentContextVector(): ContentVector = timeVectors[TimeBucket.current()] ?: ContentVector()
 
-internal fun UserBrain.breadthScore(): Double =
-    (globalVector.topics.size / 50.0).coerceIn(0.0, 1.0)
+internal fun UserBrain.breadthScore(): Double = (globalVector.topics.size / 50.0).coerceIn(0.0, 1.0)
 
-internal fun UserBrain.profileMaturity(): Double =
-    (totalInteractions / 250.0).coerceIn(0.0, 1.0)
+internal fun UserBrain.profileMaturity(): Double = (totalInteractions / 250.0).coerceIn(0.0, 1.0)
 
-internal fun UserBrain.blockedFilterCount(): Int =
-    blockedTopics.size + blockedChannels.size
+internal fun UserBrain.blockedFilterCount(): Int = blockedTopics.size + blockedChannels.size
 
-internal fun UserBrain.suppressedItemCount(): Int =
-    suppressedVideoIds.size + suppressedChannels.size
+internal fun UserBrain.suppressedItemCount(): Int = suppressedVideoIds.size + suppressedChannels.size
 
 internal fun UserBrain.timeBucketInsights(): List<TimeBucketInsight> {
     val current = TimeBucket.current()
@@ -57,32 +52,41 @@ internal fun UserBrain.timeBucketInsights(): List<TimeBucketInsight> {
             title = bucket.displayTitle(),
             window = bucket.displayWindow(),
             vector = timeVectors[bucket] ?: ContentVector(),
-            isCurrent = bucket == current
+            isCurrent = bucket == current,
         )
     }
 }
 
-internal fun TimeBucket.displayTitle(): String = when (this) {
-    TimeBucket.WEEKDAY_MORNING -> "Weekday morning"
-    TimeBucket.WEEKDAY_AFTERNOON -> "Weekday afternoon"
-    TimeBucket.WEEKDAY_EVENING -> "Weekday evening"
-    TimeBucket.WEEKDAY_NIGHT -> "Weekday night"
-    TimeBucket.WEEKEND_MORNING -> "Weekend morning"
-    TimeBucket.WEEKEND_AFTERNOON -> "Weekend afternoon"
-    TimeBucket.WEEKEND_EVENING -> "Weekend evening"
-    TimeBucket.WEEKEND_NIGHT -> "Weekend night"
-}
+internal fun TimeBucket.displayTitle(): String =
+    when (this) {
+        TimeBucket.WEEKDAY_MORNING -> "Weekday morning"
+        TimeBucket.WEEKDAY_AFTERNOON -> "Weekday afternoon"
+        TimeBucket.WEEKDAY_EVENING -> "Weekday evening"
+        TimeBucket.WEEKDAY_NIGHT -> "Weekday night"
+        TimeBucket.WEEKEND_MORNING -> "Weekend morning"
+        TimeBucket.WEEKEND_AFTERNOON -> "Weekend afternoon"
+        TimeBucket.WEEKEND_EVENING -> "Weekend evening"
+        TimeBucket.WEEKEND_NIGHT -> "Weekend night"
+    }
 
-internal fun TimeBucket.displayWindow(): String = when (this) {
-    TimeBucket.WEEKDAY_MORNING,
-    TimeBucket.WEEKEND_MORNING -> "6 AM - 12 PM"
-    TimeBucket.WEEKDAY_AFTERNOON,
-    TimeBucket.WEEKEND_AFTERNOON -> "12 PM - 6 PM"
-    TimeBucket.WEEKDAY_EVENING,
-    TimeBucket.WEEKEND_EVENING -> "6 PM - 12 AM"
-    TimeBucket.WEEKDAY_NIGHT,
-    TimeBucket.WEEKEND_NIGHT -> "12 AM - 6 AM"
-}
+internal fun TimeBucket.displayWindow(): String =
+    when (this) {
+        TimeBucket.WEEKDAY_MORNING,
+        TimeBucket.WEEKEND_MORNING,
+        -> "6 AM - 12 PM"
+
+        TimeBucket.WEEKDAY_AFTERNOON,
+        TimeBucket.WEEKEND_AFTERNOON,
+        -> "12 PM - 6 PM"
+
+        TimeBucket.WEEKDAY_EVENING,
+        TimeBucket.WEEKEND_EVENING,
+        -> "6 PM - 12 AM"
+
+        TimeBucket.WEEKDAY_NIGHT,
+        TimeBucket.WEEKEND_NIGHT,
+        -> "12 AM - 6 AM"
+    }
 
 internal fun ContentVector.topTopicLabels(limit: Int): List<String> =
     topics.entries
@@ -96,8 +100,7 @@ internal fun String.readableTopic(): String =
         .trim()
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
-internal fun Double.percentLabel(): String =
-    "${(this.coerceIn(0.0, 1.0) * 100).roundToInt()}%"
+internal fun Double.percentLabel(): String = "${(this.coerceIn(0.0, 1.0) * 100).roundToInt()}%"
 
 internal fun Double.topicWeightLabel(): String {
     val percent = coerceAtLeast(0.0) * 100.0
@@ -109,14 +112,14 @@ internal fun Double.topicWeightLabel(): String {
     }
 }
 
-internal fun compactCount(value: Int): String = when {
-    value >= 1_000_000 -> String.format(Locale.US, "%.1fM", value / 1_000_000.0)
-    value >= 1_000 -> String.format(Locale.US, "%.1fk", value / 1_000.0)
-    else -> value.toString()
-}
+internal fun compactCount(value: Int): String =
+    when {
+        value >= 1_000_000 -> String.format(Locale.US, "%.1fM", value / 1_000_000.0)
+        value >= 1_000 -> String.format(Locale.US, "%.1fk", value / 1_000.0)
+        else -> value.toString()
+    }
 
-internal fun shortChannelId(channelId: String): String =
-    if (channelId.length <= 18) channelId else "${channelId.take(18)}..."
+internal fun shortChannelId(channelId: String): String = if (channelId.length <= 18) channelId else "${channelId.take(18)}..."
 
 internal fun Set<String>.limitedFilterItems(maxItems: Int): List<String> =
     if (size <= maxItems) {

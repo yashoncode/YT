@@ -11,15 +11,14 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
-import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.WidgetImageLoader
 import com.yt.widget.core.WidgetShape
+import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.nowPlayingSnapshotFlow
 import com.yt.widget.core.widgetColorsFlow
 import kotlinx.coroutines.flow.first
 
 class NowPlayingWidget : GlanceAppWidget() {
-
     companion object {
         val COMPACT = DpSize(110.dp, 48.dp)
         val WIDE = DpSize(180.dp, 48.dp)
@@ -31,7 +30,10 @@ class NowPlayingWidget : GlanceAppWidget() {
 
     override val sizeMode = SizeMode.Responsive(setOf(COMPACT, WIDE, LARGE))
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
+    override suspend fun provideGlance(
+        context: Context,
+        id: GlanceId,
+    ) {
         val density = context.resources.displayMetrics.density
         val artworkPx = (ARTWORK_DP * density).toInt()
 

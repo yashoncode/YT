@@ -11,7 +11,7 @@ import java.io.File
 /**
  * This is based and ported from Metrolist,
  * see https://github.com/MetrolistGroup/Metrolist for the original code and license.
- * 
+ *
  * Fetches and caches YouTube's player.js for cipher operations.
  */
 object PlayerJsFetcher {
@@ -26,45 +26,48 @@ object PlayerJsFetcher {
     private val PLAYER_HASH_REGEX = Regex("""\\?/s\\?/player\\?/([a-zA-Z0-9_-]+)\\?/""")
 
     private fun getCacheDir(): File = File(CipherDeobfuscator.appContext.filesDir, "cipher_cache")
+
     private fun getCacheFile(hash: String): File = File(getCacheDir(), "player_$hash.js")
+
     private fun getHashFile(): File = File(getCacheDir(), "current_hash.txt")
 
-    suspend fun getPlayerJs(forceRefresh: Boolean = false): Pair<String, String>? = withContext(Dispatchers.IO) {
-        Log.d(TAG, "getPlayerJs: forceRefresh=$forceRefresh")
-        try {
-            val cacheDir = getCacheDir()
-            if (!cacheDir.exists()) cacheDir.mkdirs()
+    suspend fun getPlayerJs(forceRefresh: Boolean = false): Pair<String, String>? =
+        withContext(Dispatchers.IO) {
+            Log.d(TAG, "getPlayerJs: forceRefresh=$forceRefresh")
+            try {
+                val cacheDir = getCacheDir()
+                if (!cacheDir.exists()) cacheDir.mkdirs()
 
-            if (!forceRefresh) {
-                val cached = readFromCache()
-                if (cached != null) {
-                    Log.d(TAG, "Cache hit: hash=${cached.second}, length=${cached.first.length}")
-                    return@withContext cached
+                if (!forceRefresh) {
+                    val cached = readFromCache()
+                    if (cached != null) {
+                        Log.d(TAG, "Cache hit: hash=${cached.second}, length=${cached.first.length}")
+                        return@withContext cached
+                    }
+                    Log.d(TAG, "Cache miss, fetching fresh...")
                 }
-                Log.d(TAG, "Cache miss, fetching fresh...")
-            }
 
-            val hash = fetchPlayerHash()
-            if (hash == null) {
-                Log.e(TAG, "Failed to extract player hash from iframe_api")
-                return@withContext null
-            }
-            Log.d(TAG, "Player hash: $hash")
+                val hash = fetchPlayerHash()
+                if (hash == null) {
+                    Log.e(TAG, "Failed to extract player hash from iframe_api")
+                    return@withContext null
+                }
+                Log.d(TAG, "Player hash: $hash")
 
-            val playerJs = downloadPlayerJs(hash)
-            if (playerJs == null) {
-                Log.e(TAG, "Failed to download player JS for hash=$hash")
-                return@withContext null
-            }
+                val playerJs = downloadPlayerJs(hash)
+                if (playerJs == null) {
+                    Log.e(TAG, "Failed to download player JS for hash=$hash")
+                    return@withContext null
+                }
 
-            Log.d(TAG, "Downloaded player.js: hash=$hash, length=${playerJs.length}")
-            writeToCache(hash, playerJs)
-            Pair(playerJs, hash)
-        } catch (e: Exception) {
-            Log.e(TAG, "getPlayerJs exception: ${e.message}", e)
-            null
+                Log.d(TAG, "Downloaded player.js: hash=$hash, length=${playerJs.length}")
+                writeToCache(hash, playerJs)
+                Pair(playerJs, hash)
+            } catch (e: Exception) {
+                Log.e(TAG, "getPlayerJs exception: ${e.message}", e)
+                null
+            }
         }
-    }
 
     fun invalidateCache() {
         Log.d(TAG, "Invalidating cipher cache...")
@@ -110,7 +113,10 @@ object PlayerJsFetcher {
         }
     }
 
-    private fun writeToCache(hash: String, playerJs: String) {
+    private fun writeToCache(
+        hash: String,
+        playerJs: String,
+    ) {
         try {
             val cacheDir = getCacheDir()
             // Clean old cache files
@@ -125,10 +131,12 @@ object PlayerJsFetcher {
 
     private fun fetchPlayerHash(): String? {
         Log.d(TAG, "Fetching iframe_api...")
-        val request = Request.Builder()
-            .url(IFRAME_API_URL)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(IFRAME_API_URL)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .build()
         val response = httpClient.newCall(request).execute()
         Log.d(TAG, "iframe_api response: HTTP ${response.code}")
         if (!response.isSuccessful) return null
@@ -142,10 +150,12 @@ object PlayerJsFetcher {
     private fun downloadPlayerJs(hash: String): String? {
         val url = PLAYER_JS_URL_TEMPLATE.format(hash)
         Log.d(TAG, "Downloading player.js from: $url")
-        val request = Request.Builder()
-            .url(url)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(url)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .build()
         val response = httpClient.newCall(request).execute()
         Log.d(TAG, "player.js response: HTTP ${response.code}")
         if (!response.isSuccessful) return null

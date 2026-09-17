@@ -1,11 +1,11 @@
 package com.yt.data.engagement
 
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.data.model.Video
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.InteractionType
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.repository.YouTubeRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 /**

@@ -4,7 +4,6 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class SabrRoutingPolicyTest {
-
     @Test
     fun `direct ladders below the floor are upgrade candidates`() {
         assertThat(SabrRoutingPolicy.shouldAttemptSabrUpgrade(360)).isTrue()

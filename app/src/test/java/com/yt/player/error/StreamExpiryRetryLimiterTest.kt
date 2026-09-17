@@ -11,19 +11,19 @@ class StreamExpiryRetryLimiterTest {
         val limiter = limiter()
 
         assertThat(limiter.record(context(url = "https://gvs/one"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3),
         )
         advancePastDebounce()
         assertThat(limiter.record(context(url = "https://gvs/two"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 2, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 2, limit = 3),
         )
         advancePastDebounce()
         assertThat(limiter.record(context(url = "https://gvs/three"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 3, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 3, limit = 3),
         )
         advancePastDebounce()
         assertThat(limiter.record(context(url = "https://gvs/four"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.GiveUp(attempts = 4, limit = 3)
+            StreamExpiryRetryLimiter.Decision.GiveUp(attempts = 4, limit = 3),
         )
     }
 
@@ -32,15 +32,15 @@ class StreamExpiryRetryLimiterTest {
         val limiter = limiter()
 
         assertThat(limiter.record(context(url = "https://gvs/720-a", height = 720))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3),
         )
         advancePastDebounce()
         assertThat(limiter.record(context(url = "https://gvs/720-b", height = 720))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 2, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 2, limit = 3),
         )
         advancePastDebounce()
         assertThat(limiter.record(context(url = "https://gvs/360", height = 360))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3),
         )
     }
 
@@ -49,32 +49,36 @@ class StreamExpiryRetryLimiterTest {
         val limiter = limiter()
 
         assertThat(limiter.record(context(url = "https://gvs/720-a"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 1, limit = 3),
         )
         nowMs += 100L
         assertThat(limiter.record(context(url = "https://gvs/720-b"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Debounced
+            StreamExpiryRetryLimiter.Decision.Debounced,
         )
         advancePastDebounce()
         assertThat(limiter.record(context(url = "https://gvs/720-c"))).isEqualTo(
-            StreamExpiryRetryLimiter.Decision.Retry(attempt = 2, limit = 3)
+            StreamExpiryRetryLimiter.Decision.Retry(attempt = 2, limit = 3),
         )
     }
 
-    private fun limiter() = StreamExpiryRetryLimiter(
-        maxConsecutiveFailures = 3,
-        debounceMs = 1_500L,
-        clockMs = { nowMs }
-    )
+    private fun limiter() =
+        StreamExpiryRetryLimiter(
+            maxConsecutiveFailures = 3,
+            debounceMs = 1_500L,
+            clockMs = { nowMs },
+        )
 
-    private fun context(url: String, height: Int = 720) = StreamFailureContext(
+    private fun context(
+        url: String,
+        height: Int = 720,
+    ) = StreamFailureContext(
         reason = "http-403",
         httpCode = 403,
         url = url,
         videoHeight = height,
         videoCodec = "h264",
         videoItag = "136",
-        audioItag = "140"
+        audioItag = "140",
     )
 
     private fun advancePastDebounce() {

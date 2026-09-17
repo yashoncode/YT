@@ -3,7 +3,6 @@ package com.yt.sync.apply
 import android.content.Context
 import android.net.Uri
 import androidx.room.withTransaction
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.data.local.AppDatabase
 import com.yt.data.local.BackupRepository
 import com.yt.data.local.dao.SyncLogDao
@@ -22,6 +21,7 @@ import com.yt.sync.protocol.ApplyStats
 import com.yt.sync.protocol.CollectionWire
 import com.yt.sync.protocol.SyncCollection
 import com.yt.sync.protocol.SyncSerialization
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -4,31 +4,33 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class YTCrashReportFormatterTest {
-
     @Test
     fun `oom report separates input state updates and final output`() {
-        val report = YTCrashReportFormatter.build(
-            YTCrashReportSnapshot(
-                timestampMs = 1_800_000_000_000L,
-                threadName = "main",
-                threadId = 1L,
-                exceptionClass = OutOfMemoryError::class.java.name,
-                exceptionMessage = "Failed to allocate",
-                stackTrace = """
-                    java.lang.OutOfMemoryError: Failed to allocate
-                        at com.yt.player.PlayerCacheManager.updateCache(PlayerCacheManager.kt:42)
-                        at com.yt.service.VideoPlayerService.onStartCommand(VideoPlayerService.kt:121)
-                        at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5000)
-                """.trimIndent(),
-                deviceInfo = "Model: Pixel Test",
-                memoryInfo = "Max heap: 256 MB",
-                breadcrumbs = listOf(
-                    YTCrashBreadcrumb(1_799_999_990_000L, "activity", "onStop pip=false"),
-                    YTCrashBreadcrumb(1_799_999_991_000L, "background-handoff", "handleBackgroundPlaybackOnStop"),
-                    YTCrashBreadcrumb(1_799_999_992_000L, "video-service", "onStartCommand action=null startId=1")
-                )
+        val report =
+            YTCrashReportFormatter.build(
+                YTCrashReportSnapshot(
+                    timestampMs = 1_800_000_000_000L,
+                    threadName = "main",
+                    threadId = 1L,
+                    exceptionClass = OutOfMemoryError::class.java.name,
+                    exceptionMessage = "Failed to allocate",
+                    stackTrace =
+                        """
+                        java.lang.OutOfMemoryError: Failed to allocate
+                            at com.yt.player.PlayerCacheManager.updateCache(PlayerCacheManager.kt:42)
+                            at com.yt.service.VideoPlayerService.onStartCommand(VideoPlayerService.kt:121)
+                            at android.app.ActivityThread.handleServiceArgs(ActivityThread.java:5000)
+                        """.trimIndent(),
+                    deviceInfo = "Model: Pixel Test",
+                    memoryInfo = "Max heap: 256 MB",
+                    breadcrumbs =
+                        listOf(
+                            YTCrashBreadcrumb(1_799_999_990_000L, "activity", "onStop pip=false"),
+                            YTCrashBreadcrumb(1_799_999_991_000L, "background-handoff", "handleBackgroundPlaybackOnStop"),
+                            YTCrashBreadcrumb(1_799_999_992_000L, "video-service", "onStartCommand action=null startId=1"),
+                        ),
+                ),
             )
-        )
 
         assertThat(report).contains("Crash Input")
         assertThat(report).contains("OutOfMemoryError: true")
@@ -41,21 +43,23 @@ class YTCrashReportFormatterTest {
 
     @Test
     fun `top stack frames keeps only actionable frame lines`() {
-        val frames = YTCrashReportFormatter.topStackFrames(
-            """
+        val frames =
+            YTCrashReportFormatter.topStackFrames(
+                """
                 java.lang.IllegalStateException: boom
                     at first.Frame.call(First.kt:1)
                     at second.Frame.call(Second.kt:2)
                 Caused by: java.io.IOException: nope
                     at third.Frame.call(Third.kt:3)
-            """.trimIndent(),
-            limit = 3
-        )
+                """.trimIndent(),
+                limit = 3,
+            )
 
-        assertThat(frames).containsExactly(
-            "at first.Frame.call(First.kt:1)",
-            "at second.Frame.call(Second.kt:2)",
-            "Caused by: java.io.IOException: nope"
-        ).inOrder()
+        assertThat(frames)
+            .containsExactly(
+                "at first.Frame.call(First.kt:1)",
+                "at second.Frame.call(Second.kt:2)",
+                "Caused by: java.io.IOException: nope",
+            ).inOrder()
     }
 }

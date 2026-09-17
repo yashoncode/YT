@@ -3,8 +3,6 @@ package com.yt.ui.screens.music
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.yt.R
 import com.yt.data.model.distinctByNonBlankKey
 import com.yt.data.music.DownloadManager
@@ -15,6 +13,8 @@ import com.yt.innertube.models.YTItem
 import com.yt.innertube.pages.ArtistSectionKind
 import com.yt.innertube.pages.SearchSummaryPage
 import com.yt.utils.PerformanceDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*

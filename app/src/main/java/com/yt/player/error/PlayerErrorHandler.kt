@@ -6,8 +6,8 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.yt.player.config.PlayerConfig
 import com.yt.R
+import com.yt.player.config.PlayerConfig
 import com.yt.player.state.EnhancedPlayerState
 import com.yt.player.stream.VideoCodecUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +53,7 @@ class PlayerErrorHandler(
     private val getAvailableAudioStreams: () -> List<AudioStream>,
     private val setCurrentAudioStream: (AudioStream) -> Unit,
     private val setRecoveryState: () -> Unit,
-    private val reloadPlaybackManager: () -> Unit
+    private val reloadPlaybackManager: () -> Unit,
 ) {
     companion object {
         private const val TAG = "PlayerErrorHandler"
@@ -61,10 +61,11 @@ class PlayerErrorHandler(
         private const val EXPIRY_DEBOUNCE_MS = 1500L
     }
 
-    private val expiryRetryLimiter = StreamExpiryRetryLimiter(
-        maxConsecutiveFailures = MAX_CONSECUTIVE_EXPIRY,
-        debounceMs = EXPIRY_DEBOUNCE_MS
-    )
+    private val expiryRetryLimiter =
+        StreamExpiryRetryLimiter(
+            maxConsecutiveFailures = MAX_CONSECUTIVE_EXPIRY,
+            debounceMs = EXPIRY_DEBOUNCE_MS,
+        )
 
     // ── Public entry point ────────────────────────────────────────────────────
 
@@ -72,7 +73,10 @@ class PlayerErrorHandler(
      * Handle player errors from ExoPlayer.
      * Returns true if the error was handled gracefully (no user notification needed).
      */
-    fun handleError(error: PlaybackException, player: ExoPlayer?): Boolean {
+    fun handleError(
+        error: PlaybackException,
+        player: ExoPlayer?,
+    ): Boolean {
         Log.e(TAG, "ExoPlayer - onPlayerError() called with:", error)
         PlayerDiagnostics.logPlaybackError(TAG, error)
 
@@ -80,7 +84,6 @@ class PlayerErrorHandler(
         var isCatchableException = false
 
         when (error.errorCode) {
-
             // ── Live window ────────────────────────────────────────────────
             PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW -> {
                 isCatchableException = true
@@ -96,10 +99,11 @@ class PlayerErrorHandler(
 
             PlaybackException.ERROR_CODE_REMOTE_ERROR -> {
                 PlayerDiagnostics.logError(TAG, "Remote playback error: ${error.message}")
-                stateFlow.value = stateFlow.value.copy(
-                    error = appContext.getString(R.string.error_remote_playback),
-                    isPlaying = false
-                )
+                stateFlow.value =
+                    stateFlow.value.copy(
+                        error = appContext.getString(R.string.error_remote_playback),
+                        isPlaying = false,
+                    )
             }
 
             // ── IO errors ─────────────────────────────────────────────────
@@ -123,18 +127,20 @@ class PlayerErrorHandler(
 
             PlaybackException.ERROR_CODE_IO_NO_PERMISSION -> {
                 PlayerDiagnostics.logError(TAG, "IO permission denied for stream URL")
-                stateFlow.value = stateFlow.value.copy(
-                    error = appContext.getString(R.string.error_playback_permission_denied),
-                    isPlaying = false
-                )
+                stateFlow.value =
+                    stateFlow.value.copy(
+                        error = appContext.getString(R.string.error_playback_permission_denied),
+                        isPlaying = false,
+                    )
             }
 
             PlaybackException.ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED -> {
                 PlayerDiagnostics.logError(TAG, "Cleartext HTTP not permitted — stream uses plain http://")
-                stateFlow.value = stateFlow.value.copy(
-                    error = appContext.getString(R.string.error_insecure_stream_blocked),
-                    isPlaying = false
-                )
+                stateFlow.value =
+                    stateFlow.value.copy(
+                        error = appContext.getString(R.string.error_insecure_stream_blocked),
+                        isPlaying = false,
+                    )
             }
 
             PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE -> {
@@ -148,7 +154,8 @@ class PlayerErrorHandler(
             PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
-            PlaybackException.ERROR_CODE_UNSPECIFIED -> {
+            PlaybackException.ERROR_CODE_UNSPECIFIED,
+            -> {
                 handleNetworkError(error)
             }
 
@@ -157,7 +164,8 @@ class PlayerErrorHandler(
             PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
             PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED,
             PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
-            PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED -> {
+            PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED,
+            -> {
                 handleParsingError(error)
             }
 
@@ -181,7 +189,8 @@ class PlayerErrorHandler(
             PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
             PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED,
             PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED,
-            PlaybackException.ERROR_CODE_AUDIO_TRACK_WRITE_FAILED -> {
+            PlaybackException.ERROR_CODE_AUDIO_TRACK_WRITE_FAILED,
+            -> {
                 handleDecoderError(error)
             }
 
@@ -193,7 +202,8 @@ class PlayerErrorHandler(
             PlaybackException.ERROR_CODE_DRM_PROVISIONING_FAILED,
             PlaybackException.ERROR_CODE_DRM_SCHEME_UNSUPPORTED,
             PlaybackException.ERROR_CODE_DRM_SYSTEM_ERROR,
-            PlaybackException.ERROR_CODE_DRM_UNSPECIFIED -> {
+            PlaybackException.ERROR_CODE_DRM_UNSPECIFIED,
+            -> {
                 handleDrmError(error)
             }
 
@@ -209,7 +219,7 @@ class PlayerErrorHandler(
 
         return isCatchableException
     }
-    
+
     // ── Specific handlers ────────────────────────────────────────────────────
 
     private fun handleBehindLiveWindow(player: ExoPlayer?) {
@@ -223,14 +233,17 @@ class PlayerErrorHandler(
      * HTTP non-2xx response. For YouTube streams this almost always means the
      * pre-signed URL has expired (403 Forbidden / 410 Gone).
      */
-    private fun handleBadHttpStatus(error: PlaybackException, player: ExoPlayer?): Boolean {
+    private fun handleBadHttpStatus(
+        error: PlaybackException,
+        player: ExoPlayer?,
+    ): Boolean {
         val httpCode = extractHttpStatusCode(error)
         val context = buildFailureContext("http-$httpCode", httpCode)
         val urlFragment = error.cause?.message?.take(120) ?: ""
         PlayerDiagnostics.logError(TAG, "HTTP $httpCode stream context: ${context.toLogString()}")
         PlayerDiagnostics.logError(
             TAG,
-            "HTTP $httpCode error — stream may have expired. url_fragment=$urlFragment"
+            "HTTP $httpCode error — stream may have expired. url_fragment=$urlFragment",
         )
         return when (httpCode) {
             403, 410 -> {
@@ -247,24 +260,28 @@ class PlayerErrorHandler(
                 }
                 true
             }
+
             404 -> {
                 getCurrentVideoStream()?.getContent()?.let { markStreamFailed(it) }
                 PlayerDiagnostics.logError(TAG, "HTTP 404 — stream resource not found")
                 handleStreamExpired("http-404")
                 true
             }
+
             429 -> {
                 PlayerDiagnostics.logWarning(TAG, "HTTP 429 — rate limited, retrying after delay")
                 setRecoveryState()
                 reloadPlaybackManager()
                 true
             }
+
             in 500..599 -> {
                 PlayerDiagnostics.logWarning(TAG, "HTTP $httpCode server error — retrying")
                 setRecoveryState()
                 reloadPlaybackManager()
                 true
             }
+
             else -> {
                 PlayerDiagnostics.logError(TAG, "Unhandled HTTP status $httpCode")
                 false
@@ -280,33 +297,47 @@ class PlayerErrorHandler(
                 Log.d(TAG, "Stream expiry on an already-abandoned variant - ignoring. ${context.toLogString()}")
                 return
             }
+
             StreamExpiryRetryLimiter.Decision.Debounced -> {
                 Log.d(TAG, "Stream expiry within debounce window - coalescing into the in-flight reload. ${context.toLogString()}")
                 return
             }
+
             is StreamExpiryRetryLimiter.Decision.GiveUp -> {
-                Log.e(TAG, "Stream expiry limit reached (${decision.attempts}/${decision.limit}) - stopping playback. ${context.toLogString()}")
-                PlayerDiagnostics.logError(TAG, "Giving up after ${decision.attempts} consecutive stream expiry errors. ${context.toLogString()}")
-                onPlaybackShutdown()
-                stateFlow.value = stateFlow.value.copy(
-                    isBuffering = false,
-                    isPlaying = false,
-                    error = appContext.getString(R.string.error_expiring_stream_urls),
-                    recoveryAttempted = true
+                Log.e(
+                    TAG,
+                    "Stream expiry limit reached (${decision.attempts}/${decision.limit}) - stopping playback. ${context.toLogString()}",
                 )
+                PlayerDiagnostics.logError(
+                    TAG,
+                    "Giving up after ${decision.attempts} consecutive stream expiry errors. ${context.toLogString()}",
+                )
+                onPlaybackShutdown()
+                stateFlow.value =
+                    stateFlow.value.copy(
+                        isBuffering = false,
+                        isPlaying = false,
+                        error = appContext.getString(R.string.error_expiring_stream_urls),
+                        recoveryAttempted = true,
+                    )
                 onPlaybackAbandoned()
                 return
             }
+
             is StreamExpiryRetryLimiter.Decision.Retry -> {
-                Log.w(TAG, "Stream expired - requesting full extractor reload (attempt ${decision.attempt}/${decision.limit}). ${context.toLogString()}")
+                Log.w(
+                    TAG,
+                    "Stream expired - requesting full extractor reload (attempt ${decision.attempt}/${decision.limit}). ${context.toLogString()}",
+                )
             }
         }
 
-        stateFlow.value = stateFlow.value.copy(
-            isBuffering = true,
-            error = null,
-            recoveryAttempted = true
-        )
+        stateFlow.value =
+            stateFlow.value.copy(
+                isBuffering = true,
+                error = null,
+                recoveryAttempted = true,
+            )
         onStreamExpired()
     }
 
@@ -316,7 +347,10 @@ class PlayerErrorHandler(
 
     fun hasGivenUp(): Boolean = expiryRetryLimiter.hasGivenUp()
 
-    private fun buildFailureContext(reason: String, httpCode: Int? = null): StreamFailureContext {
+    private fun buildFailureContext(
+        reason: String,
+        httpCode: Int? = null,
+    ): StreamFailureContext {
         val video = getCurrentVideoStream()
         val audio = getCurrentAudioStream()
         return StreamFailureContext(
@@ -325,12 +359,14 @@ class PlayerErrorHandler(
             url = video?.getContent(),
             videoHeight = video?.let(VideoCodecUtils::qualityHeightFromStream),
             videoCodec = video?.let(VideoCodecUtils::codecKeyFromStream),
-            videoItag = video?.itagItem?.id?.toString()
-                ?: runCatching { video?.id }.getOrNull()?.takeIf { !it.isNullOrBlank() },
+            videoItag =
+                video?.itagItem?.id?.toString()
+                    ?: runCatching { video?.id }.getOrNull()?.takeIf { !it.isNullOrBlank() },
             videoMimeType = video?.format?.mimeType,
-            audioItag = audio?.itagItem?.id?.toString()
-                ?: runCatching { audio?.id }.getOrNull()?.takeIf { !it.isNullOrBlank() },
-            audioMimeType = audio?.format?.mimeType
+            audioItag =
+                audio?.itagItem?.id?.toString()
+                    ?: runCatching { audio?.id }.getOrNull()?.takeIf { !it.isNullOrBlank() },
+            audioMimeType = audio?.format?.mimeType,
         )
     }
 
@@ -354,16 +390,21 @@ class PlayerErrorHandler(
 
         // NAL corruption / ParserException
         val videoContent = getCurrentVideoStream()?.getContent()
-        if ((fullErrorInfo.contains("NAL", ignoreCase = true) ||
-                error.cause is androidx.media3.common.ParserException) &&
+        if ((
+                fullErrorInfo.contains("NAL", ignoreCase = true) ||
+                    error.cause is androidx.media3.common.ParserException
+            ) &&
             videoContent != null
         ) {
             markStreamFailed(videoContent)
             incrementStreamErrors()
             Log.w(TAG, "Corrupted stream (NAL/Parser): $videoContent — error count: ${getStreamErrorCount()}")
             if (getStreamErrorCount() >= PlayerConfig.MAX_STREAM_ERRORS) {
-                if (isAdaptiveQualityEnabled()) onQualityDowngrade()
-                else onReloadStream(0L, "manual-quality-parser-error")
+                if (isAdaptiveQualityEnabled()) {
+                    onQualityDowngrade()
+                } else {
+                    onReloadStream(0L, "manual-quality-parser-error")
+                }
                 return
             }
         }
@@ -371,7 +412,7 @@ class PlayerErrorHandler(
         setRecoveryState()
         reloadPlaybackManager()
     }
-    
+
     private fun handleNetworkError(error: PlaybackException) {
         val errorMessage = error.message ?: ""
         val causeMessage = error.cause?.message ?: ""
@@ -380,7 +421,7 @@ class PlayerErrorHandler(
         PlayerDiagnostics.logError(
             TAG,
             "Network/IO error (${error.errorCode}): ${errorMessage.take(120)}",
-            error.cause
+            error.cause,
         )
 
         // Parser error mis-classified as IO error
@@ -394,8 +435,11 @@ class PlayerErrorHandler(
                 markStreamFailed(videoContent)
                 incrementStreamErrors()
                 if (getStreamErrorCount() >= PlayerConfig.MAX_STREAM_ERRORS) {
-                    if (isAdaptiveQualityEnabled()) onQualityDowngrade()
-                    else onReloadStream(0L, "manual-quality-parser-io")
+                    if (isAdaptiveQualityEnabled()) {
+                        onQualityDowngrade()
+                    } else {
+                        onReloadStream(0L, "manual-quality-parser-io")
+                    }
                     return
                 }
             }
@@ -438,17 +482,19 @@ class PlayerErrorHandler(
         Log.e(TAG, "Decoder/renderer error: ${error.errorCode}")
         PlayerDiagnostics.logError(TAG, "Decoder error (${error.errorCode}): ${error.message}", error.cause)
 
-        val isAudioError = error.errorCode == PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED ||
-            error.errorCode == PlaybackException.ERROR_CODE_AUDIO_TRACK_WRITE_FAILED ||
-            error.message?.contains("AudioRenderer", ignoreCase = true) == true
+        val isAudioError =
+            error.errorCode == PlaybackException.ERROR_CODE_AUDIO_TRACK_INIT_FAILED ||
+                error.errorCode == PlaybackException.ERROR_CODE_AUDIO_TRACK_WRITE_FAILED ||
+                error.message?.contains("AudioRenderer", ignoreCase = true) == true
 
         if (isAudioError && getCurrentAudioStream()?.getContent() != null) {
             markStreamFailed(getCurrentAudioStream()!!.getContent())
             val failedUrls = getFailedStreamUrls()
-            val alternativeAudio = getAvailableAudioStreams()
-                .filter { !failedUrls.contains(it.getContent()) }
-                .sortedByDescending { it.averageBitrate }
-                .firstOrNull()
+            val alternativeAudio =
+                getAvailableAudioStreams()
+                    .filter { !failedUrls.contains(it.getContent()) }
+                    .sortedByDescending { it.averageBitrate }
+                    .firstOrNull()
             if (alternativeAudio != null) {
                 setCurrentAudioStream(alternativeAudio)
                 Log.d(TAG, "Switching to alternative audio: ${alternativeAudio.format?.mimeType}")
@@ -461,20 +507,22 @@ class PlayerErrorHandler(
 
         Log.e(TAG, "Decoder error — no alternatives available, stopping playback")
         onPlaybackShutdown()
-        stateFlow.value = stateFlow.value.copy(
-            error = appContext.getString(R.string.error_playback_device, error.message.orEmpty()),
-            isPlaying = false
-        )
+        stateFlow.value =
+            stateFlow.value.copy(
+                error = appContext.getString(R.string.error_playback_device, error.message.orEmpty()),
+                isPlaying = false,
+            )
     }
 
     private fun handleDrmError(error: PlaybackException) {
         Log.e(TAG, "DRM error: ${error.errorCode}")
         PlayerDiagnostics.logError(TAG, "DRM error (${error.errorCode}): ${error.message}")
         onPlaybackShutdown()
-        stateFlow.value = stateFlow.value.copy(
-            error = appContext.getString(R.string.error_content_protection, error.message.orEmpty()),
-            isPlaying = false
-        )
+        stateFlow.value =
+            stateFlow.value.copy(
+                error = appContext.getString(R.string.error_content_protection, error.message.orEmpty()),
+                isPlaying = false,
+            )
     }
 
     private fun handleUnknownError(error: PlaybackException) {
@@ -482,7 +530,7 @@ class PlayerErrorHandler(
         PlayerDiagnostics.logError(
             TAG,
             "Unknown error code=${error.errorCode} msg=${error.message?.take(120)}",
-            error.cause
+            error.cause,
         )
         setRecoveryState()
         reloadPlaybackManager()
@@ -505,11 +553,12 @@ class PlayerErrorHandler(
     fun setRecovery() {
         Log.d(TAG, "Setting recovery state")
         PlayerDiagnostics.logInfo(TAG, "Recovery state set")
-        stateFlow.value = stateFlow.value.copy(
-            isBuffering = true,
-            error = null,
-            recoveryAttempted = true
-        )
+        stateFlow.value =
+            stateFlow.value.copy(
+                isBuffering = true,
+                error = null,
+                recoveryAttempted = true,
+            )
     }
 
     fun handlePlaybackShutdown(player: ExoPlayer?) {
@@ -518,11 +567,12 @@ class PlayerErrorHandler(
         try {
             player?.stop()
             player?.clearMediaItems()
-            stateFlow.value = stateFlow.value.copy(
-                isPlaying = false,
-                isBuffering = false,
-                error = appContext.getString(R.string.error_playback_stopped)
-            )
+            stateFlow.value =
+                stateFlow.value.copy(
+                    isPlaying = false,
+                    isBuffering = false,
+                    error = appContext.getString(R.string.error_playback_stopped),
+                )
         } catch (e: Exception) {
             Log.e(TAG, "Error during playback shutdown", e)
         }
@@ -533,7 +583,10 @@ class PlayerErrorHandler(
      * after a screen-off/on cycle.
      * Returns true if a recovery action was taken.
      */
-    fun handleRefocusStuck(player: ExoPlayer?, videoId: String?): Boolean {
+    fun handleRefocusStuck(
+        player: ExoPlayer?,
+        videoId: String?,
+    ): Boolean {
         val pbState = player?.playbackState ?: return false
         val duration = player.duration
         val position = player.currentPosition
@@ -541,7 +594,7 @@ class PlayerErrorHandler(
         PlayerDiagnostics.logRefocusGlitch(
             TAG,
             "videoId=$videoId pbState=$pbState dur=$duration pos=$position " +
-                "playWhenReady=${player.playWhenReady} isPlaying=${player.isPlaying}"
+                "playWhenReady=${player.playWhenReady} isPlaying=${player.isPlaying}",
         )
 
         return when {
@@ -552,12 +605,14 @@ class PlayerErrorHandler(
                 if (player.playWhenReady) player.play()
                 true
             }
+
             pbState == Player.STATE_READY && duration <= 0L && position < 1000L -> {
                 Log.w(TAG, "Refocus: ghost READY state (dur=$duration, pos=$position) — requesting extractor reload")
                 PlayerDiagnostics.logWarning(TAG, "Refocus: ghost READY state → extractor reload")
                 onStreamExpired()
                 true
             }
+
             pbState == Player.STATE_ENDED && position < 5000L -> {
                 Log.w(TAG, "Refocus: false STATE_ENDED at pos=$position — seek(0) + play()")
                 PlayerDiagnostics.logWarning(TAG, "Refocus: false STATE_ENDED → seek(0) + play()")
@@ -566,7 +621,10 @@ class PlayerErrorHandler(
                 player.play()
                 true
             }
-            else -> false
+
+            else -> {
+                false
+            }
         }
     }
 
@@ -579,8 +637,9 @@ class PlayerErrorHandler(
         try {
             var cause: Throwable? = error.cause
             while (cause != null) {
-                val field = runCatching { cause!!.javaClass.getField("responseCode") }.getOrNull()
-                    ?: runCatching { cause!!.javaClass.getDeclaredField("responseCode") }.getOrNull()
+                val field =
+                    runCatching { cause!!.javaClass.getField("responseCode") }.getOrNull()
+                        ?: runCatching { cause!!.javaClass.getDeclaredField("responseCode") }.getOrNull()
                 if (field != null) {
                     field.isAccessible = true
                     return (field.get(cause) as? Int) ?: 0

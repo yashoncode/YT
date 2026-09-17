@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.dp
 import com.yt.R
 import com.yt.innertube.pages.channel.ChannelHeader
 import com.yt.ui.components.ChannelAvatarImage
+import com.yt.ui.components.shared.FullSizeImageDialog
 import com.yt.ui.components.shared.YTNoteCard
 import com.yt.ui.components.shared.YTSubscribeButton
-import com.yt.ui.components.shared.FullSizeImageDialog
 import com.yt.ui.theme.extendedColors
 import com.yt.utils.ThumbnailUrlResolver
 

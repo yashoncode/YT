@@ -15,7 +15,10 @@ import androidx.glance.unit.ColorProvider
  * widget renders in the exact palette the user selected in the app.
  */
 @Composable
-fun YTGlanceTheme(colors: ColorProviders, content: @Composable () -> Unit) {
+fun YTGlanceTheme(
+    colors: ColorProviders,
+    content: @Composable () -> Unit,
+) {
     GlanceTheme(colors = colors, content = content)
 }
 
@@ -25,12 +28,11 @@ fun YTGlanceTheme(colors: ColorProviders, content: @Composable () -> Unit) {
  * Pass a container color to make the whole widget a tonal block (e.g. the recognizer tile).
  */
 @Composable
-fun GlanceModifier.widgetSurface(
-    color: ColorProvider = GlanceTheme.colors.widgetBackground,
-): GlanceModifier {
-    val withBackground = this
-        .appWidgetBackground()
-        .background(color)
+fun GlanceModifier.widgetSurface(color: ColorProvider = GlanceTheme.colors.widgetBackground): GlanceModifier {
+    val withBackground =
+        this
+            .appWidgetBackground()
+            .background(color)
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         withBackground.cornerRadius(android.R.dimen.system_app_widget_background_radius)
     } else {

@@ -6,8 +6,8 @@ import com.yt.data.local.CachedHomeVideo
 import com.yt.data.local.HomeFeedCacheRepository
 import com.yt.data.local.ViewHistory
 import com.yt.data.model.Video
-import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.InteractionType
+import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.repository.YouTubeRepository
 import com.yt.player.PlayerRelatedVideosPolicy
 import com.yt.utils.ThumbnailUrlResolver

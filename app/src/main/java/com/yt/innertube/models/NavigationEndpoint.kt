@@ -22,12 +22,14 @@ data class NavigationEndpoint(
                 ?: shareEntityEndpoint
 
     val anyWatchEndpoint: WatchEndpoint?
-        get() = watchEndpoint
-            ?: watchPlaylistEndpoint
+        get() =
+            watchEndpoint
+                ?: watchPlaylistEndpoint
 
     val musicVideoType: String?
-        get() = anyWatchEndpoint
-            ?.watchEndpointMusicSupportedConfigs
-            ?.watchEndpointMusicConfig
-            ?.musicVideoType
+        get() =
+            anyWatchEndpoint
+                ?.watchEndpointMusicSupportedConfigs
+                ?.watchEndpointMusicConfig
+                ?.musicVideoType
 }

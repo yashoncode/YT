@@ -7,7 +7,6 @@ import android.util.Log
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import dagger.hilt.android.HiltAndroidApp
 import com.yt.data.local.CONTENT_LANGUAGE_FOLLOW_APP
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.SubscriptionRepository
@@ -22,13 +21,14 @@ import com.yt.network.AppProxyManager
 import com.yt.notification.NotificationHelper
 import com.yt.notification.SubscriptionCheckWorker
 import com.yt.utils.AppLanguageManager
-import com.yt.utils.YTCrashHandler
 import com.yt.utils.PerformanceDispatcher
+import com.yt.utils.YTCrashHandler
 import com.yt.utils.cipher.PipePipeNsigDecoder
 import com.yt.utils.newPipeContentCountry
 import com.yt.utils.newPipeLocalization
 import com.yt.utils.normalizeYouTubeCountry
 import com.yt.utils.potoken.NewPipePoTokenProvider
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

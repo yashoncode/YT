@@ -18,7 +18,7 @@ import javax.inject.Singleton
 
 /**
  * Enhanced Network Module for Blazing Fast Performance
- * 
+ *
  * Optimizations:
  * - Connection pooling: Reuse connections for faster subsequent requests
  * - HTTP/2 support: Multiplexing for parallel requests on single connection
@@ -28,72 +28,69 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     // Cache configuration
     private const val CACHE_SIZE_MB = 100L * 1024L * 1024L // 100MB cache
-    
+
     // Connection pool configuration
     private const val MAX_IDLE_CONNECTIONS = 6
     private const val KEEP_ALIVE_DURATION_MINUTES = 2L
-    
+
     // Timeout configuration (in seconds)
     private const val CONNECT_TIMEOUT = 15L
     private const val READ_TIMEOUT = 30L
     private const val WRITE_TIMEOUT = 30L
     private const val CALL_TIMEOUT = 60L
-    
+
     // Dispatcher configuration
     private const val MAX_REQUESTS_TOTAL = 32 // Max concurrent requests
     private const val MAX_REQUESTS_PER_HOST = 5 // Max per host
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+    ): OkHttpClient {
         val cacheDirectory = File(context.cacheDir, "http_cache")
         val cache = Cache(cacheDirectory, CACHE_SIZE_MB)
-        
-        // Connection pool for connection reuse (massive speed improvement)
-        val connectionPool = ConnectionPool(
-            MAX_IDLE_CONNECTIONS,
-            KEEP_ALIVE_DURATION_MINUTES,
-            TimeUnit.MINUTES
-        )
-        
-        // Dispatcher for high concurrency parallel requests
-        val dispatcher = Dispatcher().apply {
-            maxRequests = MAX_REQUESTS_TOTAL
-            maxRequestsPerHost = MAX_REQUESTS_PER_HOST
-        }
 
-        return AppProxyManager.applyTo(OkHttpClient.Builder())
+        // Connection pool for connection reuse (massive speed improvement)
+        val connectionPool =
+            ConnectionPool(
+                MAX_IDLE_CONNECTIONS,
+                KEEP_ALIVE_DURATION_MINUTES,
+                TimeUnit.MINUTES,
+            )
+
+        // Dispatcher for high concurrency parallel requests
+        val dispatcher =
+            Dispatcher().apply {
+                maxRequests = MAX_REQUESTS_TOTAL
+                maxRequestsPerHost = MAX_REQUESTS_PER_HOST
+            }
+
+        return AppProxyManager
+            .applyTo(OkHttpClient.Builder())
             // Enable HTTP/2 for multiplexing (parallel streams on single connection)
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
-            
             // Connection pool for reuse
             .connectionPool(connectionPool)
-            
             // High concurrency dispatcher
             .dispatcher(dispatcher)
-            
             // Response caching
             .cache(cache)
-            
             // Optimized timeouts
             .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
             .callTimeout(CALL_TIMEOUT, TimeUnit.SECONDS)
-            
             // Retry on connection failure
             .retryOnConnectionFailure(true)
-            
             // Follow redirects
             .followRedirects(true)
             .followSslRedirects(true)
-            
             .build()
     }
-    
+
     /**
      * Provides a lightweight client for quick metadata requests
      * Uses shorter timeouts for fast-fail behavior
@@ -101,8 +98,11 @@ object NetworkModule {
     @Provides
     @Singleton
     @MetadataClient
-    fun provideMetadataClient(@ApplicationContext context: Context): OkHttpClient {
-        return AppProxyManager.applyTo(OkHttpClient.Builder())
+    fun provideMetadataClient(
+        @ApplicationContext context: Context,
+    ): OkHttpClient =
+        AppProxyManager
+            .applyTo(OkHttpClient.Builder())
             .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
             .connectionPool(ConnectionPool(2, 1, TimeUnit.MINUTES))
             .connectTimeout(10, TimeUnit.SECONDS)
@@ -110,7 +110,6 @@ object NetworkModule {
             .writeTimeout(10, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build()
-    }
 }
 
 /**

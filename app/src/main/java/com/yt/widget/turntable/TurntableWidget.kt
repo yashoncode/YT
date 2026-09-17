@@ -18,10 +18,10 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
-import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.NowPlayingSnapshot
 import com.yt.widget.core.WidgetImageLoader
 import com.yt.widget.core.WidgetShape
+import com.yt.widget.core.YTGlanceTheme
 import com.yt.widget.core.nowPlayingSnapshotFlow
 import com.yt.widget.core.widgetColorsFlow
 import com.yt.widget.core.widgetSurface
@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.first
  * the bottom edge. Art tap opens the music player.
  */
 class TurntableWidget : GlanceAppWidget() {
-
     companion object {
         // Load at the largest disc we can render on a resized turntable.
         private const val DISC_LOAD_DP = 220f
@@ -43,7 +42,10 @@ class TurntableWidget : GlanceAppWidget() {
 
     override val sizeMode = SizeMode.Exact
 
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
+    override suspend fun provideGlance(
+        context: Context,
+        id: GlanceId,
+    ) {
         val density = context.resources.displayMetrics.density
         val discPx = (DISC_LOAD_DP * density).toInt()
 
@@ -68,7 +70,10 @@ class TurntableWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun TurntableContent(snapshot: NowPlayingSnapshot?, artwork: Bitmap?) {
+private fun TurntableContent(
+    snapshot: NowPlayingSnapshot?,
+    artwork: Bitmap?,
+) {
     val size = LocalSize.current
     val discSize = minOf(size.width, size.height) - 20.dp
     Box(modifier = GlanceModifier.fillMaxSize().widgetSurface()) {
