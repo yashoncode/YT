@@ -108,6 +108,9 @@ fun BoxScope.YTNavigationChrome(
     isSearchEnabled: Boolean = false,
     isCategoriesEnabled: Boolean = false,
     navOrder: List<Int> = listOf(0, 1, 2, 3, 4, 5, 6),
+    barScale: Float = 1f,
+    glass: Boolean = false,
+    hapticsEnabled: Boolean = true,
 ) {
     if (flowUsesNavigationRail()) {
         val items =
@@ -153,6 +156,9 @@ fun BoxScope.YTNavigationChrome(
                 isSearchEnabled = isSearchEnabled,
                 isCategoriesEnabled = isCategoriesEnabled,
                 navOrder = navOrder,
+                barScale = barScale,
+                glass = glass,
+                hapticsEnabled = hapticsEnabled,
             )
         }
     }

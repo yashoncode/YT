@@ -203,65 +203,77 @@ object YouTube {
     suspend fun searchSummary(query: String): Result<SearchSummaryPage> =
         runCatching {
             val response = innerTube.search(WEB_REMIX, query).body<SearchResponse>()
+            val sections =
+                response.contents
+                    ?.tabbedSearchResultsRenderer
+                    ?.tabs
+                    ?.firstOrNull()
+                    ?.tabRenderer
+                    ?.content
+                    ?.sectionListRenderer
+                    ?.contents
+                    .orEmpty()
+            val shelves =
+                sections.mapNotNull { section ->
+                    val card = section.musicCardShelfRenderer
+                    if (card != null) {
+                        SearchSummary(
+                            title =
+                                card.header
+                                    ?.musicCardShelfHeaderBasicRenderer
+                                    ?.title
+                                    ?.runs
+                                    ?.firstOrNull()
+                                    ?.text ?: YouTubeConstants.DEFAULT_TOP_RESULT,
+                            items =
+                                listOfNotNull(SearchSummaryPage.fromMusicCardShelfRenderer(card))
+                                    .plus(
+                                        card.contents
+                                            ?.mapNotNull { it.musicResponsiveListItemRenderer }
+                                            ?.mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
+                                            .orEmpty(),
+                                    ).distinctBy { it.id }
+                                    .ifEmpty { null } ?: return@mapNotNull null,
+                        )
+                    } else {
+                        SearchSummary(
+                            title =
+                                section.musicShelfRenderer
+                                    ?.title
+                                    ?.runs
+                                    ?.firstOrNull()
+                                    ?.text ?: YouTubeConstants.DEFAULT_OTHER_RESULTS,
+                            items =
+                                section.musicShelfRenderer
+                                    ?.contents
+                                    ?.getItems()
+                                    ?.mapNotNull {
+                                        SearchSummaryPage.fromMusicResponsiveListItemRenderer(it)
+                                    }?.distinctBy { it.id }
+                                    ?.ifEmpty { null } ?: return@mapNotNull null,
+                        )
+                    }
+                }
+            // Unfiltered music search stopped wrapping its results in one musicShelfRenderer and now
+            // sends every row as its own itemSectionRenderer, which left the entire result list on
+            // the floor and the screen empty (#1072). The rows are unchanged, so collect them back
+            // into the single shelf the UI expects. Filtered searches still send a musicShelfRenderer.
+            val looseItems =
+                sections
+                    .flatMap { it.itemSectionRenderer?.contents?.getItems().orEmpty() }
+                    .mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
+                    .distinctBy { it.id }
             SearchSummaryPage(
                 summaries =
-                    response.contents
-                        ?.tabbedSearchResultsRenderer
-                        ?.tabs
-                        ?.firstOrNull()
-                        ?.tabRenderer
-                        ?.content
-                        ?.sectionListRenderer
-                        ?.contents
-                        ?.mapNotNull { it ->
-                            if (it.musicCardShelfRenderer != null) {
-                                SearchSummary(
-                                    title =
-                                        it.musicCardShelfRenderer.header
-                                            ?.musicCardShelfHeaderBasicRenderer
-                                            ?.title
-                                            ?.runs
-                                            ?.firstOrNull()
-                                            ?.text ?: YouTubeConstants.DEFAULT_TOP_RESULT,
-                                    items =
-                                        listOfNotNull(SearchSummaryPage.fromMusicCardShelfRenderer(it.musicCardShelfRenderer))
-                                            .plus(
-                                                it.musicCardShelfRenderer.contents
-                                                    ?.mapNotNull { it.musicResponsiveListItemRenderer }
-                                                    ?.mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
-                                                    .orEmpty(),
-                                            ).distinctBy { it.id }
-                                            .ifEmpty { null } ?: return@mapNotNull null,
-                                )
-                            } else {
-                                SearchSummary(
-                                    title =
-                                        it.musicShelfRenderer
-                                            ?.title
-                                            ?.runs
-                                            ?.firstOrNull()
-                                            ?.text ?: YouTubeConstants.DEFAULT_OTHER_RESULTS,
-                                    items =
-                                        it.musicShelfRenderer
-                                            ?.contents
-                                            ?.getItems()
-                                            ?.mapNotNull {
-                                                SearchSummaryPage.fromMusicResponsiveListItemRenderer(it)
-                                            }?.distinctBy { it.id }
-                                            ?.ifEmpty { null } ?: return@mapNotNull null,
-                                )
-                            }
-                        }!!,
+                    shelves +
+                        listOfNotNull(
+                            looseItems
+                                .ifEmpty { null }
+                                ?.let { SearchSummary(YouTubeConstants.DEFAULT_OTHER_RESULTS, it) },
+                        ),
                 continuation =
-                    response.contents
-                        ?.tabbedSearchResultsRenderer
-                        ?.tabs
-                        ?.firstOrNull()
-                        ?.tabRenderer
-                        ?.content
-                        ?.sectionListRenderer
-                        ?.contents
-                        ?.lastOrNull()
+                    sections
+                        .lastOrNull()
                         ?.musicShelfRenderer
                         ?.continuations
                         ?.getContinuation(),
@@ -274,33 +286,26 @@ object YouTube {
     ): Result<SearchResult> =
         runCatching {
             val response = innerTube.search(WEB_REMIX, query, filter.value).body<SearchResponse>()
+            val sections =
+                response.contents
+                    ?.tabbedSearchResultsRenderer
+                    ?.tabs
+                    ?.firstOrNull()
+                    ?.tabRenderer
+                    ?.content
+                    ?.sectionListRenderer
+                    ?.contents
+                    .orEmpty()
             SearchResult(
                 items =
-                    response.contents
-                        ?.tabbedSearchResultsRenderer
-                        ?.tabs
-                        ?.firstOrNull()
-                        ?.tabRenderer
-                        ?.content
-                        ?.sectionListRenderer
-                        ?.contents
-                        ?.lastOrNull()
-                        ?.musicShelfRenderer
-                        ?.contents
-                        ?.getItems()
-                        ?.mapNotNull {
-                            SearchPage.toYTItem(it)
-                        }.orEmpty(),
+                    sections
+                        .flatMap { section ->
+                            section.musicShelfRenderer?.contents?.getItems().orEmpty() +
+                                section.itemSectionRenderer?.contents?.getItems().orEmpty()
+                        }.mapNotNull { SearchPage.toYTItem(it) },
                 continuation =
-                    response.contents
-                        ?.tabbedSearchResultsRenderer
-                        ?.tabs
-                        ?.firstOrNull()
-                        ?.tabRenderer
-                        ?.content
-                        ?.sectionListRenderer
-                        ?.contents
-                        ?.lastOrNull()
+                    sections
+                        .lastOrNull()
                         ?.musicShelfRenderer
                         ?.continuations
                         ?.getContinuation(),

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.BlurOn
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.DragIndicator
 import androidx.compose.material.icons.outlined.Explore
@@ -32,10 +33,12 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material.icons.outlined.StickyNote2
 import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.outlined.ViewAgenda
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.ViewQuilt
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -53,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yt.R
+import com.yt.data.local.BOTTOM_NAV_SCALE_RANGE
 import com.yt.data.local.HomeFeedColumns
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.local.PlayerRelatedCardStyle
@@ -64,6 +68,7 @@ import com.yt.ui.resolveDefaultNavTabIndex
 import com.yt.ui.theme.GridItemSize
 import com.yt.ui.visibleNavTabIndices
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +117,9 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
     )
     var showWatchedThresholdDialog by remember { mutableStateOf(false) }
     val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = true)
+    val bottomNavScale by preferences.bottomNavScale.collectAsState(initial = 1f)
+    val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = false)
+    val bottomNavHaptics by preferences.bottomNavHaptics.collectAsState(initial = true)
     val shareWithoutText by preferences.shareWithoutText.collectAsState(initial = false)
     val disableShortsPlayer by preferences.disableShortsPlayer.collectAsState(initial = false)
     val showShortsPlayerPrompt by preferences.showShortsPlayerPrompt.collectAsState(initial = true)
@@ -820,6 +828,52 @@ fun ContentSettingsScreen(onBackClick: () -> Unit) {
                         onCheckedChange = { enabled ->
                             coroutineScope.launch {
                                 preferences.setBottomNavHideOnScroll(enabled)
+                            }
+                        },
+                    )
+                    HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    // Dragged locally and written once on release, so a drag is one DataStore write.
+                    var navScaleDraft by remember(bottomNavScale) { mutableFloatStateOf(bottomNavScale) }
+                    SettingsSliderItem(
+                        icon = Icons.Outlined.Straighten,
+                        title = stringResource(R.string.content_settings_navbar_size_title),
+                        subtitle =
+                            stringResource(
+                                R.string.content_settings_navbar_size_subtitle,
+                                (navScaleDraft * 100).roundToInt(),
+                            ),
+                        value = navScaleDraft,
+                        valueRange = BOTTOM_NAV_SCALE_RANGE,
+                        // 0.8 to 1.5 in 0.05 steps: fine enough to tune, coarse enough to land on.
+                        steps = 13,
+                        onValueChange = { scale -> navScaleDraft = scale },
+                        onValueChangeFinished = {
+                            coroutineScope.launch {
+                                preferences.setBottomNavScale(navScaleDraft)
+                            }
+                        },
+                    )
+                    HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    SettingsSwitchItem(
+                        icon = Icons.Outlined.BlurOn,
+                        title = stringResource(R.string.content_settings_navbar_glass_title),
+                        subtitle = stringResource(R.string.content_settings_navbar_glass_subtitle),
+                        checked = bottomNavGlass,
+                        onCheckedChange = { enabled ->
+                            coroutineScope.launch {
+                                preferences.setBottomNavGlass(enabled)
+                            }
+                        },
+                    )
+                    HorizontalDivider(Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    SettingsSwitchItem(
+                        icon = Icons.Outlined.Vibration,
+                        title = stringResource(R.string.content_settings_navbar_haptics_title),
+                        subtitle = stringResource(R.string.content_settings_navbar_haptics_subtitle),
+                        checked = bottomNavHaptics,
+                        onCheckedChange = { enabled ->
+                            coroutineScope.launch {
+                                preferences.setBottomNavHaptics(enabled)
                             }
                         },
                     )

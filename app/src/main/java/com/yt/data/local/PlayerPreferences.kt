@@ -33,6 +33,9 @@ const val DEFAULT_FULLSCREEN_SEEKBAR_PADDING_DP = 48
 const val MAX_FULLSCREEN_SEEKBAR_PADDING_DP = 120
 val DEFAULT_NAV_TAB_ORDER = listOf(0, 1, 2, 3, 4, 5, 6)
 
+/** How far the bottom navigation bar may be scaled from its default size. */
+val BOTTOM_NAV_SCALE_RANGE = 0.8f..1.5f
+
 private const val MAX_UNPLAYABLE_VIDEO_IDS = 300
 
 private fun String?.decodeUnplayableIds(): Set<String> =
@@ -136,6 +139,9 @@ class PlayerPreferences(
         val HOME_NAVIGATION_ENABLED = booleanPreferencesKey("home_navigation_enabled")
         val SHORTS_NAVIGATION_ENABLED = booleanPreferencesKey("shorts_navigation_enabled")
         val BOTTOM_NAV_HIDE_ON_SCROLL = booleanPreferencesKey("bottom_nav_hide_on_scroll")
+        val BOTTOM_NAV_SCALE = floatPreferencesKey("bottom_nav_scale")
+        val BOTTOM_NAV_GLASS = booleanPreferencesKey("bottom_nav_glass")
+        val BOTTOM_NAV_HAPTICS = booleanPreferencesKey("bottom_nav_haptics")
         val MUSIC_NAVIGATION_ENABLED = booleanPreferencesKey("music_navigation_enabled")
         val SEARCH_NAV_TAB_ENABLED = booleanPreferencesKey("search_nav_tab_enabled")
         val CATEGORIES_NAV_TAB_ENABLED = booleanPreferencesKey("categories_nav_tab_enabled")
@@ -892,6 +898,41 @@ class PlayerPreferences(
     suspend fun setBottomNavHideOnScroll(enabled: Boolean) {
         context.playerPreferencesDataStore.edit { preferences ->
             preferences[Keys.BOTTOM_NAV_HIDE_ON_SCROLL] = enabled
+        }
+    }
+
+    // Size multiplier for the bottom navigation bar; 1f is the default bar.
+    val bottomNavScale: Flow<Float> =
+        context.playerPreferencesDataStore.data
+            .map { preferences ->
+                (preferences[Keys.BOTTOM_NAV_SCALE] ?: 1f).coerceIn(BOTTOM_NAV_SCALE_RANGE)
+            }
+
+    suspend fun setBottomNavScale(scale: Float) {
+        context.playerPreferencesDataStore.edit { preferences ->
+            preferences[Keys.BOTTOM_NAV_SCALE] = scale.coerceIn(BOTTOM_NAV_SCALE_RANGE)
+        }
+    }
+
+    // When ON, the bottom navigation bar is translucent so content shows through it.
+    val bottomNavGlass: Flow<Boolean> =
+        context.playerPreferencesDataStore.data
+            .map { preferences -> preferences[Keys.BOTTOM_NAV_GLASS] ?: false }
+
+    suspend fun setBottomNavGlass(enabled: Boolean) {
+        context.playerPreferencesDataStore.edit { preferences ->
+            preferences[Keys.BOTTOM_NAV_GLASS] = enabled
+        }
+    }
+
+    // Haptic tick when switching tabs from the bottom navigation bar.
+    val bottomNavHaptics: Flow<Boolean> =
+        context.playerPreferencesDataStore.data
+            .map { preferences -> preferences[Keys.BOTTOM_NAV_HAPTICS] ?: true }
+
+    suspend fun setBottomNavHaptics(enabled: Boolean) {
+        context.playerPreferencesDataStore.edit { preferences ->
+            preferences[Keys.BOTTOM_NAV_HAPTICS] = enabled
         }
     }
 

@@ -38,7 +38,6 @@ import com.yt.platform.DeviceFormFactorDetector
 import com.yt.player.BackgroundPlaybackPolicy
 import com.yt.player.GlobalPlayerState
 import com.yt.player.LifecyclePlaybackPreferences
-import com.yt.player.MemoryPressurePolicy
 import com.yt.player.PictureInPictureHelper
 import com.yt.ui.YTApp
 import com.yt.ui.components.ProvideVideoCardState
@@ -790,11 +789,9 @@ class MainActivity : ComponentActivity() {
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         YTCrashHandler.recordPhase("memory", "MainActivity.onTrimMemory level=$level")
-        if (MemoryPressurePolicy.shouldReleaseVideoPlayback(level)) {
-            com.yt.player.EnhancedPlayerManager
-                .getInstance()
-                .handleCriticalMemoryPressure()
-        }
+        com.yt.player.EnhancedPlayerManager
+            .getInstance()
+            .handleCriticalMemoryPressure(level)
     }
 
     fun enterPlayerPictureInPictureMode(

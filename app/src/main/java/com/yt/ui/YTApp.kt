@@ -43,6 +43,7 @@ import com.yt.player.EnhancedPlayerManager
 import com.yt.player.GlobalPlayerState
 import com.yt.player.SleepTimerManager
 import com.yt.ui.components.DonationPromptHost
+import com.yt.ui.components.bottomNavContentHeight
 import com.yt.ui.components.layout.YTNavigationChrome
 import com.yt.ui.components.layout.flowUsesNavigationRail
 import com.yt.ui.components.layout.topbar.ProvideYTGlobalActions
@@ -116,6 +117,9 @@ fun YTApp(
     val defaultNavTabIndex by preferences.defaultNavTabIndex.collectAsState(initial = 0)
     val subscriptionRefreshOnStartup by preferences.subscriptionRefreshOnStartup.collectAsState(initial = false)
     val bottomNavHideOnScroll by preferences.bottomNavHideOnScroll.collectAsState(initial = true)
+    val bottomNavScale by preferences.bottomNavScale.collectAsState(initial = 1f)
+    val bottomNavGlass by preferences.bottomNavGlass.collectAsState(initial = false)
+    val bottomNavHaptics by preferences.bottomNavHaptics.collectAsState(initial = true)
     val sleepTimerCloseAppOnExpiry by preferences.sleepTimerCloseAppOnExpiry.collectAsState(
         initial = SleepTimerManager.preferredCloseAppOnExpiry,
     )
@@ -280,7 +284,7 @@ fun YTApp(
 
         val navBarBottomInset = WindowInsets.navigationBars.getBottom(density)
 
-        val bottomNavContentHeightDp = 48.dp
+        val bottomNavContentHeightDp = bottomNavContentHeight(bottomNavScale)
 
         val playerSheetState = rememberPlayerDraggableState()
         val playerVisibleState = remember { mutableStateOf(false) }
@@ -644,6 +648,9 @@ fun YTApp(
                 isSearchEnabled = isSearchNavigationEnabled,
                 isCategoriesEnabled = isCategoriesNavigationEnabled,
                 navOrder = navTabOrder,
+                barScale = bottomNavScale,
+                glass = bottomNavGlass,
+                hapticsEnabled = bottomNavHaptics,
                 onItemSelected = { index ->
                     val route = navRouteForIndex(index)
 

@@ -47,5 +47,16 @@ data class SectionListRenderer(
         val musicResponsiveHeaderRenderer: MusicResponsiveHeaderRenderer?,
         val musicEditablePlaylistDetailHeaderRenderer: MusicEditablePlaylistDetailHeaderRenderer?,
         val gridRenderer: GridRenderer?,
+        val itemSectionRenderer: ItemSectionRenderer? = null,
+    )
+
+    /**
+     * A single search result standing on its own, outside any shelf. Music search moved the
+     * unfiltered result list to this wrapper: one section per row, no title (#1072). The row payload
+     * is the same as a shelf row, so it reuses [MusicShelfRenderer.Content].
+     */
+    @Serializable
+    data class ItemSectionRenderer(
+        val contents: List<MusicShelfRenderer.Content>? = null,
     )
 }

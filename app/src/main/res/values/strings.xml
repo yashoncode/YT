@@ -215,6 +215,7 @@
     <string name="action_go_to_home">Go to Home</string>
     <string name="action_delete">Delete</string>
     <string name="downloads_title">Downloads</string>
+    <string name="downloads_refresh">Refresh downloads</string>
     <string name="download_deleted">Download deleted</string>
     <string name="action_undo">Undo</string>
     <string name="cd_delete_download">Delete %1$s</string>
@@ -911,6 +912,12 @@
     <string name="content_settings_header_home_feed">Home Feed</string>
     <string name="content_settings_home_feed_title">Enable Home Feed</string>
     <string name="content_settings_home_feed_subtitle">Show personalized video recommendations on the home screen</string>
+    <string name="content_settings_navbar_size_title">Navigation bar size</string>
+    <string name="content_settings_navbar_size_subtitle">Scale the bottom bar and its labels (%1$d%%)</string>
+    <string name="content_settings_navbar_glass_title">Translucent navigation bar</string>
+    <string name="content_settings_navbar_glass_subtitle">Let content show through the bottom bar</string>
+    <string name="content_settings_navbar_haptics_title">Haptics on tab switch</string>
+    <string name="content_settings_navbar_haptics_subtitle">Short vibration when you change tabs</string>
     <string name="content_settings_home_reselect_refresh_title">Refresh Home when reselected</string>
     <string name="content_settings_home_reselect_refresh_subtitle">Reload suggestions after scrolling to the top when Home is tapped again</string>
     <string name="content_settings_home_feed_disabled_title">Home Feed Disabled</string>

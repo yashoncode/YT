@@ -28,18 +28,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yt.R
+import com.yt.data.local.BOTTOM_NAV_SCALE_RANGE
 import com.yt.ui.components.layout.YTNavItemSpec
 import com.yt.ui.components.layout.rememberYTNavItems
 
 private const val MAX_VISIBLE_NAV_ITEMS = 5
+
+// Bar metrics at scale 1f. Everything below is these numbers times the user's size setting.
+private val NAV_ICON_SIZE = 24.dp
+private val NAV_ITEM_VERTICAL_PADDING = 6.dp
+private val NAV_BAR_VERTICAL_PADDING = 4.dp
+private val NAV_LABEL_GAP = 2.dp
+private const val NAV_LABEL_SP = 11f
+private val NAV_LABEL_LINE_HEIGHT = 15.dp
+private const val GLASS_BAR_ALPHA = 0.72f
+
+/**
+ * Height of the bar's own content at [barScale], without the system navigation-bar inset. Callers
+ * reserve this much space at the bottom of the screen so the bar never covers content.
+ */
+fun bottomNavContentHeight(barScale: Float): Dp {
+    val scale = barScale.coerceIn(BOTTOM_NAV_SCALE_RANGE)
+    return (NAV_BAR_VERTICAL_PADDING + NAV_ITEM_VERTICAL_PADDING) * 2 * scale +
+        (NAV_ICON_SIZE + NAV_LABEL_GAP + NAV_LABEL_LINE_HEIGHT) * scale
+}
 
 @Composable
 fun FloatingBottomNavBar(
@@ -52,7 +75,16 @@ fun FloatingBottomNavBar(
     isSearchEnabled: Boolean = false,
     isCategoriesEnabled: Boolean = false,
     navOrder: List<Int> = listOf(0, 1, 2, 3, 4, 5, 6),
+    barScale: Float = 1f,
+    glass: Boolean = false,
+    hapticsEnabled: Boolean = true,
 ) {
+    val scale = barScale.coerceIn(BOTTOM_NAV_SCALE_RANGE)
+    val haptic = LocalHapticFeedback.current
+    val selectTab: (Int) -> Unit = { index ->
+        if (hapticsEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        onItemSelected(index)
+    }
     val enabledItems =
         rememberYTNavItems(
             isHomeEnabled = isHomeEnabled,
@@ -78,75 +110,94 @@ fun FloatingBottomNavBar(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        // Translucent instead of blurred: a real backdrop blur needs a frame capture of whatever is
+        // behind the bar, which Compose cannot do on its own.
+        // ponytail: translucent glass, swap in a backdrop-blur library if it has to blur for real.
+        color =
+            if (glass) {
+                MaterialTheme.colorScheme.surface.copy(alpha = GLASS_BAR_ALPHA)
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(vertical = 3.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            visibleItems.forEach { spec ->
-                BottomNavItem(
-                    modifier = Modifier.weight(1f),
-                    icon = if (selectedIndex == spec.index) spec.filledIcon else spec.outlinedIcon,
-                    label = stringResource(spec.labelRes),
-                    selected = selectedIndex == spec.index,
-                    onClick = { onItemSelected(spec.index) },
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Translucency alone leaves the bar bleeding into the content scrolling under it.
+            if (glass) {
+                HorizontalDivider(
+                    thickness = Dp.Hairline,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 )
             }
-
-            if (overflowItems.isNotEmpty()) {
-                Box(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(vertical = NAV_BAR_VERTICAL_PADDING * scale),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                visibleItems.forEach { spec ->
                     BottomNavItem(
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = if (isOverflowSelected) Icons.Filled.MoreHoriz else Icons.Outlined.MoreHoriz,
-                        label = stringResource(R.string.nav_more),
-                        selected = isOverflowSelected,
-                        onClick = { showMoreMenu = true },
+                        modifier = Modifier.weight(1f),
+                        icon = if (selectedIndex == spec.index) spec.filledIcon else spec.outlinedIcon,
+                        label = stringResource(spec.labelRes),
+                        selected = selectedIndex == spec.index,
+                        scale = scale,
+                        onClick = { selectTab(spec.index) },
                     )
-                    DropdownMenu(
-                        expanded = showMoreMenu,
-                        onDismissRequest = { showMoreMenu = false },
-                        offset = DpOffset(x = 0.dp, y = (-8).dp),
-                    ) {
-                        overflowItems.forEach { spec ->
-                            val isSelected = selectedIndex == spec.index
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = stringResource(spec.labelRes),
-                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                        color =
-                                            if (isSelected) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface
-                                            },
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = if (isSelected) spec.filledIcon else spec.outlinedIcon,
-                                        contentDescription = stringResource(spec.labelRes),
-                                        tint =
-                                            if (isSelected) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurfaceVariant
-                                            },
-                                    )
-                                },
-                                onClick = {
-                                    showMoreMenu = false
-                                    onItemSelected(spec.index)
-                                },
-                            )
+                }
+
+                if (overflowItems.isNotEmpty()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        BottomNavItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            icon = if (isOverflowSelected) Icons.Filled.MoreHoriz else Icons.Outlined.MoreHoriz,
+                            label = stringResource(R.string.nav_more),
+                            selected = isOverflowSelected,
+                            scale = scale,
+                            onClick = { showMoreMenu = true },
+                        )
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false },
+                            offset = DpOffset(x = 0.dp, y = (-8).dp),
+                        ) {
+                            overflowItems.forEach { spec ->
+                                val isSelected = selectedIndex == spec.index
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(spec.labelRes),
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                            color =
+                                                if (isSelected) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface
+                                                },
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = if (isSelected) spec.filledIcon else spec.outlinedIcon,
+                                            contentDescription = stringResource(spec.labelRes),
+                                            tint =
+                                                if (isSelected) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                },
+                                        )
+                                    },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        selectTab(spec.index)
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -162,8 +213,9 @@ private fun BottomNavItem(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    scale: Float = 1f,
 ) {
-    val scale by animateFloatAsState(
+    val pressScale by animateFloatAsState(
         targetValue = if (selected) 1.05f else 1f,
         animationSpec =
             spring(
@@ -189,28 +241,28 @@ private fun BottomNavItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier =
                 Modifier
-                    .scale(scale)
+                    .scale(pressScale)
                     .clip(RoundedCornerShape(8.dp))
                     .clickable(
                         interactionSource = interactionSource,
                         indication = ripple(bounded = true, radius = 28.dp),
                         onClick = onClick,
-                    ).padding(horizontal = 12.dp, vertical = 2.dp),
+                    ).padding(horizontal = 12.dp, vertical = NAV_ITEM_VERTICAL_PADDING * scale),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
                 tint = iconTint,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(NAV_ICON_SIZE * scale),
             )
 
-            Spacer(modifier = Modifier.height(1.dp))
+            Spacer(modifier = Modifier.height(NAV_LABEL_GAP * scale))
 
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = iconTint,
-                fontSize = 10.sp,
+                fontSize = (NAV_LABEL_SP * scale).sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

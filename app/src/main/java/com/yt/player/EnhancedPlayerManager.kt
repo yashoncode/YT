@@ -2800,7 +2800,19 @@ class EnhancedPlayerManager private constructor() {
         resumePlaybackIfStalled(p)
     }
 
-    fun handleCriticalMemoryPressure() {
+    /**
+     * Releases the video-heavy half of the player when the system asks for memory back.
+     *
+     * The trim level alone does not decide this: TRIM_MEMORY_RUNNING_CRITICAL reaches a foreground
+     * activity, so releasing on it blanked the video the user was watching and left the audio
+     * running until a recomposition restored the output seconds later (#1074). On a low-memory
+     * device that repeated for the whole session. [MemoryPressurePolicy] therefore also gets to see
+     * whether the video output is currently on screen.
+     */
+    fun handleCriticalMemoryPressure(trimLevel: Int) {
+        if (!MemoryPressurePolicy.shouldReleaseVideoPlayback(trimLevel, isVideoOutputOnScreen())) {
+            return
+        }
         Log.w(TAG, "Critical memory pressure; releasing video-heavy player state")
         mediaLoader?.releaseSabr()
         val p = player ?: return
@@ -2820,6 +2832,9 @@ class EnhancedPlayerManager private constructor() {
             p.clearMediaItems()
         }
     }
+
+    /** Whether the player is rendering into an attached surface on a display the user can see. */
+    private fun isVideoOutputOnScreen(): Boolean = isSurfaceReady && isDisplayInteractive()
 
     fun switchToAudioOnly() {
         val p = player ?: return

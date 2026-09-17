@@ -619,9 +619,36 @@ class VideoDownloadManager
          *
          * Safe to call repeatedly — files already recorded in the DB are skipped.
          */
+        /**
+         * Drops download rows whose files are gone.
+         *
+         * A file deleted from a file manager leaves its row behind, so the list kept offering a
+         * video that no longer exists and nothing short of deleting it by hand removed the entry
+         * (#1043). Only completed rows are considered — a download still in flight has no finished
+         * file yet — and only when the containing directory is readable, so an unmounted SD card or
+         * a revoked storage permission cannot wipe the library.
+         */
+        private suspend fun pruneMissingDownloads() {
+            downloadDao.getAllDownloadsWithItemsOnce().forEach { download ->
+                val completed = download.items.filter { it.status == DownloadItemStatus.COMPLETED }
+                if (completed.isEmpty()) return@forEach
+                val allFilesGone =
+                    completed.all { item ->
+                        if (item.filePath.startsWith("content://")) return@all false
+                        val file = File(item.filePath)
+                        file.parentFile?.isDirectory == true && !file.exists()
+                    }
+                if (allFilesGone) {
+                    downloadDao.deleteDownload(download.download.videoId)
+                    Log.i(TAG, "pruneMissingDownloads: dropped ${download.download.videoId}, file gone")
+                }
+            }
+        }
+
         suspend fun scanAndRecoverDownloads() =
             withContext(Dispatchers.IO) {
                 try {
+                    pruneMissingDownloads()
                     val dirsToScan =
                         buildList {
                             customDownloadPath?.let { add(File(it)) }

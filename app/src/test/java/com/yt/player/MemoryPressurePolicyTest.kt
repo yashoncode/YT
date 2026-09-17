@@ -27,6 +27,28 @@ class MemoryPressurePolicyTest {
 
     @Suppress("DEPRECATION")
     @Test
+    fun `running critical keeps video on screen playing`() {
+        assertThat(
+            MemoryPressurePolicy.shouldReleaseVideoPlayback(
+                ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL,
+                isVideoOutputOnScreen = true,
+            ),
+        ).isFalse()
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `moderate pressure keeps video on screen playing`() {
+        assertThat(
+            MemoryPressurePolicy.shouldReleaseVideoPlayback(
+                ComponentCallbacks2.TRIM_MEMORY_MODERATE,
+                isVideoOutputOnScreen = true,
+            ),
+        ).isFalse()
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
     fun `background state preserves paused video playback`() {
         assertThat(
             MemoryPressurePolicy.shouldReleaseVideoPlayback(
