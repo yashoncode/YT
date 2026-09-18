@@ -185,7 +185,12 @@ class ShortsViewModel
          * effect) must not refetch or reset the position.
          */
         fun load(source: ShortsQueueSource) {
-            if (queue != null || _uiState.value.isLoading) return
+            if (queue != null || _uiState.value.isLoading) {
+                // A refresh that ends here has nothing left to clear its flag, and a stuck flag
+                // means the spinner never goes away and the next pull is refused forever.
+                if (_uiState.value.isRefreshing) _uiState.value = _uiState.value.copy(isRefreshing = false)
+                return
+            }
 
             val resolved = queueFactory.resolve(source)
             val controller = queueFactory.create(resolved)
