@@ -30,6 +30,7 @@ import com.yt.ui.components.FeedInvalidationBus
 import com.yt.utils.PerformanceDispatcher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -257,6 +258,12 @@ class ShortsViewModel
         /**
          * Appends the next page. Re-entrancy and the hand-over to the feed are the controller's
          * concern, so calling this more often than necessary is harmless.
+         *
+         * Retries while the queue still has legs to walk but an attempt added nothing, because the
+         * only thing that asks for more is the pager changing page -- and a page that adds nothing
+         * leaves the pager with nowhere to go, so it never asks again. A continuation that comes
+         * back entirely deduplicated, or a request that simply failed, would strand the viewer on
+         * the last short with a feed that still had more to give.
          */
         fun loadMoreShorts() {
             val controller = queue ?: return
@@ -265,9 +272,19 @@ class ShortsViewModel
             viewModelScope.launch(PerformanceDispatcher.networkIO) {
                 _uiState.value = _uiState.value.copy(isLoadingMore = true)
                 try {
-                    controller.loadMore()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error loading more shorts", e)
+                    repeat(APPEND_ATTEMPTS) { attempt ->
+                        val before = controller.items.value.size
+                        try {
+                            controller.loadMore()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error loading more shorts", e)
+                        }
+                        if (controller.items.value.size > before || !controller.hasMore) return@repeat
+                        if (attempt < APPEND_ATTEMPTS - 1) {
+                            Log.w(TAG, "Append added nothing; retrying (${attempt + 1}/$APPEND_ATTEMPTS)")
+                            delay(APPEND_RETRY_DELAY_MS * (attempt + 1))
+                        }
+                    }
                 } finally {
                     _uiState.value = _uiState.value.copy(isLoadingMore = false)
                     publishQueue()
@@ -587,6 +604,10 @@ class ShortsViewModel
 
             /** How close to the end of the queue the pager gets before the next page is fetched. */
             private const val PAGE_AHEAD_THRESHOLD = 5
+
+            /** Attempts at appending a page that actually grows the queue, before giving up. */
+            private const val APPEND_ATTEMPTS = 3
+            private const val APPEND_RETRY_DELAY_MS = 800L
 
             private const val COMMENTS_FETCH_TIMEOUT_MS = 10_000L
         }

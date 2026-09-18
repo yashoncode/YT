@@ -18,9 +18,23 @@ class LyricsHelper(
 ) {
     companion object {
         private const val TAG = "LyricsHelper"
-        private const val PER_PROVIDER_TIMEOUT_MS = 5_000L
-        private const val MAX_TOTAL_TIMEOUT_MS = 12_000L
+
+        // Back to 8s after 5s proved too tight: a provider on a weak connection needs longer than
+        // one on a fast one, and cutting the deadline turned a slow answer into no answer at all.
+        private const val PER_PROVIDER_TIMEOUT_MS = 8_000L
+        private const val MAX_TOTAL_TIMEOUT_MS = 20_000L
         private const val PROVIDER_COOLDOWN_MS = 10 * 60 * 1000L
+
+        /**
+         * How many providers are in flight at once.
+         *
+         * Not all of them: eight simultaneous requests share one connection, so on a weak link each
+         * is slower than it would have been alone and they can all miss their deadline together —
+         * the first provider queried serially at least had the whole pipe to itself. Three overlaps
+         * enough to hide the latency of a provider that has nothing without starving the one that
+         * does.
+         */
+        private const val PROVIDER_BATCH = 3
     }
 
     private val registry = LyricsProviderRegistry.default()
@@ -105,62 +119,87 @@ class LyricsHelper(
                 }
             }
 
-        // Every provider is queried at once but consumed in the configured order, so the preference
-        // still picks the winner and only the waiting is shared. Serially this cost the sum of every
-        // provider that missed ahead of the one that hit.
+        // Providers are queried [PROVIDER_BATCH] at a time, in the configured order, so the
+        // preference still picks the winner and only the waiting inside a batch is shared. Serially
+        // this cost the sum of every provider that missed ahead of the one that hit.
         val syncedResult =
             withTimeoutOrNull(MAX_TOTAL_TIMEOUT_MS) {
-                coroutineScope {
-                    val pending =
-                        liveProviders.map { provider ->
-                            provider to
-                                async {
-                                    Log.d(TAG, "Querying provider: ${provider.name}")
-                                    fetchFromProvider(provider, videoId, cleanedTitle, cleanedArtist, duration, album)
-                                }
-                        }
+                var winner: Pair<List<LyricsEntry>, String>? = null
+                var extraBatchesAfterFallback = 0
 
-                    var winner: Pair<List<LyricsEntry>, String>? = null
-                    for ((provider, deferred) in pending) {
-                        val providerResult = deferred.await()
-
-                        if (providerResult != null && providerResult.isSuccess) {
-                            var entries = providerResult.getOrNull()
-                            if (!entries.isNullOrEmpty()) {
-                                entries = LyricsUtils.filterCreditLines(normalizeEntries(entries.sorted()))
-                                if (entries.isNotEmpty() && hasReasonableTimestamps(entries, duration)) {
-                                    if (entriesAreSynced(entries)) {
-                                        Log.d(TAG, "Got ${entries.size} SYNCED lines from ${provider.name} - using these")
-                                        winner = entries to provider.name
-                                        break
-                                    } else if (unsyncedFallback == null) {
-                                        Log.d(
-                                            TAG,
-                                            "${provider.name} returned ${entries.size} UNSYNCED lines - keeping as fallback",
-                                        )
-                                        unsyncedFallback = entries to provider.name
-                                    }
-                                } else if (entries.isNotEmpty()) {
-                                    Log.w(TAG, "${provider.name} returned lyrics with unreasonable timestamps, skipping")
-                                }
-                            }
-                        } else {
-                            val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or exception"
-                            if (isAuthFailure(errorMsg)) {
-                                providerCooldowns[provider.name] = now + PROVIDER_COOLDOWN_MS
-                                Log.w(TAG, "${provider.name} auth failure ($errorMsg) - cooling down for 10 min")
-                            } else {
-                                Log.w(TAG, "${provider.name} failed: $errorMsg")
-                            }
-                        }
+                for (batch in liveProviders.chunked(PROVIDER_BATCH)) {
+                    // Something showable is already in hand. Spend one more batch looking for a
+                    // synced version of it, then stop rather than working through the whole ladder
+                    // for an upgrade that most songs do not have.
+                    if (unsyncedFallback != null) {
+                        if (extraBatchesAfterFallback >= 1) break
+                        extraBatchesAfterFallback++
                     }
 
-                    // Cancelled explicitly: coroutineScope otherwise waits for every child before it
-                    // returns, which would hand back the slowest provider's latency instead of the
-                    // winner's. Cancelling an already-finished one is a no-op.
-                    pending.forEach { (_, deferred) -> deferred.cancel() }
-                    winner
+                    winner =
+                        coroutineScope {
+                            val pending =
+                                batch.map { provider ->
+                                    provider to
+                                        async {
+                                            Log.d(TAG, "Querying provider: ${provider.name}")
+                                            fetchFromProvider(
+                                                provider,
+                                                videoId,
+                                                cleanedTitle,
+                                                cleanedArtist,
+                                                duration,
+                                                album,
+                                            )
+                                        }
+                                }
+
+                            var batchWinner: Pair<List<LyricsEntry>, String>? = null
+                            for ((provider, deferred) in pending) {
+                                val providerResult = deferred.await()
+
+                                if (providerResult != null && providerResult.isSuccess) {
+                                    var entries = providerResult.getOrNull()
+                                    if (!entries.isNullOrEmpty()) {
+                                        entries = LyricsUtils.filterCreditLines(normalizeEntries(entries.sorted()))
+                                        if (entries.isNotEmpty() && hasReasonableTimestamps(entries, duration)) {
+                                            if (entriesAreSynced(entries)) {
+                                                Log.d(TAG, "Got ${entries.size} SYNCED lines from ${provider.name} - using these")
+                                                batchWinner = entries to provider.name
+                                                break
+                                            } else if (unsyncedFallback == null) {
+                                                Log.d(
+                                                    TAG,
+                                                    "${provider.name} returned ${entries.size} UNSYNCED lines - keeping as fallback",
+                                                )
+                                                unsyncedFallback = entries to provider.name
+                                            }
+                                        } else if (entries.isNotEmpty()) {
+                                            Log.w(TAG, "${provider.name} returned lyrics with unreasonable timestamps, skipping")
+                                        }
+                                    }
+                                } else {
+                                    val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or exception"
+                                    if (isAuthFailure(errorMsg)) {
+                                        providerCooldowns[provider.name] = now + PROVIDER_COOLDOWN_MS
+                                        Log.w(TAG, "${provider.name} auth failure ($errorMsg) - cooling down for 10 min")
+                                    } else {
+                                        Log.w(TAG, "${provider.name} failed: $errorMsg")
+                                    }
+                                }
+                            }
+
+                            // Cancelled explicitly: coroutineScope otherwise waits for every child
+                            // before it returns, which would hand back the slowest provider in the
+                            // batch instead of the winner. Cancelling a finished one is a no-op.
+                            pending.forEach { (_, deferred) -> deferred.cancel() }
+                            batchWinner
+                        }
+
+                    if (winner != null) break
                 }
+
+                winner
             }
 
         if (syncedResult != null) {

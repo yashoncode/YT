@@ -192,8 +192,10 @@ fun ShortsScreen(
                         pageCount = { uiState.shorts.size },
                     )
 
-                // Track page changes
-                LaunchedEffect(pagerState.currentPage) {
+                // Track page changes. Keyed on the queue size as well: an append that lands while
+                // the viewer is already near the end has to be re-evaluated, or the next request
+                // waits on a page change that a short feed may never produce.
+                LaunchedEffect(pagerState.currentPage, uiState.shorts.size) {
                     viewModel.updateCurrentIndex(pagerState.currentPage)
                 }
 
