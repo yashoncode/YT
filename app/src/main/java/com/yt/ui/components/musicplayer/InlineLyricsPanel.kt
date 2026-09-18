@@ -42,9 +42,10 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -149,6 +150,7 @@ private data class HyphenGroupWord(
     val groupEndMs: Long,
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun InlineLyricsPanel(
     lyrics: String?,
@@ -334,7 +336,7 @@ fun InlineLyricsPanel(
         modifier = modifier.fillMaxSize(),
     ) {
         if (isLoading) {
-            CircularProgressIndicator(
+            LoadingIndicator(
                 color = expressiveAccent,
                 modifier = Modifier.align(Alignment.Center),
             )

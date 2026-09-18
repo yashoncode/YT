@@ -8,6 +8,8 @@ import android.content.Context
 import android.util.Log
 import com.yt.data.local.PlayerPreferences
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -16,8 +18,8 @@ class LyricsHelper(
 ) {
     companion object {
         private const val TAG = "LyricsHelper"
-        private const val PER_PROVIDER_TIMEOUT_MS = 8_000L
-        private const val MAX_TOTAL_TIMEOUT_MS = 25_000L
+        private const val PER_PROVIDER_TIMEOUT_MS = 5_000L
+        private const val MAX_TOTAL_TIMEOUT_MS = 12_000L
         private const val PROVIDER_COOLDOWN_MS = 10 * 60 * 1000L
     }
 
@@ -61,17 +63,15 @@ class LyricsHelper(
             cache.remove(videoId)
         }
 
-        var cachedLineFallback: Pair<List<LyricsEntry>, String>? = null
+        // Any cached lyrics with sane timestamps counts as a hit, word-synced or not. Requiring
+        // word-sync here meant every line-synced song - which is most of them, LrcLib and KuGou
+        // publish line timings only - re-ran the whole provider sweep before it could show what it
+        // already had on disk. Upgrading to word-sync is what the refresh button is for.
         val diskCached = LyricsCacheManager.getLyrics(targetContext, videoId)
         val normalizedDiskCached = diskCached?.let { normalizeEntries(it.sorted()) }
-        if (!normalizedDiskCached.isNullOrEmpty() && hasWordSync(normalizedDiskCached) &&
-            hasReasonableTimestamps(normalizedDiskCached, duration)
-        ) {
+        if (!normalizedDiskCached.isNullOrEmpty() && hasReasonableTimestamps(normalizedDiskCached, duration)) {
             cache[videoId] = normalizedDiskCached
             return normalizedDiskCached to "DiskCache"
-        } else if (!normalizedDiskCached.isNullOrEmpty() && hasReasonableTimestamps(normalizedDiskCached, duration)) {
-            cachedLineFallback = stripWordTimings(normalizedDiskCached) to "DiskCache"
-            Log.d(TAG, "Disk cache has line/plain lyrics only; trying to upgrade to word-sync")
         } else if (!diskCached.isNullOrEmpty()) {
             Log.d(TAG, "Disk cache has invalid timestamps for $videoId, discarding")
             LyricsCacheManager.evictLyrics(targetContext, videoId)
@@ -94,60 +94,73 @@ class LyricsHelper(
 
         var unsyncedFallback: Pair<List<LyricsEntry>, String>? = null
 
+        val liveProviders =
+            orderedProviders.filter { provider ->
+                val cooldownUntil = providerCooldowns[provider.name]
+                if (cooldownUntil != null && cooldownUntil > now) {
+                    Log.d(TAG, "Skipping ${provider.name} (auth cooldown for ${(cooldownUntil - now) / 1000}s)")
+                    false
+                } else {
+                    true
+                }
+            }
+
+        // Every provider is queried at once but consumed in the configured order, so the preference
+        // still picks the winner and only the waiting is shared. Serially this cost the sum of every
+        // provider that missed ahead of the one that hit.
         val syncedResult =
             withTimeoutOrNull(MAX_TOTAL_TIMEOUT_MS) {
-                for (provider in orderedProviders) {
-                    val cooldownUntil = providerCooldowns[provider.name]
-                    if (cooldownUntil != null && cooldownUntil > now) {
-                        Log.d(TAG, "Skipping ${provider.name} (auth cooldown for ${(cooldownUntil - now) / 1000}s)")
-                        continue
-                    }
-
-                    Log.d(TAG, "Trying provider: ${provider.name}")
-                    val providerResult =
-                        try {
-                            withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                                provider.getLyrics(videoId, cleanedTitle, cleanedArtist, duration, album)
-                            }
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            Log.w(TAG, "${provider.name} threw: ${e.message}")
-                            null
-                        }
-
-                    if (providerResult != null && providerResult.isSuccess) {
-                        var entries = providerResult.getOrNull()
-                        if (!entries.isNullOrEmpty()) {
-                            entries = LyricsUtils.filterCreditLines(normalizeEntries(entries.sorted()))
-                            if (entries.isNotEmpty() && hasReasonableTimestamps(entries, duration)) {
-                                if (entriesAreSynced(entries)) {
-                                    Log.d(TAG, "Got ${entries.size} SYNCED lines from ${provider.name} — using these")
-                                    return@withTimeoutOrNull entries to provider.name
-                                } else if (unsyncedFallback == null) {
-                                    Log.d(
-                                        TAG,
-                                        "${provider.name} returned ${entries.size} UNSYNCED lines — saving as fallback, continuing for synced",
-                                    )
-                                    unsyncedFallback = entries to provider.name
-                                } else {
-                                    Log.d(TAG, "${provider.name} returned unsynced; already have a fallback, continuing for synced")
+                coroutineScope {
+                    val pending =
+                        liveProviders.map { provider ->
+                            provider to
+                                async {
+                                    Log.d(TAG, "Querying provider: ${provider.name}")
+                                    fetchFromProvider(provider, videoId, cleanedTitle, cleanedArtist, duration, album)
                                 }
-                            } else if (entries.isNotEmpty()) {
-                                Log.w(TAG, "${provider.name} returned lyrics with unreasonable timestamps, skipping")
+                        }
+
+                    var winner: Pair<List<LyricsEntry>, String>? = null
+                    for ((provider, deferred) in pending) {
+                        val providerResult = deferred.await()
+
+                        if (providerResult != null && providerResult.isSuccess) {
+                            var entries = providerResult.getOrNull()
+                            if (!entries.isNullOrEmpty()) {
+                                entries = LyricsUtils.filterCreditLines(normalizeEntries(entries.sorted()))
+                                if (entries.isNotEmpty() && hasReasonableTimestamps(entries, duration)) {
+                                    if (entriesAreSynced(entries)) {
+                                        Log.d(TAG, "Got ${entries.size} SYNCED lines from ${provider.name} - using these")
+                                        winner = entries to provider.name
+                                        break
+                                    } else if (unsyncedFallback == null) {
+                                        Log.d(
+                                            TAG,
+                                            "${provider.name} returned ${entries.size} UNSYNCED lines - keeping as fallback",
+                                        )
+                                        unsyncedFallback = entries to provider.name
+                                    }
+                                } else if (entries.isNotEmpty()) {
+                                    Log.w(TAG, "${provider.name} returned lyrics with unreasonable timestamps, skipping")
+                                }
+                            }
+                        } else {
+                            val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or exception"
+                            if (isAuthFailure(errorMsg)) {
+                                providerCooldowns[provider.name] = now + PROVIDER_COOLDOWN_MS
+                                Log.w(TAG, "${provider.name} auth failure ($errorMsg) - cooling down for 10 min")
+                            } else {
+                                Log.w(TAG, "${provider.name} failed: $errorMsg")
                             }
                         }
-                    } else {
-                        val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or exception"
-                        if (isAuthFailure(errorMsg)) {
-                            providerCooldowns[provider.name] = now + PROVIDER_COOLDOWN_MS
-                            Log.w(TAG, "${provider.name} auth failure ($errorMsg) — cooling down for 10 min")
-                        } else {
-                            Log.w(TAG, "${provider.name} failed: $errorMsg")
-                        }
                     }
+
+                    // Cancelled explicitly: coroutineScope otherwise waits for every child before it
+                    // returns, which would hand back the slowest provider's latency instead of the
+                    // winner's. Cancelling an already-finished one is a no-op.
+                    pending.forEach { (_, deferred) -> deferred.cancel() }
+                    winner
                 }
-                null
             }
 
         if (syncedResult != null) {
@@ -171,14 +184,29 @@ class LyricsHelper(
             return fallback
         }
 
-        cachedLineFallback?.let {
-            cache[videoId] = it.first
-            return it
-        }
-
         Log.w(TAG, "No lyrics found for $videoId")
         return null
     }
+
+    /** One provider call, capped at [PER_PROVIDER_TIMEOUT_MS]; null on timeout or throw. */
+    private suspend fun fetchFromProvider(
+        provider: LyricsProvider,
+        videoId: String,
+        cleanedTitle: String,
+        cleanedArtist: String,
+        duration: Int,
+        album: String?,
+    ): Result<List<LyricsEntry>>? =
+        try {
+            withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
+                provider.getLyrics(videoId, cleanedTitle, cleanedArtist, duration, album)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "${provider.name} threw: ${e.message}")
+            null
+        }
 
     private fun hasWordSync(entries: List<LyricsEntry>): Boolean {
         val wordLines = entries.filter { !it.words.isNullOrEmpty() }
@@ -242,8 +270,6 @@ class LyricsHelper(
         return distinctTimedLines >= (list.size * 0.5).toInt().coerceAtLeast(2)
     }
 
-    private fun stripWordTimings(entries: List<LyricsEntry>): List<LyricsEntry> = entries.map { entry -> entry.copy(words = null) }
-
     private fun normalizeEntries(entries: List<LyricsEntry>): List<LyricsEntry> =
         entries.map { entry ->
             entry.copy(
@@ -281,17 +307,7 @@ class LyricsHelper(
                 .getOrderedProviders(orderString)
                 .filter { enabledStates[it.name] != false }
         for (provider in orderedProviders) {
-            val providerResult =
-                try {
-                    withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                        provider.getLyrics(videoId, cleanedTitle, cleanedArtist, duration, album)
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Log.w(TAG, "${provider.name} threw while browsing: ${e.message}")
-                    null
-                }
+            val providerResult = fetchFromProvider(provider, videoId, cleanedTitle, cleanedArtist, duration, album)
             val entries = providerResult?.getOrNull()
             if (!entries.isNullOrEmpty()) {
                 val cleaned = LyricsUtils.filterCreditLines(normalizeEntries(entries.sorted()))
