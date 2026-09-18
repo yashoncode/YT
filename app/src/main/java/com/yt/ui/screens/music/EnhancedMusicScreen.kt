@@ -2,6 +2,7 @@ package com.yt.ui.screens.music
 
 import android.content.Intent
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,12 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -41,6 +46,7 @@ import com.yt.data.music.model.MusicItemType
 import com.yt.data.music.model.MusicTrack
 import com.yt.innertube.pages.MoodAndGenres
 import com.yt.ui.TabScrollEventBus
+import com.yt.ui.components.glow
 import com.yt.ui.components.layout.topbar.YTTopBar
 import com.yt.ui.components.music.common.LocalMusicMiniPlayerInset
 import com.yt.ui.components.music.section.HomeSectionType
@@ -51,9 +57,19 @@ import com.yt.ui.components.music.sheet.MusicQuickActionsSheet
 import com.yt.ui.components.shared.MusicScreenShimmerLoading
 import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.YTPullToRefreshBox
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import java.util.Random
+
+private val RecognizeFabShape = CircleShape
+private val FabBlurRadius = 26.dp
+private val FabGlowRadius = 26.dp
+private const val FAB_GLASS_ALPHA = 0.38f
 
 private val FeedBottomClearance = 96.dp
 
@@ -171,6 +187,20 @@ fun EnhancedMusicScreen(
         )
     }
 
+    // Scoped to this screen's feed: the shell's state contains this whole screen, and an effect
+    // cannot sample a source it is part of.
+    val feedHazeState = rememberHazeState()
+    val fabAccent = MaterialTheme.colorScheme.primary
+    val fabSurface = MaterialTheme.colorScheme.surface
+    val fabHazeStyle =
+        remember(fabSurface, fabAccent) {
+            HazeStyle(
+                backgroundColor = fabSurface,
+                tint = HazeTint(fabAccent.copy(alpha = FAB_GLASS_ALPHA)),
+                blurRadius = FabBlurRadius,
+            )
+        }
+
     val bottomChrome = bottomNavOverlayPadding() + LocalMusicMiniPlayerInset.current
     val fabLift =
         animateDpAsState(
@@ -193,7 +223,18 @@ fun EnhancedMusicScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onRecognizeClick,
-                modifier = Modifier.offset { IntOffset(x = 0, y = -fabLift.value.roundToPx()) },
+                shape = RecognizeFabShape,
+                // Transparent, because what fills it is the blurred feed behind it.
+                containerColor = Color.Transparent,
+                contentColor = fabAccent,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                modifier =
+                    Modifier
+                        .offset { IntOffset(x = 0, y = -fabLift.value.roundToPx()) }
+                        .glow(color = fabAccent, shape = RecognizeFabShape, radius = FabGlowRadius)
+                        .clip(RecognizeFabShape)
+                        .hazeEffect(feedHazeState, fabHazeStyle)
+                        .border(Dp.Hairline, fabAccent.copy(alpha = 0.4f), RecognizeFabShape),
             ) {
                 Icon(Icons.Rounded.Mic, stringResource(R.string.recognize_music))
             }
@@ -205,7 +246,8 @@ fun EnhancedMusicScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .hazeSource(feedHazeState),
         ) {
             val isInitialLoading = uiState.isLoading && uiState.trendingSongs.isEmpty() && uiState.dynamicSections.isEmpty()
 
@@ -245,7 +287,7 @@ fun EnhancedMusicScreen(
                     val pullState = rememberPullToRefreshState()
 
                     YTPullToRefreshBox(
-                        isRefreshing = uiState.isLoading,
+                        isRefreshing = uiState.isRefreshing,
                         onRefresh = { viewModel.refresh() },
                         state = pullState,
                         modifier = Modifier.fillMaxSize(),

@@ -149,6 +149,11 @@ fun FloatingBottomNavBar(
     // without a state to read it from, the glass setting degrades to a translucent bar.
     val blurred = glass && hazeState != null
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val glowColor by animateColorAsState(
+        targetValue = MaterialTheme.colorScheme.primary,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "navBarGlow",
+    )
     val hazeStyle =
         HazeStyle(
             backgroundColor = surfaceColor,
@@ -167,7 +172,11 @@ fun FloatingBottomNavBar(
                 .padding(bottom = NAV_BAR_BOTTOM_MARGIN)
                 .fillMaxWidth()
                 .shadow(elevation = NAV_BAR_SHADOW, shape = shape, clip = false)
-                .clip(shape)
+                .then(
+                    // Glass has no fill to carry colour, so the bar takes the accent of whichever
+                    // tab is selected and wears it as a halo instead.
+                    if (blurred) Modifier.glow(color = glowColor, shape = shape) else Modifier,
+                ).clip(shape)
                 .then(if (hazeState != null && blurred) Modifier.hazeEffect(hazeState, hazeStyle) else Modifier),
         shape = shape,
         color = if (blurred) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,

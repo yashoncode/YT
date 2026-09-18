@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -194,6 +195,7 @@ fun HomeScreen(
             resetKey = uiState.isLoading && uiState.videos.isEmpty(),
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.refreshFeed() },
+            indicatorTopPadding = padding.calculateTopPadding(),
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -269,6 +271,7 @@ private fun ResettableHomePullToRefreshBox(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    indicatorTopPadding: Dp = 0.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {
     key(resetKey) {
@@ -276,6 +279,7 @@ private fun ResettableHomePullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
             modifier = modifier,
+            indicatorTopPadding = indicatorTopPadding,
             content = content,
         )
     }

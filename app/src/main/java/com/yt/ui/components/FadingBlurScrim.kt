@@ -16,7 +16,9 @@ import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 
 private val SCRIM_BLUR_RADIUS = 24.dp
-private const val SCRIM_TINT_ALPHA = 0.5f
+// Mostly blur, barely any tint: the floating bar sitting on top of this is tinted more heavily,
+// and that difference is what keeps it reading as a separate pill rather than one solid band.
+private const val SCRIM_TINT_ALPHA = 0.22f
 
 /**
  * A band of blurred backdrop along the top or bottom edge of the window.

@@ -3,12 +3,41 @@ package com.yt.ui.theme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.yt.R
 
-// Using system default (Roboto on Android)
-val InterFontFamily = FontFamily.Default
+private fun interWeight(weight: FontWeight) =
+    Font(
+        resId = R.font.inter_variable,
+        weight = weight,
+        variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
+    )
+
+/**
+ * The app's one typeface.
+ *
+ * This is Inter, not Apple's SF Pro. SF Pro's licence permits it only for designing and building
+ * software for Apple's own platforms, so it cannot ship inside an Android APK. Inter is the
+ * open-licensed face drawn to the same brief — a tall x-height, open apertures and a near-neutral
+ * grotesque skeleton — and it is what gives iOS interfaces their look far more than any detail
+ * unique to SF.
+ *
+ * One variable file covers every weight the type scale asks for, which is smaller than the four
+ * static cuts it replaces and lets a weight be named rather than approximated.
+ */
+val InterFontFamily =
+    FontFamily(
+        interWeight(FontWeight.Light),
+        interWeight(FontWeight.Normal),
+        interWeight(FontWeight.Medium),
+        interWeight(FontWeight.SemiBold),
+        interWeight(FontWeight.Bold),
+        interWeight(FontWeight.ExtraBold),
+    )
 
 private val BaseTypography =
     Typography(

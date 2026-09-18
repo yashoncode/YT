@@ -754,6 +754,9 @@ class MusicViewModel
                 if (_uiState.value.trendingSongs.isNotEmpty() || homeSections.isNotEmpty()) {
                     _uiState.update { it.copy(isLoading = false) }
                 }
+                // The gesture is answered here, not by the cached pass above: this is the point at
+                // which the feed either has new content or is known not to be getting any.
+                _uiState.update { it.copy(isRefreshing = false) }
             }
 
             // 3. SECONDARY: History (Disk IO)
@@ -1355,7 +1358,7 @@ class MusicViewModel
                     } catch (e: Exception) {
                         Log.e("MusicViewModel", "Error filtering by chip", e)
                     } finally {
-                        _uiState.update { it.copy(isLoading = false) }
+                        _uiState.update { it.copy(isLoading = false, isRefreshing = false) }
                     }
                 }
             } else {
@@ -1370,7 +1373,7 @@ class MusicViewModel
         fun refresh() {
             relatedCache.clear()
             artistDetailsCache.clear()
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, isRefreshing = true) }
             loadMusicContent(force = true)
         }
 
@@ -1702,6 +1705,9 @@ data class MusicUiState(
     val dynamicSections: List<MusicSection> = emptyList(),
     val dailyMixSections: List<MusicSection> = emptyList(),
     val homeChips: List<HomePage.Chip> = emptyList(),
+    // Distinct from isLoading: the cached pass clears that one immediately, long before the
+    // network pass this flag follows has anything new to show.
+    val isRefreshing: Boolean = false,
     val selectedHomeChip: HomePage.Chip? = null,
     val brainMaturity: String? = null, // "cold_start" / "warming" / "mature" — steers section order
     val explorePage: com.yt.innertube.pages.ExplorePage? = null,

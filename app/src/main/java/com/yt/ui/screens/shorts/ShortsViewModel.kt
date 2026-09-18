@@ -199,7 +199,7 @@ class ShortsViewModel
             viewModelScope.launch(PerformanceDispatcher.networkIO) {
                 try {
                     controller.loadInitial(resolved.openAtVideoId)
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false)
                     publishQueue()
 
                     // Pre-resolve around the opening position so the pager's prepare pass is a cache
@@ -218,10 +218,24 @@ class ShortsViewModel
                     _uiState.value =
                         _uiState.value.copy(
                             isLoading = false,
+                            isRefreshing = false,
                             error = e.message ?: context.getString(R.string.error_failed_to_load_shorts),
                         )
                 }
             }
+        }
+
+        /**
+         * Pull-to-refresh: drops the queue and loads the source again from the top.
+         *
+         * Guarded on [ShortsUiState.isLoading] because [load] refuses to start while one is already
+         * running, and the flag would then have nothing to clear it.
+         */
+        fun refresh(source: ShortsQueueSource) {
+            if (_uiState.value.isLoading || _uiState.value.isRefreshing) return
+            queue = null
+            _uiState.value = _uiState.value.copy(isRefreshing = true, error = null, currentIndex = 0)
+            load(source)
         }
 
         /** Retries the source the screen was opened with, after a failure. */
@@ -577,6 +591,8 @@ data class ShortsUiState(
     val currentIndex: Int = 0,
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
+    /** A pull-to-refresh is in flight. Separate from [isLoading], which also covers the first load. */
+    val isRefreshing: Boolean = false,
     val hasMorePages: Boolean = true,
     val error: String? = null,
 )

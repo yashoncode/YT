@@ -102,6 +102,25 @@ fun LazyListScope.musicHomeFeed(
         }
     }
 
+    // A selected chip filters the feed, so the feed has to be only what came back for it. The
+    // shelves below are composed locally (On Repeat, Daily Mixes) or carried over from the
+    // unfiltered home, and leaving them on screen was why picking a mood looked like it did nothing.
+    if (uiState.selectedHomeChip != null) {
+        if (uiState.dynamicSections.isEmpty()) {
+            item(key = "chip_loading") { YTFeedProgress() }
+        } else {
+            dynamicHome(
+                uiState = uiState,
+                downloaded = downloaded,
+                onSongClick = onSongClick,
+                onAlbumClick = onAlbumClick,
+                onTrackMenu = onTrackMenu,
+                onCollectionMenu = ::trackCollectionMenu,
+            )
+        }
+        return
+    }
+
     if (uiState.selectedFilter != null) {
         if (uiState.isSearching) {
             item(key = "filter_loading") { YTFeedProgress() }

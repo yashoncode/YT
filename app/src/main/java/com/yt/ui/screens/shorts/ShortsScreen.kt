@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.yt.ui.components.shared.YTPullToRefreshBox
 import com.yt.R
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.model.ShortVideo
@@ -38,6 +39,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
+/** Clears the status bar, so the spinner is not half behind it on a full-bleed page. */
+private val ShortsRefreshIndicatorPadding = 48.dp
+
 @Composable
 fun ShortsScreen(
     source: ShortsQueueSource,
@@ -316,57 +320,66 @@ fun ShortsScreen(
                     }
                 }
 
-                VerticalPager(
-                    state = pagerState,
+                // Only the first page has slack for the gesture: below it the pager consumes the
+                // drag itself, so the refresh cannot fire part-way down a feed.
+                YTPullToRefreshBox(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = { viewModel.refresh(source) },
                     modifier = Modifier.fillMaxSize(),
-                    beyondViewportPageCount = 1,
-                    key = { uiState.shorts[it].id },
-                ) { page ->
-                    val short = uiState.shorts[page]
-                    val isActive = page == pagerState.currentPage
+                    indicatorTopPadding = ShortsRefreshIndicatorPadding,
+                ) {
+                    VerticalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize(),
+                        beyondViewportPageCount = 1,
+                        key = { uiState.shorts[it].id },
+                    ) { page ->
+                        val short = uiState.shorts[page]
+                        val isActive = page == pagerState.currentPage
 
-                    ShortVideoPage(
-                        video = short.toVideo(),
-                        isActive = isActive,
-                        pageIndex = page,
-                        viewModel = viewModel,
-                        bottomNavOverlayPadding = bottomNavOverlayPadding,
-                        sheetInsets = sheetInsets,
-                        screenSheetOpen = screenSheetOpen,
-                        actions =
-                            ShortVideoPageActions(
-                                onChannelClick = { onChannelClick(short.channelId) },
-                                onCommentsClick = {
-                                    viewModel.loadComments(short.id)
-                                    showCommentsSheet = true
-                                },
-                                onDescriptionClick = {
-                                    scope.launch { viewModel.loadShortDetails(short.id) }
-                                    showDescriptionSheet = true
-                                },
-                                onShareClick = {
-                                    val sendIntent =
-                                        Intent(Intent.ACTION_SEND).apply {
-                                            action = Intent.ACTION_SEND
-                                            putExtra(
-                                                Intent.EXTRA_TEXT,
-                                                context.getString(R.string.share_short_template, short.id),
-                                            )
-                                            type = "text/plain"
+                        ShortVideoPage(
+                            video = short.toVideo(),
+                            isActive = isActive,
+                            pageIndex = page,
+                            viewModel = viewModel,
+                            bottomNavOverlayPadding = bottomNavOverlayPadding,
+                            sheetInsets = sheetInsets,
+                            screenSheetOpen = screenSheetOpen,
+                            actions =
+                                ShortVideoPageActions(
+                                    onChannelClick = { onChannelClick(short.channelId) },
+                                    onCommentsClick = {
+                                        viewModel.loadComments(short.id)
+                                        showCommentsSheet = true
+                                    },
+                                    onDescriptionClick = {
+                                        scope.launch { viewModel.loadShortDetails(short.id) }
+                                        showDescriptionSheet = true
+                                    },
+                                    onShareClick = {
+                                        val sendIntent =
+                                            Intent(Intent.ACTION_SEND).apply {
+                                                action = Intent.ACTION_SEND
+                                                putExtra(
+                                                    Intent.EXTRA_TEXT,
+                                                    context.getString(R.string.share_short_template, short.id),
+                                                )
+                                                type = "text/plain"
+                                            }
+                                        context.startActivity(Intent.createChooser(sendIntent, null))
+                                    },
+                                    onWantMore = { viewModel.wantMoreLikeThis(short) },
+                                    onNotInterested = { viewModel.notInterested(short) },
+                                    onVideoEnded = {
+                                        scope.launch {
+                                            if (page < pagerState.pageCount - 1) {
+                                                pagerState.animateScrollToPage(page + 1)
+                                            }
                                         }
-                                    context.startActivity(Intent.createChooser(sendIntent, null))
-                                },
-                                onWantMore = { viewModel.wantMoreLikeThis(short) },
-                                onNotInterested = { viewModel.notInterested(short) },
-                                onVideoEnded = {
-                                    scope.launch {
-                                        if (page < pagerState.pageCount - 1) {
-                                            pagerState.animateScrollToPage(page + 1)
-                                        }
-                                    }
-                                },
-                            ),
-                    )
+                                    },
+                                ),
+                        )
+                    }
                 }
 
                 // Loading more indicator at bottom

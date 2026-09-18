@@ -512,23 +512,6 @@ fun YTApp(
                 animationSpec = tween(durationMillis = 220),
                 label = "musicMiniPlayerContentPadding",
             )
-            val bottomNavContentPadding by animateDpAsState(
-                targetValue =
-                    if (
-                        !bottomNavHideOnScroll &&
-                        !usesNavigationRail &&
-                        !isInPipMode &&
-                        showBottomNav.value &&
-                        isNavScrolledVisible &&
-                        !isShortsPlayerRoute
-                    ) {
-                        bottomNavContentHeightDp
-                    } else {
-                        0.dp
-                    },
-                animationSpec = tween(durationMillis = 220),
-                label = "bottomNavContentPadding",
-            )
 
             ProvideMusicPlaybackState(
                 miniPlayerInset = musicMiniPlayerInset,
@@ -566,7 +549,10 @@ fun YTApp(
                             Modifier
                                 .padding(if (isInPipMode) PaddingValues(0.dp) else contentPadding)
                                 .padding(start = navigationRailInset)
-                                .padding(bottom = bottomNavContentPadding)
+                                // No inset for the navigation bar: it floats over the content,
+                                // and reserving its height would leave nothing behind it to blur,
+                                // which is the whole of the effect. Scrollable screens clear it
+                                // through bottomNavOverlayPadding instead.
                                 .padding(bottom = musicMiniPlayerContentPadding.coerceAtLeast(0.dp))
                                 .nestedScroll(nestedScrollConnection),
                     ) {

@@ -57,6 +57,7 @@ import com.yt.data.local.MusicPlayerBackgroundStyle
 import com.yt.data.local.PlayerPreferences
 import com.yt.data.music.model.MusicTrack
 import com.yt.player.EnhancedMusicPlayerManager
+import com.yt.ui.components.glow
 import com.yt.ui.components.musicplayer.motion.MiniPlayerDismissGestureHandler
 import com.yt.ui.components.musicplayer.motion.MusicSheetDragGestureHandler
 import com.yt.ui.components.musicplayer.motion.MusicSheetMotionController
@@ -425,6 +426,14 @@ fun UnifiedMusicPlayerSheet(
                             elevation = cardShadowElevation,
                             shape = cardShape,
                             clip = false,
+                        ).then(
+                            // The collapsed bar is glass, so the artwork's colour has nowhere to
+                            // live inside it. It goes around it instead.
+                            if (blurMiniBar) {
+                                Modifier.glow(color = palette.accent, shape = cardShape)
+                            } else {
+                                Modifier
+                            },
                         ).clip(cardShape)
                         .then(
                             if (blurMiniBar) Modifier.hazeEffect(hazeState!!, miniBarHazeStyle) else Modifier,

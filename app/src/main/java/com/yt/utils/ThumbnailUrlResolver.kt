@@ -16,6 +16,17 @@ object ThumbnailUrlResolver {
         return if (id.isEmpty()) "" else "https://i.ytimg.com/vi/$id/hqdefault.jpg"
     }
 
+    /**
+     * The smallest still YouTube publishes, 120x90 and a few kilobytes.
+     *
+     * Too small to show as artwork; big enough, blurred, to stand in for one while the real
+     * thumbnail loads.
+     */
+    fun buildTinyYoutubeThumbnail(videoId: String): String {
+        val id = videoId.trim()
+        return if (id.isEmpty()) "" else "https://i.ytimg.com/vi/$id/default.jpg"
+    }
+
     fun buildMaxResYoutubeThumbnail(videoId: String): String {
         val id = videoId.trim()
         return if (id.isEmpty()) "" else "https://i.ytimg.com/vi/$id/maxresdefault.jpg"

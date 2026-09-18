@@ -8,8 +8,11 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
  * Every pull-to-refresh surface in the app, on the M3 Expressive loading indicator rather than the
@@ -23,6 +26,9 @@ fun YTPullToRefreshBox(
     modifier: Modifier = Modifier,
     state: PullToRefreshState = rememberPullToRefreshState(),
     contentAlignment: Alignment = Alignment.TopStart,
+    // Screens whose content runs under their top bar pass that bar's height here, so the spinner
+    // comes down in front of the bar instead of out from behind it.
+    indicatorTopPadding: Dp = 0.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {
     PullToRefreshBox(
@@ -35,7 +41,10 @@ fun YTPullToRefreshBox(
             PullToRefreshDefaults.LoadingIndicator(
                 state = state,
                 isRefreshing = isRefreshing,
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = indicatorTopPadding),
             )
         },
         content = content,

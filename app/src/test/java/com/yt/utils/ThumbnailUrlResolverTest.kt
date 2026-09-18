@@ -124,6 +124,17 @@ class ThumbnailUrlResolverTest {
         assertThat(ThumbnailUrlResolver.resolveChannelAvatar(raw)).isEqualTo(raw)
     }
 
+    @Test
+    fun `the blur-up placeholder is youtube's smallest still`() {
+        assertThat(ThumbnailUrlResolver.buildTinyYoutubeThumbnail(VIDEO_ID))
+            .isEqualTo("https://i.ytimg.com/vi/$VIDEO_ID/default.jpg")
+    }
+
+    @Test
+    fun `no video id means no placeholder to show`() {
+        assertThat(ThumbnailUrlResolver.buildTinyYoutubeThumbnail("   ")).isEmpty()
+    }
+
     private companion object {
         const val VIDEO_ID = "dQw4w9WgXcQ"
         const val OTHER_ID = "aBcDeFgHiJk"
