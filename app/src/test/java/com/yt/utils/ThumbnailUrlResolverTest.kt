@@ -135,6 +135,27 @@ class ThumbnailUrlResolverTest {
         assertThat(ThumbnailUrlResolver.buildTinyYoutubeThumbnail("   ")).isEmpty()
     }
 
+    @Test
+    fun `music art placeholder asks the cdn for a tiny square`() {
+        val raw = "https://lh3.googleusercontent.com/abc=w544-h544-l90-rj"
+
+        assertThat(ThumbnailUrlResolver.buildTinyThumbnail(raw))
+            .isEqualTo("https://lh3.googleusercontent.com/abc=w48-h48-l90-rj")
+    }
+
+    @Test
+    fun `video art placeholder falls back to the smallest still`() {
+        assertThat(ThumbnailUrlResolver.buildTinyThumbnail("https://i.ytimg.com/vi/$VIDEO_ID/hq720.jpg"))
+            .isEqualTo("https://i.ytimg.com/vi/$VIDEO_ID/default.jpg")
+    }
+
+    @Test
+    fun `a host with no small variant gets no placeholder request`() {
+        assertThat(ThumbnailUrlResolver.buildTinyThumbnail("https://example.com/cover.jpg")).isNull()
+        assertThat(ThumbnailUrlResolver.buildTinyThumbnail(null)).isNull()
+        assertThat(ThumbnailUrlResolver.buildTinyThumbnail("  ")).isNull()
+    }
+
     private companion object {
         const val VIDEO_ID = "dQw4w9WgXcQ"
         const val OTHER_ID = "aBcDeFgHiJk"

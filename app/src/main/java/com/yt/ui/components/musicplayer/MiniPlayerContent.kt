@@ -44,11 +44,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.yt.R
 import com.yt.data.music.model.MusicTrack
 import com.yt.player.EnhancedMusicPlayerManager
 import com.yt.ui.components.PlayingWaveform
+import com.yt.ui.components.shared.BlurUpImage
+import com.yt.utils.ThumbnailUrlResolver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -91,8 +92,12 @@ internal fun MiniPlayerContent(
                             .size(50.dp)
                             .clip(CircleShape),
                 ) {
-                    AsyncImage(
+                    BlurUpImage(
                         model = track.listThumbnailUrl,
+                        placeholderUrl =
+                            remember(track.listThumbnailUrl) {
+                                ThumbnailUrlResolver.buildTinyThumbnail(track.listThumbnailUrl)
+                            },
                         contentDescription = stringResource(R.string.album_art),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,

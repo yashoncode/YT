@@ -1,5 +1,6 @@
 package com.yt.ui.components.shared
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,13 +15,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.animation.AnimatedVisibility
 import coil3.compose.AsyncImage
 import com.yt.utils.ThumbnailUrlResolver
 
@@ -63,6 +63,56 @@ fun VideoThumbnailImage(
     )
 }
 
+/**
+ * An image that fades in over a blurred, few-kilobyte version of itself.
+ *
+ * The stand-in is usually on screen within a frame or two of the request, and blurred up to fill the
+ * surface it reads as the image arriving, where an empty box reads as the app having lost it. Falls
+ * back to the plain surface colour when [placeholderUrl] is null.
+ */
+@Composable
+fun BlurUpImage(
+    model: Any?,
+    placeholderUrl: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+    onError: () -> Unit = {},
+) {
+    var loaded by remember(model) { mutableStateOf(false) }
+
+    Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
+        if (placeholderUrl != null) {
+            AnimatedVisibility(
+                visible = !loaded,
+                enter = fadeIn(tween(PLACEHOLDER_FADE_MILLIS)),
+                exit = fadeOut(tween(PLACEHOLDER_FADE_MILLIS)),
+            ) {
+                AsyncImage(
+                    model = placeholderUrl,
+                    contentDescription = null,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            // Rectangle, not the default: the blur is behind the sharp image and a
+                            // soft edge would show as a seam around the card.
+                            .blur(PLACEHOLDER_BLUR, BlurredEdgeTreatment.Rectangle),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+        }
+
+        AsyncImage(
+            model = model,
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = contentScale,
+            onSuccess = { loaded = true },
+            onError = { onError() },
+        )
+    }
+}
+
 @Composable
 private fun SafeAsyncImage(
     models: List<Any>,
@@ -86,40 +136,14 @@ private fun SafeAsyncImage(
         }
 
         (currentModel is String && currentModel.isNotEmpty()) || currentModel is Int -> {
-            var loaded by remember(currentModel) { mutableStateOf(false) }
-
-            Box(modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
-                if (placeholderUrl != null) {
-                    AnimatedVisibility(
-                        visible = !loaded,
-                        enter = fadeIn(tween(PLACEHOLDER_FADE_MILLIS)),
-                        exit = fadeOut(tween(PLACEHOLDER_FADE_MILLIS)),
-                    ) {
-                        AsyncImage(
-                            model = placeholderUrl,
-                            contentDescription = null,
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    // Rectangle, not the default: the blur is behind the sharp image
-                                    // and a soft edge would show as a seam around the card.
-                                    .blur(PLACEHOLDER_BLUR, BlurredEdgeTreatment.Rectangle),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                }
-
-                AsyncImage(
-                    model = currentModel,
-                    contentDescription = contentDescription,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = contentScale,
-                    onSuccess = { loaded = true },
-                    onError = {
-                        index = if (index < models.lastIndex) index + 1 else models.size
-                    },
-                )
-            }
+            BlurUpImage(
+                model = currentModel,
+                placeholderUrl = placeholderUrl,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = contentScale,
+                onError = { index = if (index < models.lastIndex) index + 1 else models.size },
+            )
         }
 
         else -> {

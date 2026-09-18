@@ -27,6 +27,42 @@ object ThumbnailUrlResolver {
         return if (id.isEmpty()) "" else "https://i.ytimg.com/vi/$id/default.jpg"
     }
 
+    /**
+     * Edge length for a blur-up stand-in: small enough to arrive in a frame or two, big enough to
+     * carry the artwork's colour layout once it is blurred up to fill the surface.
+     */
+    private const val TINY_ART_EDGE = 48
+
+    /**
+     * A few-kilobyte version of [rawUrl] to show, blurred, while the real image loads, or null when
+     * the host publishes no small variant and a placeholder request would just be a second full
+     * download.
+     */
+    fun buildTinyThumbnail(rawUrl: String?): String? {
+        val raw = rawUrl?.trim().orEmpty()
+        if (raw.isEmpty()) return null
+
+        return when {
+            isYoutubeVideoThumbnail(raw) -> {
+                val id =
+                    youtubeVideoThumbnailPattern
+                        .find(raw)
+                        ?.groupValues
+                        ?.getOrNull(1)
+                        .orEmpty()
+                buildTinyYoutubeThumbnail(id).takeIf { it.isNotEmpty() && it != raw }
+            }
+
+            raw.contains("googleusercontent.com") || raw.contains("ggpht.com") -> {
+                resizeImageThumbnail(raw, TINY_ART_EDGE, TINY_ART_EDGE).takeIf { it != raw }
+            }
+
+            else -> {
+                null
+            }
+        }
+    }
+
     fun buildMaxResYoutubeThumbnail(videoId: String): String {
         val id = videoId.trim()
         return if (id.isEmpty()) "" else "https://i.ytimg.com/vi/$id/maxresdefault.jpg"

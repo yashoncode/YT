@@ -138,6 +138,8 @@ fun UnifiedMusicPlayerSheet(
     val palette = rememberMediaPalette(displayTrack.highResThumbnailUrl)
     val playerScheme = rememberMusicPlayerColorScheme(palette, backgroundStyle)
 
+    var giggleInitialized by remember { mutableStateOf(false) }
+
     val motionController =
         remember(state) {
             MusicSheetMotionController(
@@ -148,6 +150,29 @@ fun UnifiedMusicPlayerSheet(
             )
         }
     val overshootScaleY = remember { Animatable(1f) }
+
+    // The collapsed bar reacts to play/pause with a short squash-and-settle, so a tap that only
+    // changes an icon still registers as the bar having done something. Expanded, the same layer
+    // is the full player, which must not bounce - hence the collapsed gate at the read site.
+    val giggleScale = remember { Animatable(1f) }
+    val isMusicPlaying by EnhancedMusicPlayerManager.playerState.collectAsState()
+    LaunchedEffect(isMusicPlaying.isPlaying) {
+        // Skips the very first emission: appearing is already animated by miniAppear.
+        if (!giggleInitialized) {
+            giggleInitialized = true
+            return@LaunchedEffect
+        }
+        giggleScale.snapTo(1.06f)
+        giggleScale.animateTo(
+            targetValue = 1f,
+            animationSpec =
+                spring(
+                    dampingRatio = 0.34f,
+                    stiffness = Spring.StiffnessMedium,
+                ),
+        )
+    }
+
     val predictiveBackProgress = remember { Animatable(0f) }
     val dismissOffset = remember { Animatable(0f) }
 
@@ -402,8 +427,12 @@ fun UnifiedMusicPlayerSheet(
                         .graphicsLayer {
                             translationX = dismissOffset.value
                             val appearScale = lerp(0.985f, 1f, miniAppear.value)
-                            scaleX = appearScale
-                            scaleY = overshootScaleY.value * appearScale
+                            // Only the pill giggles; past a sliver of expansion this layer is the
+                            // full player and scaling it would wobble the whole screen.
+                            val giggle =
+                                if (state.expansionFraction.value < 0.02f) giggleScale.value else 1f
+                            scaleX = appearScale * giggle
+                            scaleY = overshootScaleY.value * appearScale * giggle
                             alpha = miniAppear.value
                             transformOrigin = TransformOrigin(0.5f, 1f)
                         }.layout { measurable, constraints ->

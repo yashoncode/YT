@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,10 +36,12 @@ import coil3.compose.AsyncImage
 import com.yt.R
 import com.yt.data.music.model.MusicTrack
 import com.yt.ui.components.PlayingWaveform
+import com.yt.ui.components.shared.BlurUpImage
 import com.yt.ui.theme.ArtworkScrimActive
 import com.yt.ui.theme.ArtworkScrimContent
 import com.yt.ui.theme.ArtworkScrimIndex
 import com.yt.ui.theme.Dimensions
+import com.yt.utils.ThumbnailUrlResolver
 
 /**
  * The single artwork surface for the music library. [shape] covers the circular artist variant,
@@ -64,8 +67,9 @@ fun MusicThumbnail(
                 .aspectRatio(thumbnailRatio)
                 .clip(shape),
     ) {
-        AsyncImage(
+        BlurUpImage(
             model = thumbnailUrl,
+            placeholderUrl = remember(thumbnailUrl) { ThumbnailUrlResolver.buildTinyThumbnail(thumbnailUrl) },
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
