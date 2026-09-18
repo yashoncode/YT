@@ -57,6 +57,7 @@ import com.yt.ui.components.music.sheet.MusicQuickActionsSheet
 import com.yt.ui.components.shared.MusicScreenShimmerLoading
 import com.yt.ui.components.shared.YTErrorState
 import com.yt.ui.components.shared.YTPullToRefreshBox
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
@@ -70,6 +71,9 @@ private val RecognizeFabShape = CircleShape
 private val FabBlurRadius = 26.dp
 private val FabGlowRadius = 26.dp
 private const val FAB_GLASS_ALPHA = 0.38f
+
+private val TOP_BAR_BLUR_RADIUS = 24.dp
+private const val TOP_BAR_GLASS_ALPHA = 0.5f
 
 private val FeedBottomClearance = 96.dp
 
@@ -202,6 +206,16 @@ fun EnhancedMusicScreen(
         }
 
     val bottomChrome = bottomNavOverlayPadding() + LocalMusicMiniPlayerInset.current
+    val backdrop = MaterialTheme.colorScheme.background
+    val topBarHazeStyle =
+        remember(backdrop) {
+            HazeStyle(
+                backgroundColor = backdrop,
+                tint = HazeTint(backdrop.copy(alpha = TOP_BAR_GLASS_ALPHA)),
+                blurRadius = TOP_BAR_BLUR_RADIUS,
+            )
+        }
+
     val fabLift =
         animateDpAsState(
             targetValue = bottomChrome,
@@ -212,6 +226,13 @@ fun EnhancedMusicScreen(
     Scaffold(
         topBar = {
             YTTopBar(
+                modifier =
+                    Modifier.hazeEffect(feedHazeState, topBarHazeStyle) {
+                        // Solid across the bar, gone by the time it meets the feed, so there is no
+                        // edge where the blur stops.
+                        progressive =
+                            HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+                    },
                 title = stringResource(R.string.screen_title_music),
                 actions = {
                     IconButton(onClick = onSearchClick) {
@@ -242,24 +263,27 @@ fun EnhancedMusicScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0.dp),
     ) { paddingValues ->
+        // No top inset: the feed runs full-bleed under the bar so the bar has something to blur.
+        // Each branch below clears it through topContentPadding instead.
+        val topContentPadding = paddingValues.calculateTopPadding()
         Box(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
                     .hazeSource(feedHazeState),
         ) {
             val isInitialLoading = uiState.isLoading && uiState.trendingSongs.isEmpty() && uiState.dynamicSections.isEmpty()
 
             when {
                 isInitialLoading -> {
-                    MusicScreenShimmerLoading()
+                    MusicScreenShimmerLoading(modifier = Modifier.padding(top = topContentPadding))
                 }
 
                 uiState.error != null && uiState.trendingSongs.isEmpty() -> {
                     YTErrorState(
                         error = uiState.error ?: stringResource(R.string.error_occurred),
                         onRetry = { viewModel.retry() },
+                        modifier = Modifier.padding(top = topContentPadding),
                     )
                 }
 
@@ -290,12 +314,17 @@ fun EnhancedMusicScreen(
                         isRefreshing = uiState.isRefreshing,
                         onRefresh = { viewModel.refresh() },
                         state = pullState,
+                        indicatorTopPadding = topContentPadding,
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         LazyColumn(
                             state = musicListState,
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = bottomChrome + FeedBottomClearance),
+                            contentPadding =
+                                PaddingValues(
+                                    top = topContentPadding,
+                                    bottom = bottomChrome + FeedBottomClearance,
+                                ),
                         ) {
                             musicHomeFeed(
                                 uiState = uiState,

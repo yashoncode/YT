@@ -2,11 +2,7 @@ package com.yt.ui
 
 import android.app.Activity
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -24,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -70,6 +67,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 
 @UnstableApi
+/** How far the arriving screen travels. Enough to read as movement, short of a full swipe-in. */
+private const val NAV_ENTER_TRAVEL = 0.28f
+
+/** The leaving screen moves less, so it reads as sitting behind the one arriving. */
+private const val NAV_PARALLAX_TRAVEL = 0.12f
+
 @Composable
 fun YTApp(
     currentTheme: ThemeMode,
@@ -562,39 +565,38 @@ fun YTApp(
                                 homeViewModel.initialize(context.applicationContext)
                             }
 
+                            val motion = MaterialTheme.motionScheme
+                            val navEnterSpatial = motion.defaultSpatialSpec<IntOffset>()
+                            val navEnterEffects = motion.defaultEffectsSpec<Float>()
+                            val navExitEffects = motion.fastEffectsSpec<Float>()
+
                             ProvideYTGlobalActions(
                                 onOpenSettings = { navController.navigate("settings") },
                             ) {
                                 NavHost(
                                     navController = navController,
                                     startDestination = if (needsOnboarding == true) "onboarding" else defaultStartRoute,
+                                    // Shared axis X. The screen being left slides a short way in
+                                    // the direction of travel while the one arriving covers the
+                                    // rest, so the two read as one movement rather than a fade
+                                    // between two stills. Springs, not tweens: a predictive back
+                                    // gesture drives these frame by frame, and a spring picks up
+                                    // from wherever the screen actually is when the finger lifts.
                                     enterTransition = {
-                                        fadeIn(animationSpec = tween(250, easing = FastOutSlowInEasing)) +
-                                            slideInHorizontally(
-                                                initialOffsetX = { (it * 0.06f).toInt() },
-                                                animationSpec =
-                                                    spring(
-                                                        dampingRatio = Spring.DampingRatioNoBouncy,
-                                                        stiffness = Spring.StiffnessMediumLow,
-                                                    ),
-                                            )
+                                        slideInHorizontally(navEnterSpatial) { (it * NAV_ENTER_TRAVEL).toInt() } +
+                                            fadeIn(navEnterEffects)
                                     },
                                     exitTransition = {
-                                        fadeOut(animationSpec = tween(200, easing = FastOutLinearInEasing))
+                                        slideOutHorizontally(navEnterSpatial) { -(it * NAV_PARALLAX_TRAVEL).toInt() } +
+                                            fadeOut(navExitEffects)
                                     },
                                     popEnterTransition = {
-                                        fadeIn(animationSpec = tween(250, easing = FastOutSlowInEasing))
+                                        slideInHorizontally(navEnterSpatial) { -(it * NAV_PARALLAX_TRAVEL).toInt() } +
+                                            fadeIn(navEnterEffects)
                                     },
                                     popExitTransition = {
-                                        fadeOut(animationSpec = tween(200, easing = FastOutLinearInEasing)) +
-                                            slideOutHorizontally(
-                                                targetOffsetX = { (it * 0.06f).toInt() },
-                                                animationSpec =
-                                                    spring(
-                                                        dampingRatio = Spring.DampingRatioNoBouncy,
-                                                        stiffness = Spring.StiffnessMediumLow,
-                                                    ),
-                                            )
+                                        slideOutHorizontally(navEnterSpatial) { (it * NAV_ENTER_TRAVEL).toInt() } +
+                                            fadeOut(navExitEffects)
                                     },
                                 ) {
                                     flowAppGraph(
