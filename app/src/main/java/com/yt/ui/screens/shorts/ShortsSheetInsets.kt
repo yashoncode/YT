@@ -4,6 +4,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
@@ -29,6 +30,14 @@ internal const val SHORTS_SHEET_HEIGHT_FRACTION = 0.62f
 
 /** Landscape has no height to give away, so a sheet there grows instead of the reel shrinking. */
 internal const val SHORTS_SHEET_LANDSCAPE_HEIGHT_FRACTION = 0.9f
+
+/**
+ * Rounded top corners for the Shorts sheets.
+ *
+ * The player's sheets sit flush under the video and are square on purpose; these slide up over a
+ * full-bleed reel, where a square edge reads as the screen splitting in two.
+ */
+internal val SHORTS_SHEET_SHAPE = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
 internal fun shortsSheetReservedPx(
     sheetHeightPx: Float,

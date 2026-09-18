@@ -469,7 +469,7 @@ class ShortsPlayerPool private constructor() {
 
             if (isTarget) {
                 if (playerOwnerIndices[i] == index) {
-                    player.playWhenReady = true
+                    player.resumePlayback()
                     player.setPlaybackSpeed(basePlaybackSpeed)
                     player.setAudioAttributes(
                         AudioAttributes
@@ -619,10 +619,23 @@ class ShortsPlayerPool private constructor() {
      */
     private fun findActivePlayer(): ExoPlayer? = ownedPlayer(activeIndex)
 
+    /**
+     * Starts playback, rewinding first when the reel has already run to its end.
+     *
+     * Only the auto-advance modes ever reach `STATE_ENDED` — `loop` keeps `REPEAT_MODE_ONE`, which
+     * never ends — and an ended player ignores `playWhenReady`, so without the seek every resume of
+     * a finished short (swiping back to it, the play button, a media button) left it frozen on its
+     * last frame.
+     */
+    private fun ExoPlayer.resumePlayback() {
+        if (playbackState == Player.STATE_ENDED) seekTo(0)
+        playWhenReady = true
+    }
+
     fun play() {
         findActivePlayer()?.let { player ->
             player.setPlaybackSpeed(basePlaybackSpeed)
-            player.playWhenReady = true
+            player.resumePlayback()
         }
     }
 
@@ -632,7 +645,7 @@ class ShortsPlayerPool private constructor() {
 
     fun togglePlayPause() {
         val player = findActivePlayer() ?: return
-        player.playWhenReady = !player.playWhenReady
+        if (player.playWhenReady) player.playWhenReady = false else player.resumePlayback()
     }
 
     fun seekTo(positionMs: Long) {

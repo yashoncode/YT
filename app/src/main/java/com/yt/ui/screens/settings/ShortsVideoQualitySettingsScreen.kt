@@ -26,8 +26,8 @@ fun ShortsVideoQualitySettingsScreen(onNavigateBack: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
     val playerPreferences = remember { PlayerPreferences(context) }
 
-    val wifiQuality by playerPreferences.shortsQualityWifi.collectAsState(initial = VideoQuality.Q_720P)
-    val cellularQuality by playerPreferences.shortsQualityCellular.collectAsState(initial = VideoQuality.Q_480P)
+    val wifiQuality by playerPreferences.shortsQualityWifi.collectAsState(initial = VideoQuality.AUTO)
+    val cellularQuality by playerPreferences.shortsQualityCellular.collectAsState(initial = VideoQuality.AUTO)
 
     val qualities =
         listOf(

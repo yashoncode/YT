@@ -14,28 +14,68 @@ class ShortsPlaybackTargetTest {
     fun `wifi and cellular select their own configured quality`() {
         assertEquals(
             1080,
-            shortsTargetHeight(isWifi = true, wifiQuality = VideoQuality.Q_1080P, cellularQuality = VideoQuality.Q_480P),
+            shortsTargetHeight(
+                isWifi = true,
+                wifiQuality = VideoQuality.Q_1080P,
+                cellularQuality = VideoQuality.Q_480P,
+                autoHeight = MEASURED,
+            ),
         )
         assertEquals(
             480,
-            shortsTargetHeight(isWifi = false, wifiQuality = VideoQuality.Q_1080P, cellularQuality = VideoQuality.Q_480P),
+            shortsTargetHeight(
+                isWifi = false,
+                wifiQuality = VideoQuality.Q_1080P,
+                cellularQuality = VideoQuality.Q_480P,
+                autoHeight = MEASURED,
+            ),
         )
     }
 
     @Test
     fun `the transport is what decides, not which quality is higher`() {
         val onCellular =
-            shortsTargetHeight(isWifi = false, wifiQuality = VideoQuality.Q_360P, cellularQuality = VideoQuality.Q_1080P)
+            shortsTargetHeight(
+                isWifi = false,
+                wifiQuality = VideoQuality.Q_360P,
+                cellularQuality = VideoQuality.Q_1080P,
+                autoHeight = MEASURED,
+            )
 
         assertEquals(1080, onCellular)
     }
 
     @Test
-    fun `auto resolves to the unconstrained height both paths agree on`() {
-        val wifi = shortsTargetHeight(isWifi = true, wifiQuality = VideoQuality.AUTO, cellularQuality = VideoQuality.Q_480P)
+    fun `auto takes the measured height, not the unconstrained one`() {
+        val wifi =
+            shortsTargetHeight(
+                isWifi = true,
+                wifiQuality = VideoQuality.AUTO,
+                cellularQuality = VideoQuality.Q_480P,
+                autoHeight = MEASURED,
+            )
 
-        // 0 means "no cap" downstream; the point here is that it is a single stable value rather
-        // than each caller substituting its own placeholder.
-        assertEquals(VideoQuality.AUTO.height, wifi)
+        // Auto used to fall through as AUTO.height, which is 0, and 0 means "no cap" downstream --
+        // so the setting a viewer picks to let the app judge asked for the largest stream there
+        // was, on any connection.
+        assertEquals(MEASURED, wifi)
+    }
+
+    @Test
+    fun `a measured height only applies where auto is configured`() {
+        val pinned =
+            shortsTargetHeight(
+                isWifi = true,
+                wifiQuality = VideoQuality.Q_720P,
+                cellularQuality = VideoQuality.AUTO,
+                autoHeight = 240,
+            )
+
+        assertEquals(720, pinned)
+    }
+
+    private companion object {
+        /** Stands in for whatever the bandwidth meter last reported. */
+        const val MEASURED = 360
     }
 }

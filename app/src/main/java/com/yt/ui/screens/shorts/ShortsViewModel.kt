@@ -290,6 +290,7 @@ class ShortsViewModel
                             isWifi = isOnWifi(context),
                             wifiQuality = prefs.shortsQualityWifi.first(),
                             cellularQuality = prefs.shortsQualityCellular.first(),
+                            autoHeight = ShortsAutoQuality.targetHeight(context),
                         )
                     val preferredLang = prefs.preferredAudioLanguage.first()
                     videoIds.forEach { id ->

@@ -44,7 +44,7 @@ private val ShortsRefreshPullThreshold = 140.dp
 /** Clears the status bar, so the spinner is not half behind it on a full-bleed page. */
 private val ShortsRefreshIndicatorPadding = 48.dp
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShortsScreen(
     source: ShortsQueueSource,
@@ -115,7 +115,9 @@ fun ShortsScreen(
     }.collectAsState(initial = null)
     val shortsTargetHeight by remember(isWifi, shortsQualityPair) {
         derivedStateOf {
-            shortsQualityPair?.let { (wifi, cellular) -> shortsTargetHeight(isWifi, wifi, cellular) }
+            shortsQualityPair?.let { (wifi, cellular) ->
+                shortsTargetHeight(isWifi, wifi, cellular, ShortsAutoQuality.targetHeight(context))
+            }
         }
     }
     val prevShortsTargetHeight = remember { mutableStateOf<Int?>(null) }
@@ -205,7 +207,11 @@ fun ShortsScreen(
 
                 // Track settled page for player pool management
                 val settledShortId = uiState.shorts.getOrNull(pagerState.settledPage)?.id
-                LaunchedEffect(pagerState.settledPage, settledShortId, shortsTargetHeight) {
+                // A short whose streams would not resolve. Held by id, not by index, so paging past
+                // it and back does not resurrect a stale failure on a different reel.
+                var failedShortId by remember { mutableStateOf<String?>(null) }
+                var streamRetryToken by remember { mutableIntStateOf(0) }
+                LaunchedEffect(pagerState.settledPage, settledShortId, shortsTargetHeight, streamRetryToken) {
                     val targetHeight = shortsTargetHeight ?: return@LaunchedEffect
                     val settled = pagerState.settledPage
                     val playerPool = ShortsPlayerPool.getInstance()
@@ -231,11 +237,16 @@ fun ShortsScreen(
                                     videoDashManifest = streams.videoDashManifest,
                                     audioDashManifest = streams.audioDashManifest,
                                 )
+                                if (failedShortId == short.id) failedShortId = null
                             } else {
                                 Log.w("ShortsScreen", "No stream URL resolved for ${short.id}")
+                                // Only the visible page gets an error: a neighbour that fails is
+                                // re-prepared when it becomes the settled one anyway.
+                                if (shouldPlay) failedShortId = short.id
                             }
                         } catch (e: Exception) {
                             Log.e("ShortsScreen", "Failed to prepare player for ${short.id}", e)
+                            if (shouldPlay) failedShortId = short.id
                         }
                     }
 
@@ -257,9 +268,15 @@ fun ShortsScreen(
                     uiState.shorts.getOrNull(settled - 1)?.let { prevShort ->
                         launch { prepareShort(settled - 1, prevShort, shouldPlay = false) }
                     }
-                    // Two ahead: resolved only, not handed to a player. Last so it never competes
-                    // with the visible short.
-                    uiState.shorts.getOrNull(settled + 2)?.let { preloadShort ->
+                    // Two and three ahead: resolved only, never handed to a player — the pool holds
+                    // three, and its slots belong to settled-1, settled and settled+1. Resolving
+                    // further ahead is what makes a fast scroll find the stream already in the
+                    // repository cache instead of waiting on the network mid-swipe. Last, so it
+                    // never competes with the visible short.
+                    listOfNotNull(
+                        uiState.shorts.getOrNull(settled + 2),
+                        uiState.shorts.getOrNull(settled + 3),
+                    ).forEach { preloadShort ->
                         launch {
                             runCatching {
                                 viewModel.getPlaybackStreams(preloadShort.id, targetHeight, preferredLang)
@@ -386,14 +403,24 @@ fun ShortsScreen(
                 }
 
                 if (uiState.isRefreshing && !isInPip) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         color = Color.White,
-                        strokeWidth = 3.dp,
                         modifier =
                             Modifier
                                 .align(Alignment.TopCenter)
                                 .padding(top = ShortsRefreshIndicatorPadding)
-                                .size(32.dp),
+                                .size(38.dp),
+                    )
+                }
+
+                if (failedShortId != null && failedShortId == settledShortId && !isInPip) {
+                    ShortsErrorState(
+                        error = stringResource(R.string.error_short_load),
+                        onRetry = {
+                            failedShortId = null
+                            streamRetryToken++
+                        },
+                        modifier = Modifier.align(Alignment.Center),
                     )
                 }
 
@@ -436,6 +463,7 @@ fun ShortsScreen(
                 expandedHeight = sheetExpandedHeight,
                 onSheetProgressChange = { progress -> sheetInsets.follow(sheetExpandedHeightPx * progress) },
                 dismissOnOutsideTap = true,
+                shape = SHORTS_SHEET_SHAPE,
                 onDismiss = { showCommentsSheet = false },
             )
         }
@@ -449,6 +477,7 @@ fun ShortsScreen(
                 expandedHeight = sheetExpandedHeight,
                 onSheetProgressChange = { progress -> sheetInsets.follow(sheetExpandedHeightPx * progress) },
                 dismissOnOutsideTap = true,
+                shape = SHORTS_SHEET_SHAPE,
                 onDismiss = { showDescriptionSheet = false },
             )
         }
@@ -516,6 +545,7 @@ private fun ShortsTopBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ShortsLoadingState(modifier: Modifier = Modifier) {
     Column(
@@ -523,10 +553,9 @@ private fun ShortsLoadingState(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        CircularProgressIndicator(
+        LoadingIndicator(
             color = Color.White,
-            strokeWidth = 3.dp,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(48.dp),
         )
         Text(
             stringResource(R.string.loading_shorts),

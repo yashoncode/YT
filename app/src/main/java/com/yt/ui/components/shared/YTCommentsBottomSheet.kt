@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -56,6 +57,7 @@ fun YTCommentsBottomSheet(
     collapsedHeight: Dp = 0.dp,
     onSheetProgressChange: (Float) -> Unit = {},
     dismissOnOutsideTap: Boolean = false,
+    shape: Shape = RectangleShape,
     modifier: Modifier = Modifier,
 ) {
     val sheetState = rememberYTBottomSheetState()
@@ -73,7 +75,7 @@ fun YTCommentsBottomSheet(
         expandedHeight = expandedHeight ?: defaultSheetExpandedHeight(),
         collapsedHeight = collapsedHeight,
         dismissOnOutsideTap = dismissOnOutsideTap,
-        shape = RectangleShape,
+        shape = shape,
         containerColor = MaterialTheme.colorScheme.surface,
         onProgressChange = onSheetProgressChange,
         header = { dragModifier ->

@@ -45,10 +45,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
+// StiffnessLow took most of a second to settle, which on Shorts meant the reel re-measuring under a
+// sheet that was still crawling upwards. MediumLow lands in roughly half that, still without bounce.
 private fun sheetSpring() =
     spring<Float>(
         dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessLow,
+        stiffness = Spring.StiffnessMediumLow,
     )
 
 private const val DISMISS_PROGRESS_THRESHOLD = 0.55f

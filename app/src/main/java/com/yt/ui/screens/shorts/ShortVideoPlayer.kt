@@ -83,6 +83,7 @@ private val shortsOverlayTextShadow =
         blurRadius = 4f,
     )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ShortVideoPage(
     video: Video,
@@ -615,13 +616,12 @@ internal fun ShortVideoPage(
         }
 
         if (pageState.isBuffering) {
-            CircularProgressIndicator(
+            LoadingIndicator(
                 modifier =
                     Modifier
                         .align(Alignment.Center)
-                        .size(44.dp),
+                        .size(52.dp),
                 color = primaryColor,
-                strokeWidth = 3.dp,
             )
         }
 
@@ -1239,7 +1239,7 @@ internal fun ShortVideoPage(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ShortsOptionsSheet(
     isLoadingStreams: Boolean,
@@ -1420,7 +1420,7 @@ private fun ShortsOptionsSheet(
                     )
                     if (isLoadingStreams) {
                         Spacer(Modifier.weight(1f))
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        LoadingIndicator(modifier = Modifier.size(22.dp))
                     }
                 }
             }
@@ -1462,7 +1462,7 @@ private fun ShortsOptionsSheet(
                     )
                     if (isLoadingStreams) {
                         Spacer(Modifier.weight(1f))
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        LoadingIndicator(modifier = Modifier.size(22.dp))
                     }
                 }
             }
@@ -1503,7 +1503,7 @@ private fun ShortsOptionsSheet(
                     )
                     if (isLoadingStreams) {
                         Spacer(Modifier.weight(1f))
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        LoadingIndicator(modifier = Modifier.size(22.dp))
                     }
                 }
             }

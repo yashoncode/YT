@@ -1215,17 +1215,19 @@ class PlayerPreferences(
             }
         }.distinctUntilChanged()
 
-    // Shorts quality preferences (default to 720p WiFi, 480p Cellular)
+    // Shorts quality preferences. Both default to Auto, which picks a height from the measured
+    // bandwidth rather than pinning one: a fixed 720p is a stall on a weak connection and a waste
+    // of data on a strong one.
     val shortsQualityWifi: Flow<VideoQuality> =
         context.playerPreferencesDataStore.data
             .map { preferences ->
-                VideoQuality.fromString(preferences[Keys.SHORTS_QUALITY_WIFI] ?: "720p")
+                VideoQuality.fromString(preferences[Keys.SHORTS_QUALITY_WIFI] ?: VideoQuality.AUTO.label)
             }
 
     val shortsQualityCellular: Flow<VideoQuality> =
         context.playerPreferencesDataStore.data
             .map { preferences ->
-                VideoQuality.fromString(preferences[Keys.SHORTS_QUALITY_CELLULAR] ?: "480p")
+                VideoQuality.fromString(preferences[Keys.SHORTS_QUALITY_CELLULAR] ?: VideoQuality.AUTO.label)
             }
 
     suspend fun setShortsQualityWifi(quality: VideoQuality) {

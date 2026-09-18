@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -171,6 +172,7 @@ fun YTDescriptionBottomSheet(
     onSheetProgressChange: (Float) -> Unit = {},
     dismissOnOutsideTap: Boolean = false,
     enableVerticalDismiss: Boolean = true,
+    shape: Shape = RectangleShape,
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -215,7 +217,7 @@ fun YTDescriptionBottomSheet(
         collapsedHeight = collapsedHeight,
         dismissible = enableVerticalDismiss,
         dismissOnOutsideTap = dismissOnOutsideTap,
-        shape = RectangleShape,
+        shape = shape,
         containerColor = MaterialTheme.colorScheme.surface,
         onProgressChange = onSheetProgressChange,
         header = { dragModifier ->
