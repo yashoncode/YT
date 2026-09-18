@@ -172,15 +172,18 @@ fun ShortsScreen(
                 ShortsLoadingState(modifier = Modifier.align(Alignment.Center))
             }
 
-            uiState.error != null && uiState.shorts.isEmpty() -> {
+            // One branch for every way of having nothing to show. A source that returns an empty
+            // page without failing used to match no branch at all: the screen rendered black with
+            // no control left on it to load anything.
+            uiState.shorts.isEmpty() -> {
                 ShortsErrorState(
-                    error = uiState.error,
+                    error = uiState.error ?: stringResource(R.string.no_shorts_found),
                     onRetry = { viewModel.retry(source) },
                     modifier = Modifier.align(Alignment.Center),
                 )
             }
 
-            uiState.shorts.isNotEmpty() -> {
+            else -> {
                 val pagerState =
                     rememberPagerState(
                         initialPage = uiState.currentIndex,

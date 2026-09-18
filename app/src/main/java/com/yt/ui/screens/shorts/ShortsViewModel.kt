@@ -204,8 +204,12 @@ class ShortsViewModel
             viewModelScope.launch(PerformanceDispatcher.networkIO) {
                 try {
                     controller.loadInitial(resolved.openAtVideoId)
-                    _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false)
                     publishQueue()
+                    // An empty queue is not a queue. Left in place it would make load() refuse to
+                    // try again on the next entry to the screen, and the retry button would be the
+                    // only way back from a feed that came back with nothing.
+                    if (controller.items.value.isEmpty()) queue = null
+                    _uiState.value = _uiState.value.copy(isLoading = false, isRefreshing = false)
 
                     // Pre-resolve around the opening position so the pager's prepare pass is a cache
                     // hit both forwards and backwards.
