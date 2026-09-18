@@ -44,6 +44,10 @@ private val ShortsRefreshPullThreshold = 140.dp
 /** Clears the status bar, so the spinner is not half behind it on a full-bleed page. */
 private val ShortsRefreshIndicatorPadding = 48.dp
 
+/** Silent retries of an empty feed before the viewer is shown a retry button instead. */
+private const val MAX_EMPTY_AUTO_RETRIES = 1
+private const val EMPTY_AUTO_RETRY_DELAY_MS = 600L
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShortsScreen(
@@ -168,6 +172,25 @@ fun ShortsScreen(
             sheetInsets.shrinkEnabled = canShrinkReel
         }
         val screenSheetOpen = showCommentsSheet || showDescriptionSheet
+
+        // One silent retry before the screen admits defeat. A page that lands empty is usually
+        // transient -- a continuation that returned nothing, a request that failed -- and making the
+        // viewer press a button for it is how a feed that would have worked reads as broken.
+        // Counted outside the branch below, because that branch leaves composition while the retry
+        // is in flight and a flag held inside it would reset into an endless retry.
+        var emptyRetries by remember(source) { mutableIntStateOf(0) }
+        LaunchedEffect(uiState.shorts.isEmpty(), uiState.isLoading, uiState.isRefreshing) {
+            if (uiState.shorts.isNotEmpty()) {
+                emptyRetries = 0
+                return@LaunchedEffect
+            }
+            if (uiState.isLoading || uiState.isRefreshing || emptyRetries >= MAX_EMPTY_AUTO_RETRIES) {
+                return@LaunchedEffect
+            }
+            emptyRetries++
+            delay(EMPTY_AUTO_RETRY_DELAY_MS)
+            viewModel.retry(source)
+        }
 
         when {
             uiState.isLoading && uiState.shorts.isEmpty() -> {

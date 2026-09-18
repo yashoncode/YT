@@ -1140,10 +1140,9 @@ class ShortsRepository private constructor(
     }
 
     /**
-     * Drops Shorts the user has already watched or been shown in the last week.
-     *
-     * [keepId] survives regardless: it is the Short the user just asked for by name, and having
-     * watched it once is no reason to refuse to open it again.
+     * Drops Shorts the user has already watched or been shown in the last week, without ever
+     * dropping every one of them -- see [freshestNonEmpty] for why an empty feed is the worse
+     * outcome.
      */
     private suspend fun filterWatchedShorts(
         shorts: List<ShortVideo>,
@@ -1160,8 +1159,13 @@ class ShortsRepository private constructor(
                 YTNeuroEngine.initialize(context)
                 YTNeuroEngine.getRecentlySeenShorts()
             }.getOrDefault(emptySet())
-        if (watchedIds.isEmpty() && recentlySeenIds.isEmpty()) return shorts
-        return shorts.filter { it.id == keepId || (it.id !in watchedIds && it.id !in recentlySeenIds) }
+        return freshestNonEmpty(
+            items = shorts,
+            id = { it.id },
+            watchedIds = watchedIds,
+            seenIds = recentlySeenIds,
+            keepId = keepId,
+        )
     }
 
     suspend fun recordShown(videoId: String) {

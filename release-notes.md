@@ -1,9 +1,8 @@
-# YT v4.15.23
+# YT v4.15.24
 
 **Release date:** 2026-09-18
 
 ## Fixes and stability
 
-- Fixed Shorts getting stuck on the last video, with nothing new loading and no way to scroll on. The feed only asked for more when you moved to a new short, so if a batch came back empty or a request failed, there was no page left to move to and nothing ever asked again. It now retries, and re-checks whenever the queue grows.
-- Lyrics are fetched three sources at a time instead of all at once. Querying every source together made them compete for the connection, so on a weaker network each one was slower and they could all run out of time — which was worse than the version this replaced. The per-source time limit also goes back up from 5 to 8 seconds.
-- Lyrics now stop searching shortly after finding something usable, instead of working through every remaining source hoping for a synced version.
+- Fixed the Shorts tab showing "No shorts found" even though YouTube had returned videos. Shorts you had already watched, or that were shown to you in the past week, were filtered out — and if that removed every video on the page, the result was an empty feed that looked like a failure. Filtering now relaxes step by step rather than leaving nothing: it drops the "shown recently" rule first, then the "already watched" rule. A page of videos you have seen before is shown instead of an empty screen, and when there is anything fresh, that is still what you get.
+- An empty Shorts feed now retries once on its own before showing the Retry button.
