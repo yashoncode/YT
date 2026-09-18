@@ -2,8 +2,6 @@
 
 **Release date:** 2026-09-18
 
-Enjoying YT? Consider supporting its development on [Patreon](https://patreon.com/A_EDev) to help keep the app free, open source, ad-free, and improving!
-
 ## New features
 
 - Shorts quality now adapts to your connection. Auto used to mean "largest stream available" on any network; it now picks a height from the measured bandwidth, and both Wi-Fi and mobile data default to it. Fixed qualities are still there in Shorts video quality settings.
