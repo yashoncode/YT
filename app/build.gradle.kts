@@ -19,8 +19,8 @@ android {
         applicationId = "com.yt"
         minSdk = 26
         targetSdk = 36
-        versionCode = 26
-        versionName = "4.15.21"
+        versionCode = 27
+        versionName = "4.15.22"
 
         testInstrumentationRunner = "com.yt.HiltTestRunner"
         vectorDrawables {
