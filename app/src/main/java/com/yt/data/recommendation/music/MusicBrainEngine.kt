@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -80,6 +81,8 @@ class MusicBrainEngine
         /** Previous counted artist + timestamp, for session co-occurrence. Ephemeral, never persisted. */
         private var lastCounted: Pair<String, Long>? = null
 
+        private val sessionSkips = MusicSessionSkips()
+
         suspend fun ensureInitialized() {
             if (isInitialized) return
             // CPU-bound init (backfill replay) runs on Default so it never occupies
@@ -111,6 +114,8 @@ class MusicBrainEngine
             playedFraction: Double,
             genre: String? = null,
             playedMs: Long = 0L,
+            endedByUser: Boolean = false,
+            isAutoplay: Boolean = false,
         ) {
             if (track.videoId.isBlank() || track.videoId.startsWith(LOCAL_MEDIA_PREFIX)) return
             val pct = playedFraction.coerceIn(0.0, 1.0)
@@ -120,7 +125,11 @@ class MusicBrainEngine
             val signal =
                 track
                     .toMusicSignal(pct)
-                    .copy(genre = genre?.trim()?.lowercase()?.takeIf { it.isNotEmpty() })
+                    .copy(
+                        genre = genre?.trim()?.lowercase()?.takeIf { it.isNotEmpty() },
+                        skipTier = MusicBrainLearn.skipTier(endedByUser, pct, playedMs),
+                        isAutoplay = isAutoplay,
+                    )
             if (signal.artistKey.isEmpty()) {
                 Log.w(TAG, "listen ${track.videoId} has no artist key")
                 return
@@ -132,14 +141,19 @@ class MusicBrainEngine
             mutex.withLock {
                 val wasNewArtist = signal.artistKey !in brain.seenArtists
                 var counted = false
-                if (crossed.isNotEmpty()) {
+                sessionSkips.record(signal.artistKey, signal.skipTier, now)
+                if (crossed.isNotEmpty() || signal.skipTier == MusicSkipTier.EARLY) {
                     val coArtist =
                         lastCounted
                             ?.takeIf { now - it.second < MusicBrainParams.SESSION_GAP_MS && it.first != signal.artistKey }
                             ?.first
                     counted = MusicBrainLearn.applyMusicSignal(brain, signal, crossed, now, coArtist)
                     if (counted) lastCounted = signal.artistKey to now
-                    Log.i(TAG, "listen ${track.videoId} pct=${"%.2f".format(pct)} counted=$counted artist=${signal.artistKey}")
+                    Log.i(
+                        TAG,
+                        "listen ${track.videoId} pct=${"%.2f".format(pct)} counted=$counted " +
+                            "skip=${signal.skipTier} autoplay=$isAutoplay artist=${signal.artistKey}",
+                    )
                 } else {
                     Log.d(TAG, "listen ${track.videoId} pct=$pct below first milestone")
                 }
@@ -169,10 +183,12 @@ class MusicBrainEngine
             playedFraction: Double,
             genre: String? = null,
             playedMs: Long = 0L,
+            endedByUser: Boolean = false,
+            isAutoplay: Boolean = false,
         ) {
             saveScope.launch {
                 try {
-                    onListenSession(track, playedFraction, genre, playedMs)
+                    onListenSession(track, playedFraction, genre, playedMs, endedByUser, isAutoplay)
                 } catch (e: Exception) {
                     Log.w(TAG, "Listen session failed: ${e.message}")
                 }
@@ -221,14 +237,18 @@ class MusicBrainEngine
         ): List<MusicTrack> {
             if (tracks.isEmpty()) return tracks
             ensureInitialized()
+            val mode = playerPreferences.musicDiscoveryMode.first()
             return withContext(Dispatchers.Default) {
                 mutex.withLock {
                     if (tracks.size == 1) {
                         val key = tracks[0].primaryArtistKey()
                         if (brain.isArtistBlocked(key)) emptyList() else tracks
                     } else {
+                        val now = System.currentTimeMillis()
                         val inputs = tracks.map { MusicRankInput(trackId = it.videoId, artistKey = it.primaryArtistKey()) }
-                        MusicBrainRanker.rank(brain, inputs, surface, System.currentTimeMillis()).map { tracks[it] }
+                        MusicBrainRanker
+                            .rank(brain, inputs, surface, now, mode, sessionSkips.active(now))
+                            .map { tracks[it] }
                     }
                 }
             }
@@ -248,9 +268,12 @@ class MusicBrainEngine
         ): List<MusicTrack> {
             if (candidates.isEmpty() || limit <= 0) return emptyList()
             val inputs = candidates.map { MusicRankInput(trackId = it.videoId, artistKey = it.primaryArtistKey()) }
+            // The pool was ranked when fetched; a skip since then still has to push that artist back.
+            val skipped = sessionSkips.snapshot
+            val (demoted, kept) = inputs.indices.partition { inputs[it].artistKey in skipped }
             val order =
                 MusicBrainRanker.spreadArtists(
-                    order = inputs.indices.toList(),
+                    order = kept + demoted,
                     inputs = inputs,
                     maxRun = MusicBrainParams.RADIO_MAX_CONSECUTIVE_ARTIST,
                     previousArtist = previousTrack?.primaryArtistKey(),

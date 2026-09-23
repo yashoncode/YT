@@ -42,6 +42,7 @@ import com.yt.data.music.YouTubeMusicService
 import com.yt.data.music.model.MusicTrack
 import com.yt.data.newmusic.InnertubeMusicService
 import com.yt.data.recommendation.music.MusicBrainEngine
+import com.yt.data.recommendation.music.MusicBrainParams
 import com.yt.extensions.setOffloadEnabled
 import com.yt.innertube.YouTube
 import com.yt.innertube.models.WatchEndpoint
@@ -89,6 +90,7 @@ class Media3MusicService : MediaLibraryService() {
         private const val RADIO_MIN_UPCOMING = 3
         private const val RADIO_APPEND_BATCH = 10
         private const val RADIO_POOL_LOW_WATER = 15
+        private const val RADIO_RESEED_AFTER_SKIPS = 2
         private const val LOCAL_MEDIA_PREFIX = "local_"
 
         private val CommandToggleShuffle = SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
@@ -138,6 +140,12 @@ class Media3MusicService : MediaLibraryService() {
     private var radioEndpoint: WatchEndpoint? = null
     private var radioTopUpJob: Job? = null
     private var radioAutoplayEnabled = true
+
+    /** Tracks the radio appended on its own, so the brain can tell autoplay from the user's picks. */
+    private val radioAppendedIds = HashSet<String>()
+    private var consecutiveRadioSkips = 0
+    private var lastAcceptedTrackId: String? = null
+    private var radioReseedFrom: String? = null
     private var loudnessNormalizationEnabled = true
     private var lastQueueIds: List<String>? = null
 
@@ -340,7 +348,11 @@ class Media3MusicService : MediaLibraryService() {
                     mediaItem: androidx.media3.common.MediaItem?,
                     reason: Int,
                 ) {
-                    finalizeListenSession()
+                    // Notification and headset next arrive as SEEK. In-app jumps rebuild the
+                    // playlist after stop(), so they are flagged by the manager instead.
+                    val endedByUser =
+                        reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK && mediaItem?.mediaId != learnMediaId
+                    finalizeListenSession(endedByUser)
                     startListenSession(mediaItem?.mediaId)
                     applyLoudnessGain()
 
@@ -522,7 +534,11 @@ class Media3MusicService : MediaLibraryService() {
         refreshLearnDuration()
     }
 
-    private fun finalizeListenSession() {
+    private fun finalizeListenSession(endedByUser: Boolean = false) {
+        // Consumed on every finalize, so a flag can never outlive the track it was set for.
+        val userJumped =
+            com.yt.player.EnhancedMusicPlayerManager
+                .consumeUserSkip()
         closePlayingSegment()
         val mediaId = learnMediaId
         val pinnedTrack = learnTrack
@@ -550,10 +566,40 @@ class Media3MusicService : MediaLibraryService() {
             return
         }
 
-        Log.d(TAG, "listen finalize: $mediaId playedMs=$playedMs pct=${playedMs.toDouble() / durationMs}")
+        val pct = playedMs.toDouble() / durationMs
+        // An error-driven skip to the next track is not the user rejecting this one.
+        val skipped = (endedByUser || userJumped) && mediaId !in lastPlaybackErrorAtMap
+        val isAutoplay = mediaId in radioAppendedIds
+        Log.d(TAG, "listen finalize: $mediaId playedMs=$playedMs pct=$pct skipped=$skipped autoplay=$isAutoplay")
         // Engine-scoped, NOT lifecycleScope: the finalize from onDestroy runs after
         // this service's scope is already cancelled, and the session must still land.
-        musicBrain.onListenSessionAsync(track, playedMs.toDouble() / durationMs, pinnedGenre, playedMs)
+        musicBrain.onListenSessionAsync(track, pct, pinnedGenre, playedMs, skipped, isAutoplay)
+        trackRadioSkips(mediaId, pct, skipped, isAutoplay)
+    }
+
+    /**
+     * Skipping radio track after radio track means the station drifted. Reseed its pool
+     * from the last track the user actually listened to; the visible queue is untouched.
+     */
+    private fun trackRadioSkips(
+        mediaId: String,
+        playedFraction: Double,
+        skipped: Boolean,
+        isAutoplay: Boolean,
+    ) {
+        if (playedFraction >= MusicBrainParams.COUNT_MILESTONE) {
+            lastAcceptedTrackId = mediaId.takeUnless { it.startsWith(LOCAL_MEDIA_PREFIX) }
+            consecutiveRadioSkips = 0
+            return
+        }
+        if (!skipped || !isAutoplay) return
+        consecutiveRadioSkips += 1
+        val seed = lastAcceptedTrackId ?: return
+        if (consecutiveRadioSkips < RADIO_RESEED_AFTER_SKIPS) return
+        consecutiveRadioSkips = 0
+        // Applied by maybeExtendRadio, which runs only once this transition is known to
+        // stay in the same queue; a brand-new queue seeds its own radio and clears this.
+        radioReseedFrom = seed
     }
 
     /**
@@ -1116,6 +1162,9 @@ class Media3MusicService : MediaLibraryService() {
         radioContinuation = null
         radioEndpoint = null
         radioResumeWhenAppended = false
+        radioAppendedIds.clear()
+        consecutiveRadioSkips = 0
+        radioReseedFrom = null
         startRadio(currentId)
     }
 
@@ -1196,6 +1245,16 @@ class Media3MusicService : MediaLibraryService() {
             return
         }
 
+        radioReseedFrom?.let { seed ->
+            radioReseedFrom = null
+            Log.d(TAG, "Radio drifted after $RADIO_RESEED_AFTER_SKIPS skips, reseeding pool from $seed")
+            radioContinuation = null
+            radioEndpoint = null
+            // startRadio replaces the hidden pool and calls back here once it lands.
+            startRadio(seed)
+            return
+        }
+
         // At ENDED every item has played, whatever the timeline says (shuffle).
         val remaining = player.mediaItemCount - player.currentMediaItemIndex - 1
         if (!ended && remaining > RADIO_MIN_UPCOMING) return
@@ -1217,6 +1276,7 @@ class Media3MusicService : MediaLibraryService() {
         batch.forEach { track ->
             manager.addToQueue(track)
             manager.removeAutomixItem(track.videoId)
+            radioAppendedIds.add(track.videoId)
         }
         if (batch.isNotEmpty()) {
             // Our own growth must not read as a new queue on the next skip.

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
+import com.yt.data.recommendation.music.MusicDiscoveryMode
 import com.yt.network.AppProxyConfig
 import com.yt.network.AppProxyType
 import com.yt.player.stream.CaptionTrackResolver
@@ -60,6 +61,7 @@ class PlayerPreferences(
         val AUTOPLAY_ENABLED = booleanPreferencesKey("autoplay_enabled")
         val QUEUE_AUTOPLAY_ENABLED = booleanPreferencesKey("queue_autoplay_enabled")
         val MUSIC_ENDLESS_RADIO_ENABLED = booleanPreferencesKey("music_endless_radio_enabled")
+        val MUSIC_DISCOVERY_MODE = stringPreferencesKey("music_discovery_mode")
         val AUTOPLAY_COUNTDOWN_SECONDS = intPreferencesKey("autoplay_countdown_seconds")
         val SHOW_CONTROLS_WHILE_LOADING = booleanPreferencesKey("show_controls_while_loading")
         val VIDEO_LOOP_ENABLED = booleanPreferencesKey("video_loop_enabled")
@@ -1290,6 +1292,16 @@ class PlayerPreferences(
     suspend fun setMusicEndlessRadioEnabled(enabled: Boolean) {
         context.playerPreferencesDataStore.edit { preferences ->
             preferences[Keys.MUSIC_ENDLESS_RADIO_ENABLED] = enabled
+        }
+    }
+
+    val musicDiscoveryMode: Flow<MusicDiscoveryMode> =
+        context.playerPreferencesDataStore.data
+            .map { preferences -> MusicDiscoveryMode.fromName(preferences[Keys.MUSIC_DISCOVERY_MODE]) }
+
+    suspend fun setMusicDiscoveryMode(mode: MusicDiscoveryMode) {
+        context.playerPreferencesDataStore.edit { preferences ->
+            preferences[Keys.MUSIC_DISCOVERY_MODE] = mode.name
         }
     }
 

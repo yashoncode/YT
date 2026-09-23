@@ -87,7 +87,34 @@ data class MusicSignal(
     val isExplicitLike: Boolean = false,
     val title: String = "",
     val thumbnail: String = "",
+    val skipTier: MusicSkipTier = MusicSkipTier.NONE,
+    val isAutoplay: Boolean = false,
 )
+
+/**
+ * How a listen that the user cut short reads as feedback. Most skips land in the
+ * first seconds of a track, and those are the clearest "not this" signal there is.
+ */
+enum class MusicSkipTier {
+    NONE,
+    EARLY,
+    PARTIAL,
+}
+
+/** The user's Familiar / Blend / Discover choice. BLEND is the engine's untuned default. */
+enum class MusicDiscoveryMode(
+    val noveltyOffset: Double,
+    val discoveryScale: Double,
+) {
+    FAMILIAR(noveltyOffset = -0.15, discoveryScale = 0.5),
+    BLEND(noveltyOffset = 0.0, discoveryScale = 1.0),
+    DISCOVER(noveltyOffset = 0.20, discoveryScale = 1.5),
+    ;
+
+    companion object {
+        fun fromName(name: String?): MusicDiscoveryMode = entries.firstOrNull { it.name == name } ?: BLEND
+    }
+}
 
 /**
  * The resident music taste state. One small JSON blob (< ~0.5 MB at every cap),
@@ -186,6 +213,11 @@ object MusicBrainParams {
     const val APPETITE_DISLIKE_NUDGE = 0.03
     const val APPETITE_MIN = 0.05
     const val APPETITE_MAX = 0.95
+    const val EARLY_SKIP_MS = 30_000L
+    const val EARLY_SKIP_SCORE_FACTOR = 0.8
+
+    /** Radio plays the user never chose teach at half strength, so autoplay cannot narrow the profile it feeds on. */
+    const val AUTOPLAY_LEARN_SCALE = 0.5
 
     // Model caps: (max trigger, keep)
     const val ARTIST_AFFINITY_MAX = 600

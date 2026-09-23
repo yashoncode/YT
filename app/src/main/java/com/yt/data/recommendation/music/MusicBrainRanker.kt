@@ -125,6 +125,7 @@ internal object MusicBrainRanker {
         anchors: List<String>,
         bucket: MusicTimeBucket,
         nowMs: Long,
+        mode: MusicDiscoveryMode,
     ): Double {
         val artist = input.artistKey
         val fam = brain.artistAffinity[artist]?.score ?: 0.0
@@ -134,7 +135,7 @@ internal object MusicBrainRanker {
         val cooc = coocScore(brain, artist, anchors)
         val ctx = contextScore(brain, bucket, input.genre)
         val novel = if (artist.isEmpty() || artist in brain.seenArtists) 0.0 else 1.0
-        val discovery = w.discovery * novel * brain.discoveryAppetite
+        val discovery = w.discovery * mode.discoveryScale * novel * brain.discoveryAppetite
 
         val base = w.fam * fam + w.act * act + w.rot * rot + w.prox * prox + w.cooc * cooc + w.ctx * ctx + discovery
         val cooldown = if (isInDislikeCooldown(brain, artist, nowMs)) MusicBrainParams.DISLIKE_COOLDOWN_MULTIPLIER else 1.0
@@ -144,6 +145,7 @@ internal object MusicBrainRanker {
     fun surfaceTargetNovelty(
         surface: String,
         appetite: Double,
+        mode: MusicDiscoveryMode = MusicDiscoveryMode.BLEND,
     ): Double {
         val base =
             when (surface) {
@@ -163,7 +165,7 @@ internal object MusicBrainRanker {
                     0.0
                 }
             }
-        return (base + flex).coerceIn(MusicBrainParams.NOVELTY_MIN, MusicBrainParams.NOVELTY_MAX)
+        return (base + flex + mode.noveltyOffset).coerceIn(MusicBrainParams.NOVELTY_MIN, MusicBrainParams.NOVELTY_MAX)
     }
 
     /** A novel artist only counts as discovery (not noise) when adjacent to existing taste. */
@@ -176,14 +178,17 @@ internal object MusicBrainRanker {
             (input.genre?.let { brain.genreAffinity[it] } ?: 0.0) > MusicBrainParams.ADJACENT_GENRE_THRESHOLD
 
     /**
-     * The full pipeline: score → hard-drop blocked → sink dislike-cooldowns to the
-     * end → compose to the surface's novelty target → spread long same-artist runs.
+     * The full pipeline: score → hard-drop blocked → sink dislike-cooldowns and
+     * artists skipped this session to the end → compose to the surface's novelty
+     * target → spread long same-artist runs.
      */
     fun rank(
         brain: MusicBrain,
         inputs: List<MusicRankInput>,
         surface: String,
         nowMs: Long,
+        mode: MusicDiscoveryMode = MusicDiscoveryMode.BLEND,
+        sessionSkipped: Set<String> = emptySet(),
     ): List<Int> {
         if (inputs.size <= 1) return inputs.indices.toList()
 
@@ -191,15 +196,19 @@ internal object MusicBrainRanker {
         val bucket = MusicTimeBucket.fromTimestamp(nowMs)
         val anchors = brain.topArtists(MusicBrainParams.COOC_ANCHOR_ARTISTS).map { it.first }
 
-        val scores = inputs.map { scoreCandidate(brain, it, w, anchors, bucket, nowMs) }
+        val scores = inputs.map { scoreCandidate(brain, it, w, anchors, bucket, nowMs, mode) }
         val order =
             inputs.indices
                 .sortedWith(compareByDescending<Int> { scores[it] }.thenBy { it })
                 .filterNot { brain.isArtistBlocked(inputs[it].artistKey) }
 
-        val (suppressed, primary) = order.partition { isInDislikeCooldown(brain, inputs[it].artistKey, nowMs) }
+        val (suppressed, primary) =
+            order.partition {
+                val artist = inputs[it].artistKey
+                artist in sessionSkipped || isInDislikeCooldown(brain, artist, nowMs)
+            }
 
-        val target = surfaceTargetNovelty(surface, brain.discoveryAppetite)
+        val target = surfaceTargetNovelty(surface, brain.discoveryAppetite, mode)
         val novel = primary.filter { inputs[it].artistKey.isNotEmpty() && inputs[it].artistKey !in brain.seenArtists }.toSet()
         val adjacent = primary.filter { it in novel && isTasteAdjacent(brain, inputs[it], anchors) }.toSet()
         val composed = composeToRatio(primary, novel, adjacent, target)

@@ -30,6 +30,29 @@ internal object MusicQueuePlanner {
         }
     }
 
+    fun indexOfFrom(
+        queueIds: List<String>,
+        fromIndex: Int,
+        trackId: String,
+    ): Int {
+        for (index in fromIndex.coerceAtLeast(0) until queueIds.size) {
+            if (queueIds[index] == trackId) return index
+        }
+        return INDEX_UNSET
+    }
+
+    /** A requested start index is trusted only when it still points at the requested track. */
+    fun startIndex(
+        queueIds: List<String>,
+        requestedIndex: Int,
+        trackId: String,
+    ): Int =
+        if (queueIds.getOrNull(requestedIndex) == trackId) {
+            requestedIndex
+        } else {
+            queueIds.indexOf(trackId).coerceAtLeast(0)
+        }
+
     fun shouldForcePendingPlayNext(
         isAutomaticTransition: Boolean,
         pendingMediaId: String?,

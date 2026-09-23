@@ -31,6 +31,18 @@ internal object MusicBrainLearn {
             else -> 0.35
         }
 
+    /** Only a listen the user ended themselves, before it counted, is a skip. */
+    fun skipTier(
+        endedByUser: Boolean,
+        playedFraction: Double,
+        playedMs: Long,
+    ): MusicSkipTier =
+        when {
+            !endedByUser || playedFraction >= MusicBrainParams.COUNT_MILESTONE -> MusicSkipTier.NONE
+            playedMs < MusicBrainParams.EARLY_SKIP_MS -> MusicSkipTier.EARLY
+            else -> MusicSkipTier.PARTIAL
+        }
+
     /**
      * The complete learning step for one listen. Returns true when the listen COUNTED
      * (crossed the 50% milestone or was an explicit like) — the caller uses that to
@@ -52,13 +64,30 @@ internal object MusicBrainLearn {
         // backfilled "drake" and live "UC…" never accumulate as two artists.
         reconcileNameKey(brain, sig)
 
+        // An early skip is heard too briefly to mark the artist seen, and an artist the
+        // brain has never learned has no score to lower.
+        if (sig.skipTier == MusicSkipTier.EARLY) {
+            brain.artistAffinity[artist]?.let {
+                it.score = (it.score * MusicBrainParams.EARLY_SKIP_SCORE_FACTOR).coerceIn(0.0, 1.0)
+            }
+            prune(brain)
+            return false
+        }
+
         // Novelty must be read BEFORE the milestone loop marks the artist seen.
         val wasNovel = artist !in brain.seenArtists
+        val alpha =
+            if (sig.isAutoplay && sig.skipTier == MusicSkipTier.NONE) {
+                MusicBrainParams.ALPHA_LONG * MusicBrainParams.AUTOPLAY_LEARN_SCALE
+            } else {
+                MusicBrainParams.ALPHA_LONG
+            }
 
         for (m in crossed) {
             if (m >= 0.15) brain.seenArtists.add(artist)
             val e = brain.artistAffinity.getOrPut(artist) { MusicAffinity() }
-            e.score = ema(e.score, milestoneWeight(m), MusicBrainParams.ALPHA_LONG)
+            val target = if (sig.skipTier == MusicSkipTier.PARTIAL) 0.0 else milestoneWeight(m)
+            e.score = ema(e.score, target, alpha)
             e.lastPlayed = nowMs
             if (sig.artistDisplay.isNotBlank()) e.display = sig.artistDisplay
         }

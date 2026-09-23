@@ -53,6 +53,16 @@ object EnhancedMusicPlayerManager {
     @Volatile
     var playContextGenre: String? = null
 
+    /**
+     * Set when the user jumps away from the current track (next, or a queue tap). The rebuild
+     * that follows stops the player first, so the service cannot tell the jump from a brand-new
+     * queue by the transition alone.
+     */
+    @Volatile
+    private var userSkipPending = false
+
+    fun consumeUserSkip(): Boolean = userSkipPending.also { userSkipPending = false }
+
     private var appContext: Context? = null
 
     private val _playerInstance = MutableStateFlow<Player?>(null)
@@ -110,6 +120,7 @@ object EnhancedMusicPlayerManager {
     sealed class PlayerEvent {
         data class RequestPlayTrack(
             val track: MusicTrack,
+            val queueIndex: Int = MusicQueuePlanner.INDEX_UNSET,
         ) : PlayerEvent()
 
         object RequestToggleLike : PlayerEvent()
@@ -591,7 +602,7 @@ object EnhancedMusicPlayerManager {
                 buildMediaItem(t, uri, useCacheKey = localUri == null)
             }
 
-        val startIdx = if (startIndex >= 0) startIndex else activeQueue.indexOfFirst { it.videoId == track.videoId }.coerceAtLeast(0)
+        val startIdx = MusicQueuePlanner.startIndex(activeQueue.map { it.videoId }, startIndex, track.videoId)
 
         player?.setMediaItems(mediaItems, startIdx, startPositionMs)
         player?.prepare()
@@ -793,7 +804,7 @@ object EnhancedMusicPlayerManager {
             player?.let { p ->
                 if (p.mediaItemCount == 0 && _currentTrack.value != null) {
                     _currentTrack.value?.let { track ->
-                        _playerEvents.emit(PlayerEvent.RequestPlayTrack(track))
+                        _playerEvents.emit(PlayerEvent.RequestPlayTrack(track, _currentQueueIndex.value))
                     }
                 } else if (p.isPlaying) {
                     p.pause()
@@ -806,12 +817,27 @@ object EnhancedMusicPlayerManager {
 
     fun playNext(track: MusicTrack) {
         val currentQ = _queue.value.toMutableList()
+        val queueIds = currentQ.map { it.videoId }
         val insertIdx =
             MusicQueuePlanner.playNextInsertionIndex(
-                queueIds = currentQ.map { it.videoId },
+                queueIds = queueIds,
                 playerIndex = player?.currentMediaItemIndex ?: MusicQueuePlanner.INDEX_UNSET,
                 currentTrackId = _currentTrack.value?.videoId,
             )
+
+        // Already upcoming: move it up rather than queue a second copy that plays again later.
+        val upcomingIdx = MusicQueuePlanner.indexOfFrom(queueIds, insertIdx, track.videoId)
+        if (upcomingIdx != MusicQueuePlanner.INDEX_UNSET) {
+            currentQ.add(insertIdx, currentQ.removeAt(upcomingIdx))
+            _queue.value = currentQ
+            pendingPlayNextMediaId = track.videoId
+            pendingPlayNextMediaIndex = insertIdx
+            player?.let { p ->
+                if (upcomingIdx < p.mediaItemCount) p.moveMediaItem(upcomingIdx, insertIdx)
+            }
+            triggerQueueSave()
+            return
+        }
 
         currentQ.add(insertIdx, track)
         _queue.value = currentQ
@@ -853,7 +879,8 @@ object EnhancedMusicPlayerManager {
         if (idx != -1 && idx < queue.size - 1) {
             val nextTrack = queue[idx + 1]
             setPendingTrack(nextTrack)
-            scope.launch { _playerEvents.emit(PlayerEvent.RequestPlayTrack(nextTrack)) }
+            userSkipPending = true
+            scope.launch { _playerEvents.emit(PlayerEvent.RequestPlayTrack(nextTrack, idx + 1)) }
         }
     }
 
@@ -870,7 +897,7 @@ object EnhancedMusicPlayerManager {
             if (idx > 0) {
                 val prevTrack = queue[idx - 1]
                 setPendingTrack(prevTrack)
-                _playerEvents.emit(PlayerEvent.RequestPlayTrack(prevTrack))
+                _playerEvents.emit(PlayerEvent.RequestPlayTrack(prevTrack, idx - 1))
             }
         }
     }
@@ -881,7 +908,8 @@ object EnhancedMusicPlayerManager {
             clearPendingPlayNext()
             val track = queue[index]
             setPendingTrack(track)
-            scope.launch { _playerEvents.emit(PlayerEvent.RequestPlayTrack(track)) }
+            if (index != currentPlaybackQueueIndex()) userSkipPending = true
+            scope.launch { _playerEvents.emit(PlayerEvent.RequestPlayTrack(track, index)) }
         }
     }
 

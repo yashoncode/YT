@@ -98,7 +98,11 @@ class MusicPlayerViewModel
                 EnhancedMusicPlayerManager.playerEvents.collect { event ->
                     when (event) {
                         is EnhancedMusicPlayerManager.PlayerEvent.RequestPlayTrack -> {
-                            loadAndPlayTrack(event.track, _uiState.value.queue)
+                            loadAndPlayTrack(
+                                track = event.track,
+                                queue = EnhancedMusicPlayerManager.queue.value,
+                                startIndex = event.queueIndex,
+                            )
                         }
 
                         is EnhancedMusicPlayerManager.PlayerEvent.RequestToggleLike -> {
@@ -275,6 +279,7 @@ class MusicPlayerViewModel
             track: MusicTrack,
             queue: List<MusicTrack> = emptyList(),
             sourceName: String? = null,
+            startIndex: Int = -1,
         ) {
             loadTrackJob?.cancel()
             // Genre-scoped surfaces tag their source; the genre becomes listen
@@ -323,6 +328,7 @@ class MusicPlayerViewModel
                             track = track,
                             audioUrl = "music://${track.videoId}",
                             queue = activeQueue,
+                            startIndex = startIndex,
                             sourceName = finalSourceName,
                             localUriOverrides = localUriOverrides,
                         )
