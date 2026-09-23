@@ -1,6 +1,5 @@
 package com.yt
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
@@ -13,6 +12,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -24,13 +24,11 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.JsonParser
 import com.yt.BuildConfig
 import com.yt.data.local.AppUiModePreferences
 import com.yt.data.local.LocalDataManager
 import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.discord.DiscordPresenceRuntime
-import com.yt.network.AppProxyManager
 import com.yt.platform.AppUiMode
 import com.yt.platform.AppUiRoot
 import com.yt.platform.DeviceFormFactorDetector
@@ -40,10 +38,11 @@ import com.yt.player.LifecyclePlaybackPreferences
 import com.yt.player.PictureInPictureHelper
 import com.yt.ui.YTApp
 import com.yt.ui.components.ProvideVideoCardState
-import com.yt.ui.components.UpdateDialog
+import com.yt.ui.components.UpdateSheet
 import com.yt.ui.components.shared.ProvideChannelGroupLabels
 import com.yt.ui.components.shared.ProvideDateDisplaySettings
 import com.yt.ui.screens.CrashReporterScreen
+import com.yt.ui.screens.update.UpdateViewModel
 import com.yt.ui.theme.CustomThemePalettes
 import com.yt.ui.theme.ThemeMode
 import com.yt.ui.theme.ThemeVariant
@@ -51,7 +50,6 @@ import com.yt.ui.theme.YTTheme
 import com.yt.ui.tv.YTTvApp
 import com.yt.ui.utils.ProvideWindowSizeClass
 import com.yt.ui.youtubeChannelDeepLinkRoute
-import com.yt.updater.ApkUpdateHelper
 import com.yt.utils.AppLanguageManager
 import com.yt.utils.UpdateInfo
 import com.yt.utils.UpdateManager
@@ -62,9 +60,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import javax.inject.Inject
 
 private const val PORTRAIT_REEL_ASPECT_RATIO = 9f / 16f
@@ -77,8 +72,7 @@ class MainActivity : ComponentActivity() {
     private val _isDeeplinkShort = mutableStateOf(false)
     val isDeeplinkShort: State<Boolean> = _isDeeplinkShort
 
-    private val _pendingUpdateInfo = mutableStateOf<UpdateInfo?>(null)
-    val pendingUpdateInfo: State<UpdateInfo?> = _pendingUpdateInfo
+    private val updateViewModel: UpdateViewModel by viewModels()
 
     private val _openMusicPlayerRequest = mutableIntStateOf(0)
     val openMusicPlayerRequest: State<Int> = _openMusicPlayerRequest
@@ -177,10 +171,7 @@ class MainActivity : ComponentActivity() {
 
         handleIntent(intent)
 
-        // Check for updates (only in release builds, only in github flavor)
-        if (!BuildConfig.DEBUG && BuildConfig.UPDATER_ENABLED) {
-            checkForUpdates(dataManager)
-        }
+        updateViewModel.checkOnLaunch()
 
         setContent {
             val scope = rememberCoroutineScope()
@@ -230,21 +221,7 @@ class MainActivity : ComponentActivity() {
                 return@setContent
             }
 
-            var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
-
-            // Check for updates ONCE on launch — skip debug/foss builds, enforce 24h cooldown
-            LaunchedEffect(Unit) {
-                if (BuildConfig.DEBUG || !BuildConfig.UPDATER_ENABLED) return@LaunchedEffect
-                val lastCheck = dataManager.lastUpdateCheck.first()
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastCheck < 24 * 60 * 60 * 1000L) return@LaunchedEffect
-
-                val info = UpdateManager.checkForUpdate(BuildConfig.VERSION_NAME)
-                dataManager.setLastUpdateCheck(currentTime)
-                if (info != null && info.isNewer) {
-                    updateInfo = info
-                }
-            }
+            val updateState by updateViewModel.state.collectAsState()
 
             // Load theme preference and keep it reactive
             LaunchedEffect(Unit) {
@@ -297,26 +274,15 @@ class MainActivity : ComponentActivity() {
                 systemDarkThemeMode = systemDarkThemeMode,
                 systemDarkThemeVariant = systemDarkThemeVariant,
             ) {
-                // Show Dialog Overlay if update exists (github flavor only)
-                if (BuildConfig.UPDATER_ENABLED && updateInfo != null) {
-                    UpdateDialog(
-                        updateInfo = updateInfo!!,
-                        onDismiss = { updateInfo = null },
-                        onUpdate = {
-                            UpdateManager.triggerDownload(context, updateInfo!!.downloadUrl)
-                            updateInfo = null
+                if (BuildConfig.UPDATER_ENABLED) {
+                    UpdateSheet(
+                        state = updateState,
+                        onDismiss = updateViewModel::dismiss,
+                        onUpdate = { url ->
+                            UpdateManager.triggerDownload(context, url)
+                            updateViewModel.dismiss()
                         },
                     )
-                }
-
-                // Handle update from notification (github flavor only)
-                if (BuildConfig.UPDATER_ENABLED) {
-                    val pendingUpdate by this@MainActivity.pendingUpdateInfo
-                    LaunchedEffect(pendingUpdate) {
-                        if (pendingUpdate != null) {
-                            updateInfo = pendingUpdate
-                        }
-                    }
                 }
 
                 // Request notification permission for Android 13+ (skip during benchmark/test runs)
@@ -568,7 +534,7 @@ class MainActivity : ComponentActivity() {
             val version = intent.getStringExtra("EXTRA_UPDATE_VERSION") ?: ""
             val changelog = intent.getStringExtra("EXTRA_UPDATE_CHANGELOG") ?: ""
             val url = intent.getStringExtra("EXTRA_UPDATE_URL") ?: ""
-            _pendingUpdateInfo.value = UpdateInfo(version, changelog, url, true)
+            if (BuildConfig.UPDATER_ENABLED) updateViewModel.show(UpdateInfo(version, changelog, url, true))
         }
     }
 
@@ -872,79 +838,6 @@ class MainActivity : ComponentActivity() {
             playerManager.pause()
             playerManager.stopBackgroundService()
         }
-    }
-
-    private fun checkForUpdates(dataManager: LocalDataManager) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                // Check cooldown (24 hours)
-                val lastCheck = dataManager.lastUpdateCheck.first()
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastCheck < 24 * 60 * 60 * 1000) {
-                    Log.d("MainActivity", "Skipping update check (cooldown)")
-                    return@launch
-                }
-
-                val client = AppProxyManager.applyTo(OkHttpClient.Builder()).build()
-                val request =
-                    Request
-                        .Builder()
-                        .url("https://api.github.com/repos/A-EDev/Flow/releases/latest")
-                        .header("Accept", "application/vnd.github.v3+json")
-                        .build()
-                val response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    val body = response.body?.string()
-                    if (body != null) {
-                        val json = JsonParser.parseString(body).asJsonObject
-                        val latestTag = json.get("tag_name").asString
-                        val currentVersion = BuildConfig.VERSION_NAME
-
-                        val cleanLatest = latestTag.removePrefix("v").split("-").first()
-                        val cleanCurrent = currentVersion.removePrefix("v").split("-").first()
-
-                        Log.d("MainActivity", "Latest tag: $latestTag, Current: $currentVersion, Comparing: $cleanLatest vs $cleanCurrent")
-
-                        if (isNewerVersion(cleanLatest, cleanCurrent)) {
-                            withContext(Dispatchers.Main) {
-                                AlertDialog
-                                    .Builder(this@MainActivity)
-                                    .setTitle(getString(R.string.new_update_available))
-                                    .setMessage(getString(R.string.update_download_prompt, latestTag))
-                                    .setPositiveButton(getString(R.string.download)) { _, _ ->
-                                        ApkUpdateHelper.requestDownload(this@MainActivity, "https://github.com/A-EDev/Flow/releases/latest")
-                                    }.setNegativeButton(getString(R.string.maybe_later), null)
-                                    .show()
-                            }
-                        }
-                    }
-                }
-
-                // Update last check time
-                dataManager.setLastUpdateCheck(currentTime)
-            } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to check for updates", e)
-            }
-        }
-    }
-
-    private fun isNewerVersion(
-        latest: String,
-        current: String,
-    ): Boolean {
-        val cleanLatest = latest.split("-").first()
-        val cleanCurrent = current.split("-").first()
-        val latestParts = cleanLatest.split(".").mapNotNull { it.toIntOrNull() }
-        val currentParts = cleanCurrent.split(".").mapNotNull { it.toIntOrNull() }
-
-        val size = maxOf(latestParts.size, currentParts.size)
-        for (i in 0 until size) {
-            val l = latestParts.getOrNull(i) ?: 0
-            val c = currentParts.getOrNull(i) ?: 0
-            if (l > c) return true
-            if (l < c) return false
-        }
-        return false
     }
 
     companion object {

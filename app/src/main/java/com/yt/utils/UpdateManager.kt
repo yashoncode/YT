@@ -11,11 +11,12 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.io.IOException
 
 data class UpdateInfo(
-    val version: String, // e.g., "v1.2.0"
-    val changelog: String, // The release notes
-    val downloadUrl: String, // Link to the .apk or the release page
+    val version: String,
+    val changelog: String,
+    val downloadUrl: String,
     val isNewer: Boolean,
 )
 
@@ -28,135 +29,93 @@ object UpdateManager {
     private val client: OkHttpClient
         get() = AppProxyManager.applyTo(OkHttpClient.Builder()).build()
 
-    // 🔥 CHANGE THIS TO YOUR REPO: "owner/repo"
-    private const val GITHUB_REPO = "A-EDev/Flow"
+    private const val GITHUB_REPO = "yashoncode/YT"
     private const val API_URL = "https://api.github.com/repos/$GITHUB_REPO/releases/latest"
+    const val RELEASES_PAGE = "https://github.com/$GITHUB_REPO/releases/latest"
 
+    // Release asset names are a public contract set by .github/workflows/build.yml.
+    private const val UNIVERSAL_APK = "yt.apk"
+    private const val FOSS_APK_MARKER = "foss"
+    private val ABI_APKS = mapOf("arm64-v8a" to "yt-arm64-v8a.apk", "armeabi-v7a" to "yt-armeabi-v7a.apk")
+
+    /** The newer release, or null when this build is current. Throws when GitHub cannot be reached. */
     suspend fun checkForUpdate(currentVersionName: String): UpdateInfo? =
         withContext(Dispatchers.IO) {
-            try {
-                val request =
-                    Request
-                        .Builder()
-                        .url(API_URL)
-                        .addHeader("Accept", "application/vnd.github.v3+json")
-                        .build()
+            val request =
+                Request
+                    .Builder()
+                    .url(API_URL)
+                    .addHeader("Accept", "application/vnd.github+json")
+                    .build()
 
-                val response = client.newCall(request).execute()
-
-                if (!response.isSuccessful) return@withContext null
-
-                val json = JSONObject(response.body?.string() ?: "{}")
-
-                // 1. Get Remote Version
-                val remoteTag =
-                    json
-                        .optString("tag_name", "")
-                        .removePrefix("v")
-                        .split("-")
-                        .first()
-                val currentTag = currentVersionName.removePrefix("v").split("-").first()
-
-                // 2. Get the APK matching this device, or fall back to the release page.
-                val assets = json.optJSONArray("assets")
-                val releaseAssets = mutableListOf<ReleaseAsset>()
-                if (assets != null && assets.length() > 0) {
-                    for (i in 0 until assets.length()) {
-                        val asset = assets.getJSONObject(i)
-                        val name = asset.optString("name")
-                        if (name.endsWith(".apk", ignoreCase = true)) {
-                            releaseAssets +=
-                                ReleaseAsset(
-                                    name = name,
-                                    downloadUrl = asset.optString("browser_download_url"),
-                                )
-                        }
-                    }
+            val body =
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) throw IOException("GitHub releases returned HTTP ${response.code}")
+                    response.body.string()
                 }
-                val downloadUrl =
-                    selectApkDownloadUrl(
-                        assets = releaseAssets,
-                        supportedAbis = Build.SUPPORTED_ABIS.asList(),
-                    ) ?: json.optString("html_url")
+            val json = JSONObject(body)
+            val tag = json.optString("tag_name")
+            if (!isNewer(tag, currentVersionName)) return@withContext null
 
-                // 3. Compare Versions
-                if (isNewer(remoteTag, currentTag)) {
-                    return@withContext UpdateInfo(
-                        version = json.optString("tag_name"),
-                        changelog = json.optString("body"),
-                        downloadUrl = downloadUrl,
-                        isNewer = true,
-                    )
-                }
-                return@withContext null
-            } catch (e: Exception) {
-                e.printStackTrace()
-                return@withContext null
-            }
+            val assets = json.optJSONArray("assets")
+            val releaseAssets =
+                (0 until (assets?.length() ?: 0))
+                    .map { assets!!.getJSONObject(it) }
+                    .filter { it.optString("name").endsWith(".apk", ignoreCase = true) }
+                    .map { ReleaseAsset(it.optString("name"), it.optString("browser_download_url")) }
+
+            UpdateInfo(
+                version = tag,
+                changelog = json.optString("body"),
+                downloadUrl =
+                    selectApkDownloadUrl(releaseAssets, Build.SUPPORTED_ABIS.asList())
+                        ?: json.optString("html_url").ifBlank { RELEASES_PAGE },
+                isNewer = true,
+            )
         }
 
-    /**
-     * Compares two version strings (e.g., "1.2.0" vs "1.1.9").
-     * Both strings should already have build-type suffixes stripped (done in checkForUpdate).
-     */
-    private fun isNewer(
+    /** Numeric part-by-part comparison; a leading `v` and any `-suffix` are ignored. */
+    internal fun isNewer(
         remote: String,
         current: String,
     ): Boolean {
-        val cleanRemote = remote.split("-").first()
-        val cleanCurrent = current.split("-").first()
-        val remoteParts = cleanRemote.split(".").map { it.toIntOrNull() ?: 0 }
-        val currentParts = cleanCurrent.split(".").map { it.toIntOrNull() ?: 0 }
+        fun parts(version: String) =
+            version
+                .trim()
+                .removePrefix("v")
+                .removePrefix("V")
+                .substringBefore("-")
+                .split(".")
+                .map { it.toIntOrNull() ?: 0 }
 
-        val length = maxOf(remoteParts.size, currentParts.size)
-
-        for (i in 0 until length) {
+        val remoteParts = parts(remote)
+        val currentParts = parts(current)
+        for (i in 0 until maxOf(remoteParts.size, currentParts.size)) {
             val r = remoteParts.getOrElse(i) { 0 }
             val c = currentParts.getOrElse(i) { 0 }
-            if (r > c) return true
-            if (r < c) return false
+            if (r != c) return r > c
         }
         return false
     }
 
+    /**
+     * This device's ABI split when the release has one, else the universal github-flavor APK,
+     * else the single APK a hand-published release carries (`YT-<version>.apk`).
+     */
     internal fun selectApkDownloadUrl(
         assets: List<ReleaseAsset>,
         supportedAbis: List<String>,
     ): String? {
-        val githubAssets =
-            assets.filterNot {
-                it.name.startsWith("flow-foss-", ignoreCase = true)
-            }
-        val splitAssets =
-            githubAssets.filter {
-                it.name.equals("flow-arm64-v8a.apk", ignoreCase = true) ||
-                    it.name.equals("flow-armeabi-v7a.apk", ignoreCase = true)
-            }
+        val githubAssets = assets.filterNot { it.name.contains(FOSS_APK_MARKER, ignoreCase = true) }
 
-        if (splitAssets.isNotEmpty()) {
-            val preferredNames =
-                supportedAbis.mapNotNull { abi ->
-                    when (abi) {
-                        "arm64-v8a" -> "flow-arm64-v8a.apk"
-                        "armeabi-v7a" -> "flow-armeabi-v7a.apk"
-                        else -> null
-                    }
-                }
-            return preferredNames.firstNotNullOfOrNull { preferredName ->
-                splitAssets
-                    .firstOrNull {
-                        it.name.equals(preferredName, ignoreCase = true)
-                    }?.downloadUrl
-            }
-        }
+        fun named(name: String) = githubAssets.firstOrNull { it.name.equals(name, ignoreCase = true) }?.downloadUrl
 
-        return githubAssets
-            .firstOrNull {
-                it.name.equals("flow.apk", ignoreCase = true)
-            }?.downloadUrl ?: githubAssets.firstOrNull()?.downloadUrl
+        return supportedAbis.firstNotNullOfOrNull { abi -> ABI_APKS[abi]?.let(::named) }
+            ?: named(UNIVERSAL_APK)
+            ?: githubAssets.singleOrNull()?.downloadUrl
     }
 
-    // Helper to open browser
+    /** Hands the APK link to the browser, which downloads it and passes it to the system installer. */
     fun triggerDownload(
         context: Context,
         url: String,
