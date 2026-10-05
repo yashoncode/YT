@@ -1,22 +1,21 @@
-# YT v5.0.0
+# YT v5.5.0
 
-**Release date:** 2026-09-23
+**Release date:** 2026-10-05
 
-## Recommendations that listen to you
+## Playback that keeps going
 
-- New **Recommendation mix** setting under Settings → Music recommendations: **Familiar**, **Blend** or **Discover**. Familiar sticks to artists you already play; Discover mixes in more artists you have not heard yet. It applies to Quick Picks, Similar, Daily Discover and endless radio alike. Blend is the default and behaves exactly as before.
-- Skipping a song now counts. A skip in the first 30 seconds lowers that artist a little, and a skip later on (but before halfway) lowers them slightly less. Before, a song you skipped after a few seconds taught the app nothing, and one you skipped after a minute still counted in the artist's favour. Only skips you make count: a track that fails to play and moves on by itself is not held against it.
-- An artist you skip is pushed to the back of every list for the rest of that listening session, including radio tracks that were already lined up, and comes back once you listen to them properly again.
-- When endless radio drifts and you skip two of its songs in a row, it now restarts from the last song you actually listened to. The songs already in your queue stay where they are.
-- Songs endless radio picked for you now count half as much as songs you chose yourself, so a long radio session cannot slowly narrow what the app thinks you like.
-
-## Updates
-
-- Update checks now look at this app's own releases. They were still pointed at the project YT was forked from, so no update notice ever appeared for YT releases.
-- A new update popup shows what changed and offers **Update** or **Maybe later**. Update downloads the new APK straight from GitHub, and Android asks before installing it.
-- **Check for updates** in Settings → About checks straight away and tells you if you are already up to date or if the check failed.
+- Videos and songs no longer stall about 30 seconds to a minute in. When YouTube refuses a stream, YT now tells a refused stream apart from one whose link simply expired. It stops retrying the refused source for 30 minutes and switches to another one, instead of retrying the same refused source again and again.
+- Music now picks its stream the same way videos do, so a source YouTube has refused is skipped for songs as well.
+- The Diagnostics screen has a new **Reset YouTube session** action for when playback keeps failing. It clears the stored YouTube session so the next video starts a fresh one.
+- The preferred audio language now picks the right dub. Before, a language code could match inside another language's name: "en" matched "French" and "hi" matched "Chinese", so a French dub could play instead of the English original.
 
 ## Fixes and stability
 
-- Fixed songs that appear more than once in the queue: skipping to, or tapping, the second copy no longer jumps back to the first copy and replays the songs in between.
-- "Play next" on a song that is already coming up later in the queue now moves it up, instead of adding a second copy that plays twice.
+- Fixed a crash when returning from picture-in-picture, and when opening a link before the app had finished starting.
+- Sharing a video to YT from another app now opens it in the YT window you already have, instead of starting a second copy inside the sharing app.
+- Very long watch histories no longer crash the app. History is now read in pages.
+- The player no longer adds another set of settings listeners every time it is rebuilt. These piled up over a long session.
+- Stopping music, and the sleep timer's exit, now stop the music service cleanly. Before, the service could come back to the foreground after it had stopped.
+- A download that stops receiving data now fails after 60 seconds instead of staying frozen at the same percentage.
+- Shorts you have nearly finished (90% or more) are now hidden from the Shorts feed, matching the watched mark on them.
+- The splash screen's loading glow no longer has hard, cut-off edges.
