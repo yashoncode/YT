@@ -14,10 +14,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -221,7 +225,21 @@ fun YTSplashScreen(onAnimationFinished: () -> Unit) {
                         Modifier
                             .fillMaxWidth(lineProgress.value)
                             .fillMaxHeight()
-                            .background(
+                            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                // Fade both ends so the halo has no hard vertical edge.
+                                drawRect(
+                                    brush =
+                                        Brush.horizontalGradient(
+                                            0f to Color.Transparent,
+                                            0.25f to Color.Black,
+                                            0.8f to Color.Black,
+                                            1f to Color.Transparent,
+                                        ),
+                                    blendMode = BlendMode.DstIn,
+                                )
+                            }.background(
                                 brush =
                                     Brush.verticalGradient(
                                         colors =
