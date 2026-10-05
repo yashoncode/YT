@@ -9,6 +9,7 @@ import com.yt.data.local.dao.SubscriptionGroupDao
 import com.yt.data.local.dao.VideoDao
 import com.yt.data.local.dao.WatchHistoryDao
 import com.yt.data.local.entity.NoteEntity
+import com.yt.data.local.readHistory
 import com.yt.data.recommendation.YTNeuroEngine
 import com.yt.data.recommendation.music.MusicBrainEngine
 import com.yt.data.recommendation.music.MusicBrainStorage
@@ -73,9 +74,7 @@ class SyncDataAccess
 
         suspend fun readWatchHistory(node: String): List<CanonicalWatchHistory> =
             watchHistoryDao
-                .getAllHistory()
-                .first()
-                .filter { !it.isLocal } // device-local media files don't sync
+                .readHistory(isLocal = 0) // device-local media files don't sync
                 .map { WatchHistoryMapper.toCanonical(it, node) }
 
         suspend fun writeWatchHistory(merged: List<CanonicalWatchHistory>) {

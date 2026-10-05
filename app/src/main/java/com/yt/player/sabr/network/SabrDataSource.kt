@@ -2,6 +2,7 @@ package com.yt.player.sabr.network
 
 import android.util.Log
 import com.yt.network.AppProxyManager
+import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -24,6 +25,7 @@ class SabrDataSource(
     }
 
     private var client: OkHttpClient? = null
+    private var currentCall: Call? = null
     private var currentResponse: Response? = null
     private var currentStream: InputStream? = null
 
@@ -75,7 +77,9 @@ class SabrDataSource(
 
         Log.d(TAG, "SABR POST: ${url.take(100)}... bodySize=${body.size}")
 
-        val response = getClient().newCall(request).execute()
+        val call = getClient().newCall(request)
+        currentCall = call
+        val response = call.execute()
 
         if (!response.isSuccessful) {
             val errorBody = response.body?.string()?.take(500) ?: ""
@@ -97,6 +101,16 @@ class SabrDataSource(
     }
 
     fun close() {
+        // Cancelled before anything is closed. Closing an OkHttp body drains whatever is left on
+        // the socket so the connection can be pooled, and that read throws
+        // NetworkOnMainThreadException when a release arrives on the main thread — which is where
+        // ExoPlayer tears a media source down. Call.cancel() is documented safe from any thread and
+        // severs the connection itself, so the closes below have nothing left to read.
+        try {
+            currentCall?.cancel()
+        } catch (e: Exception) {
+            Log.v(TAG, "Error cancelling call", e)
+        }
         try {
             currentStream?.close()
         } catch (e: Exception) {
@@ -109,6 +123,7 @@ class SabrDataSource(
         }
         currentStream = null
         currentResponse = null
+        currentCall = null
     }
 
     fun release() {

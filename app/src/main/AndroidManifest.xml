@@ -101,11 +101,13 @@
             </intent-filter>
         </activity>
 
+        <!-- singleTask: a share or link from another app must reach this instance through
+             onNewIntent, not start a second one inside the sharing app's task. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|uiMode"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:theme="@style/Theme.YT.Starting"

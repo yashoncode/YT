@@ -1,7 +1,7 @@
 package com.yt.ui.components
 
 import com.google.common.truth.Truth.assertThat
-import com.yt.data.local.VideoHistoryEntry
+import com.yt.data.local.dao.WatchProgress
 import org.junit.Test
 
 class VideoCardStateTest {
@@ -9,13 +9,11 @@ class VideoCardStateTest {
         videoId: String,
         position: Long,
         duration: Long,
-    ) = VideoHistoryEntry(
+    ) = WatchProgress(
         videoId = videoId,
         position = position,
         duration = duration,
         timestamp = 0L,
-        title = videoId,
-        thumbnailUrl = "",
     )
 
     @Test
@@ -67,6 +65,6 @@ class VideoCardStateTest {
 
     @Test
     fun `an empty history produces an empty map`() {
-        assertThat(emptyList<VideoHistoryEntry>().toWatchProgressMap()).isEmpty()
+        assertThat(emptyList<WatchProgress>().toWatchProgressMap()).isEmpty()
     }
 }

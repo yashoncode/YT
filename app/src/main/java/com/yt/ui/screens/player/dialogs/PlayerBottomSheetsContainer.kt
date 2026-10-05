@@ -82,9 +82,6 @@ internal fun PlayerBottomSheetsContainer(
             context.stopService(
                 android.content.Intent(context, com.yt.service.VideoPlayerService::class.java),
             )
-            context.stopService(
-                android.content.Intent(context, com.yt.service.Media3MusicService::class.java),
-            )
             (context as? android.app.Activity)?.finishAndRemoveTask()
         }
     }

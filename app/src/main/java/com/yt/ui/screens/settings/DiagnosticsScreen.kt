@@ -1,9 +1,6 @@
 package com.yt.ui.screens.settings
 
 import android.content.Intent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -14,7 +11,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -88,6 +84,7 @@ fun DiagnosticsScreen(onNavigateBack: () -> Unit) {
 
     // UI feedback
     var showClearDialog by remember { mutableStateOf(false) }
+    var showResetSessionDialog by remember { mutableStateOf(false) }
     var copiedSnackShown by remember { mutableStateOf(false) }
     val snackbarHost = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
@@ -158,6 +155,12 @@ fun DiagnosticsScreen(onNavigateBack: () -> Unit) {
                 title = stringResource(R.string.diagnostics_title),
                 onBack = onNavigateBack,
                 actions = {
+                    IconButton(onClick = { showResetSessionDialog = true }) {
+                        Icon(
+                            Icons.Outlined.Restore,
+                            contentDescription = stringResource(R.string.diagnostics_reset_session),
+                        )
+                    }
                     IconButton(onClick = ::shareReport) {
                         Icon(
                             Icons.Outlined.Share,
@@ -332,6 +335,22 @@ fun DiagnosticsScreen(onNavigateBack: () -> Unit) {
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
                     Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    if (showResetSessionDialog) {
+        DiagnosticsResetSessionDialog(
+            onDismiss = { showResetSessionDialog = false },
+            onConfirm = {
+                showResetSessionDialog = false
+                scope.launch {
+                    resetYouTubeSession()
+                    snackbarHost.showSnackbar(
+                        message = context.getString(R.string.diagnostics_reset_session_done),
+                        duration = SnackbarDuration.Short,
+                    )
                 }
             },
         )

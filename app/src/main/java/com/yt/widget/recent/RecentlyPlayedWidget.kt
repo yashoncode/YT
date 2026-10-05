@@ -45,9 +45,7 @@ class RecentlyPlayedWidget : GlanceAppWidget() {
             withContext(Dispatchers.IO) {
                 ViewHistory
                     .getInstance(context)
-                    .getVideoHistoryFlow()
-                    .first()
-                    .take(MAX_ITEMS)
+                    .getRecentVideoHistory(MAX_ITEMS, includeShorts = true)
                     .mapIndexed { index, entry ->
                         WidgetVideoItem(
                             videoId = entry.videoId,

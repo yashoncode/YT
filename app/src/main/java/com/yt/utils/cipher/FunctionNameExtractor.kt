@@ -75,7 +75,17 @@ object FunctionNameExtractor {
 
     // ==================== DETECTION PATTERNS ====================
 
-    private val Q_ARRAY_PATTERN = Regex("""var\s+Q\s*=\s*"[^"]+"\s*\.\s*split\s*\(\s*"\}"\s*\)""")
+    /**
+     * The string-array obfuscation: every literal the player needs is hoisted into one delimited
+     * string that is split into an array at load, and the code indexes that array instead of
+     * writing the literal.
+     *
+     * Neither the array's name nor its delimiter is stable — measured 2026-09-22, player `ecb23058`
+     * used `var LJ=...split(";")` and `dac2d7b2` used `var jd=...split(";")`. Matching only `Q` and
+     * `}` (and, in NewPipe 0.26.5, only a *single-character* name) misses both.
+     */
+    private val STRING_ARRAY_PATTERN =
+        Regex("""var\s+([A-Za-z0-9_${'$'}]{1,6})\s*=\s*"[^"]{100,}"\s*\.\s*split\s*\(\s*"([;{}])"\s*\)""")
 
     private val PLAYER_HASH_PATTERNS =
         listOf(
@@ -117,22 +127,35 @@ object FunctionNameExtractor {
     // ==================== EXTRACTION FUNCTIONS ====================
 
     fun hasQArrayObfuscation(playerJs: String): Boolean {
-        val hasQArray = Q_ARRAY_PATTERN.containsMatchIn(playerJs)
-        Log.d(TAG, "Q-array obfuscation check: hasQArray=$hasQArray")
-
-        if (hasQArray) {
-            val match = Q_ARRAY_PATTERN.find(playerJs)
-            if (match != null) {
-                val start = match.range.first
-                val qDefEnd = playerJs.indexOf(";", start)
-                if (qDefEnd > start) {
-                    val qDef = playerJs.substring(start, qDefEnd)
-                    val elementCount = qDef.count { it == '}' } + 1
-                    Log.d(TAG, "Q-array detected with ~$elementCount elements")
-                }
-            }
+        val match = STRING_ARRAY_PATTERN.find(playerJs)
+        if (match == null) {
+            Log.d(TAG, "String-array obfuscation check: none found")
+            return false
         }
-        return hasQArray
+        val name = match.groupValues[1]
+        val separator = match.groupValues[2]
+        val literalIndexed = Regex("""\b${Regex.escape(name)}\[\d+\]""").containsMatchIn(playerJs)
+        val computedIndexed = Regex("""\b${Regex.escape(name)}\[[^\]\d]""").containsMatchIn(playerJs)
+        Log.d(
+            TAG,
+            "String-array obfuscation: array=$name separator='$separator' " +
+                "literalIndexed=$literalIndexed computedIndexed=$computedIndexed",
+        )
+        return true
+    }
+
+    /**
+     * Whether the player computes its string-array indices from runtime values.
+     *
+     * When it does, no pattern can name the signature function, because there is no longer a
+     * signature function to name: measured on `ecb23058`, the transform is inlined inside a
+     * control-flow-flattened dispatch (`mL=function(L,G,f,C)`) whose every index is an XOR of its
+     * arguments. Worth reporting rather than retrying — it is the difference between "the patterns
+     * are out of date" and "this player cannot be read this way".
+     */
+    fun hasComputedArrayIndices(playerJs: String): Boolean {
+        val name = STRING_ARRAY_PATTERN.find(playerJs)?.groupValues?.get(1) ?: return false
+        return Regex("""\b${Regex.escape(name)}\[[^\]\d]""").containsMatchIn(playerJs)
     }
 
     fun extractPlayerHash(playerJs: String): String? {

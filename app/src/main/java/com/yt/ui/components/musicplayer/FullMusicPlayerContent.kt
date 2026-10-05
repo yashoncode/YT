@@ -90,7 +90,6 @@ import com.yt.data.local.MusicPlayerBackgroundStyle
 import com.yt.data.music.model.MusicTrack
 import com.yt.player.EnhancedMusicPlayerManager
 import com.yt.player.SleepTimerManager
-import com.yt.service.Media3MusicService
 import com.yt.ui.components.music.sheet.AddToPlaylistDialog
 import com.yt.ui.components.music.sheet.CreatePlaylistDialog
 import com.yt.ui.components.music.sheet.MusicQuickActionsSheet
@@ -163,7 +162,6 @@ internal fun FullMusicPlayerContent(
     LaunchedEffect(Unit) {
         SleepTimerManager.attachExitCallback {
             EnhancedMusicPlayerManager.stop()
-            context.stopService(Intent(context, Media3MusicService::class.java))
             (context as? android.app.Activity)?.finishAndRemoveTask()
         }
     }

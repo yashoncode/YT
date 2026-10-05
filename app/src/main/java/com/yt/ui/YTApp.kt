@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.yt.MainActivity
@@ -64,9 +63,7 @@ import com.yt.ui.theme.isEffectivelyDark
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 
-@UnstableApi
 /** How far the arriving screen travels. Enough to read as movement, short of a full swipe-in. */
 private const val NAV_ENTER_TRAVEL = 0.28f
 
@@ -429,7 +426,7 @@ fun YTApp(
 
         LaunchedEffect(pendingRoute) {
             pendingRoute?.let { route ->
-                navController.currentBackStackEntryFlow.first()
+                navController.awaitGraph()
                 navController.navigate(route)
                 onPendingRouteConsumed()
             }
@@ -467,13 +464,12 @@ fun YTApp(
         )
 
         LaunchedEffect(isInPipMode) {
-            if (
-                isInPipMode &&
-                !isShortsPlayerRoute &&
-                !currentRoute.value.startsWith("player") &&
-                currentVideo != null
-            ) {
-                navController.navigate("player/${currentVideo!!.id}")
+            if (!isInPipMode) return@LaunchedEffect
+            navController.awaitGraph()
+            val video = currentVideo
+            val route = currentRoute.value
+            if (route != SHORTS_ROUTE_KEY && !route.startsWith("player") && video != null) {
+                navController.navigate("player/${video.id}")
             }
         }
 

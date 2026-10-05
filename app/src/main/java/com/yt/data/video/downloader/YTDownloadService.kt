@@ -103,6 +103,8 @@ class YTDownloadService : Service() {
         const val NOTIFICATION_GROUP = "yt_download_group"
         private const val FOREGROUND_NOTIFICATION_ID = 724
         private const val MAX_CONCURRENT_DOWNLOADS = 3
+        private const val SABR_PROGRESS_INTERVAL_MS = 500L
+        private const val SABR_STALL_MS = 60_000L
 
         const val ACTION_START_DOWNLOAD = "com.yt.START_DOWNLOAD"
         const val ACTION_PAUSE_DOWNLOAD = "com.yt.PAUSE_DOWNLOAD"
@@ -981,23 +983,30 @@ class YTDownloadService : Service() {
             val videoTmp = "${mission.savePath}.video.tmp"
             val audioTmp = "${mission.savePath}.audio.tmp"
 
+            val stall =
+                StallLimit((SABR_STALL_MS / SABR_PROGRESS_INTERVAL_MS).toInt()) {
+                    Log.w(TAG, "executeSabrDownload: SABR sent nothing new for ${SABR_STALL_MS / 1000}s, ending $videoId")
+                    engine.cancel()
+                }
             val progressJob =
                 serviceScope.launch {
                     while (mission.status == MissionStatus.RUNNING) {
+                        val downloaded = engine.downloadedVideoBytes.get() + engine.downloadedAudioBytes.get()
+                        if (stall.stillAt(downloaded)) stall.onStall()
                         val ids = itemIds[videoId]
                         if (!ids.isNullOrEmpty()) {
                             downloadManager.emitProgress(
                                 DownloadProgressUpdate(
                                     videoId = videoId,
                                     itemId = ids.first(),
-                                    downloadedBytes = engine.downloadedVideoBytes.get() + engine.downloadedAudioBytes.get(),
+                                    downloadedBytes = downloaded,
                                     totalBytes = mission.totalBytes.coerceAtLeast(1),
                                     status = DownloadItemStatus.DOWNLOADING,
                                 ),
                             )
                         }
                         updateNotification(mission, videoId)
-                        delay(500L)
+                        delay(SABR_PROGRESS_INTERVAL_MS)
                     }
                 }
 

@@ -16,6 +16,15 @@ import com.yt.R
 import com.yt.data.shorts.queue.ShortsQueueSource
 import com.yt.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+
+/**
+ * Suspends until the NavHost has set its graph. The NavHost is composed only once the onboarding
+ * check resolves, so a fresh activity has a window where navigate() throws.
+ */
+suspend fun NavController.awaitGraph() {
+    currentBackStackEntryFlow.first()
+}
 
 @Composable
 fun HandleDeepLinks(
@@ -25,41 +34,19 @@ fun HandleDeepLinks(
     onDeeplinkConsumed: () -> Unit,
 ) {
     LaunchedEffect(deeplinkVideoId, isShort) {
-        if (deeplinkVideoId != null) {
-            val maxAttempts = 30
-            var navigated = false
-            for (attempt in 1..maxAttempts) {
-                delay(100L)
-                try {
-                    if (navController.currentDestination != null) {
-                        if (isShort) {
-                            val src = Uri.encode(ShortsQueueSource.SeededFeed(deeplinkVideoId).encode())
-                            navController.navigate("shorts?src=$src") {
-                                launchSingleTop = true
-                            }
-                        } else {
-                            navController.navigate("player/$deeplinkVideoId") {
-                                launchSingleTop = true
-                            }
-                        }
-                        navigated = true
-                        break
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.w(
-                        "HandleDeepLinks",
-                        "Navigation attempt $attempt failed for $deeplinkVideoId: ${e.message}",
-                    )
-                }
+        val videoId = deeplinkVideoId ?: return@LaunchedEffect
+        navController.awaitGraph()
+        if (isShort) {
+            val src = Uri.encode(ShortsQueueSource.SeededFeed(videoId).encode())
+            navController.navigate("shorts?src=$src") {
+                launchSingleTop = true
             }
-            if (!navigated) {
-                android.util.Log.e(
-                    "HandleDeepLinks",
-                    "Navigation failed after $maxAttempts attempts for: $deeplinkVideoId",
-                )
+        } else {
+            navController.navigate("player/$videoId") {
+                launchSingleTop = true
             }
-            onDeeplinkConsumed()
         }
+        onDeeplinkConsumed()
     }
 }
 

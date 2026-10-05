@@ -141,6 +141,10 @@ class ShortsRepository private constructor(
         private const val MIN_POOL_SIZE = 10
         private const val CACHE_TTL_MS = 5 * 60 * 1000L
 
+        // The line the card badge draws (WATCHED_PROGRESS_THRESHOLD), not the video watched threshold:
+        // under 99 % or "almost finished" a Short saved at 92 % showed as watched but stayed in the feed.
+        private const val SHORT_FINISHED_PERCENT = 90f
+
         // Upper bound on how long background feed work defers to the first playable short.
         private const val FIRST_PLAYBACK_GRACE_MS = 6_000L
 
@@ -1149,10 +1153,9 @@ class ShortsRepository private constructor(
         keepId: String? = null,
     ): List<ShortVideo> {
         if (shorts.isEmpty()) return shorts
-        val threshold = PlayerPreferences(context).watchedThreshold.first()
         val watchedIds =
             runCatching {
-                viewHistory.getWatchedShortIdsAboveThreshold(threshold.minPercent, threshold.maxRemainingMs)
+                viewHistory.getWatchedShortIdsAboveThreshold(minPercent = SHORT_FINISHED_PERCENT)
             }.getOrDefault(emptySet())
         val recentlySeenIds =
             runCatching {

@@ -502,7 +502,7 @@ class PlaybackLoadResolver
             )
         }
 
-        private companion object {
+        internal companion object {
             const val TAG = "PlaybackLoadResolver"
             const val NEWPIPE_ATTEMPTS = 3
             const val NEWPIPE_TIMEOUT_MS = 10_000L
@@ -511,9 +511,14 @@ class PlaybackLoadResolver
             const val LOAD_TIMEOUT_MS = 30_000L
             const val SABR_LOAD_TIMEOUT_MS = 120_000L
 
+            /**
+             * A SABR session used to count as playable on its own. It is not: the server never
+             * sends an init segment, so ExoPlayer cannot sniff the stream and the video fails
+             * however long the pipeline waits. Playability is the direct formats, and a result
+             * without them should let the ladder move on rather than end the load.
+             */
             fun innerTubeHasPlayableVod(result: InnerTubeVideoStreamExtractor.VideoExtractionResult): Boolean {
                 if (result.isLive) return false
-                if (result.sabrInfo != null) return true
                 val hasVideo = result.videoFormats.any { !it.url.isNullOrEmpty() }
                 val hasAudio = result.audioFormats.any { !it.url.isNullOrEmpty() }
                 return hasVideo && hasAudio

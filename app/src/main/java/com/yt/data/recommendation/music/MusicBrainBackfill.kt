@@ -8,6 +8,7 @@ package com.yt.data.recommendation.music
 
 import android.util.Log
 import com.yt.data.local.dao.WatchHistoryDao
+import com.yt.data.local.readHistory
 import com.yt.data.music.PlaylistRepository
 import com.yt.data.music.model.MusicTrack
 import kotlinx.coroutines.flow.firstOrNull
@@ -65,9 +66,7 @@ class MusicBrainBackfill
         ) {
             val rows =
                 watchHistoryDao
-                    .getMusicHistory()
-                    .firstOrNull()
-                    .orEmpty()
+                    .readHistory(isMusic = 1, isLocal = 0)
                     .take(MusicBrainParams.BACKFILL_MAX_ROWS)
                     .asReversed()
 

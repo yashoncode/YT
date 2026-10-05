@@ -27,6 +27,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
@@ -48,10 +49,14 @@ import com.yt.innertube.YouTube
 import com.yt.innertube.models.WatchEndpoint
 import com.yt.player.audio.CustomEqualizerAudioProcessor
 import com.yt.player.audio.shouldHandleAudioFocus
+import com.yt.player.error.StreamDenialClassifier
+import com.yt.player.error.StreamDenialKind
 import com.yt.player.factory.LoadControlFactory
 import com.yt.player.sessionArtworkBitmapLoader
+import com.yt.player.stream.ClientGateTracker
 import com.yt.utils.MusicPlayerUtils
 import com.yt.utils.NetworkConnectivityObserver
+import com.yt.utils.potoken.WebPoTokenSession
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -109,6 +114,14 @@ class Media3MusicService : MediaLibraryService() {
         @Volatile
         var currentAudioSessionId: Int = 0
             private set
+
+        /**
+         * Stops playback and the service from inside it. Sent through the controller, it lands after
+         * the player commands the caller already queued, which a direct stopService() overtakes.
+         */
+        fun requestStop(controller: MediaController) {
+            controller.sendCustomCommand(CommandStop, Bundle.EMPTY)
+        }
     }
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
@@ -648,6 +661,7 @@ class Media3MusicService : MediaLibraryService() {
 
             isExpiredUrlError(error) -> {
                 Log.d(TAG, "Expired URL (403) detected, refreshing stream URL")
+                reportStreamDenial(error)
                 notifyMusicWarning(getString(R.string.music_playback_warning_forbidden))
                 handleExpiredUrlError(mediaId, currentRetry)
             }
@@ -690,15 +704,23 @@ class Media3MusicService : MediaLibraryService() {
         }
     }
 
-    private fun getHttpResponseCode(error: PlaybackException): Int? {
-        var cause: Throwable? = error.cause
-        while (cause != null) {
-            if (cause is HttpDataSource.InvalidResponseCodeException) {
-                return cause.responseCode
-            }
-            cause = cause.cause
-        }
-        return null
+    private fun httpFailure(error: PlaybackException): HttpDataSource.InvalidResponseCodeException? =
+        generateSequence(error.cause) { it.cause }
+            .filterIsInstance<HttpDataSource.InvalidResponseCodeException>()
+            .firstOrNull()
+
+    private fun getHttpResponseCode(error: PlaybackException): Int? = httpFailure(error)?.responseCode
+
+    /** Demotes the client a refused url came from, so the retry and every later song skip it. */
+    private fun reportStreamDenial(error: PlaybackException) {
+        val url = httpFailure(error)?.dataSpec?.uri?.toString() ?: return
+        val kind = ClientGateTracker.reportDenied(url)
+        if (kind == StreamDenialKind.TOKEN_REJECTED) WebPoTokenSession.reportTokenRejected()
+        Log.w(
+            TAG,
+            "HTTP 403 c=${StreamDenialClassifier.clientOf(url)} itag=${StreamDenialClassifier.itagOf(url)} " +
+                "pot=${StreamDenialClassifier.hasPoToken(url)} ${StreamDenialClassifier.describeExpiry(url)} denial=$kind",
+        )
     }
 
     private fun isExpiredUrlError(error: PlaybackException): Boolean = getHttpResponseCode(error) == 403
@@ -961,7 +983,7 @@ class Media3MusicService : MediaLibraryService() {
             player.clearMediaItems()
         }
         com.yt.player.EnhancedMusicPlayerManager
-            .clearCurrentTrack()
+            .onServiceStopped()
         releaseLocks()
         stopSelf()
     }
@@ -1028,12 +1050,17 @@ class Media3MusicService : MediaLibraryService() {
      * Without this override Android calls stopSelf() via the default onTaskRemoved,
      * which destroys the foreground service and stops background music playback.
      * Overriding without calling super keeps the service alive.
+     *
+     * When nothing is playing it stops the way Media3's default does: a raw stopSelf() leaves the
+     * user-engaged timeout armed, so the notification update for that pause can put the stopped
+     * service back into the foreground.
      */
+    @OptIn(UnstableApi::class)
     override fun onTaskRemoved(rootIntent: Intent?) {
         if (::player.isInitialized && player.isPlaying) {
             return
         }
-        stopSelf()
+        pauseAllPlayersAndStopSelf()
     }
 
     override fun onDestroy() {

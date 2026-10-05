@@ -18,6 +18,8 @@ import androidx.media3.exoplayer.offline.DownloadNotificationHelper
 import com.yt.di.DownloadCache
 import com.yt.di.PlayerCache
 import com.yt.network.AppProxyManager
+import com.yt.player.error.StreamDenialClassifier
+import com.yt.player.stream.ClientGateTracker
 import com.yt.service.ExoDownloadService
 import com.yt.utils.MusicPlayerUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -206,7 +208,7 @@ class DownloadUtil
                     Log.w(TAG, "[Player] playerCache check error for $mediaId", e)
                 }
 
-                songUrlCache[mediaId]?.takeIf { it.third > System.currentTimeMillis() }?.let { (url, ua, _) ->
+                songUrlCache[mediaId]?.takeIf(::isReusable)?.let { (url, ua, _) ->
                     Log.d(TAG, "[Player] Using cached URL for $mediaId")
                     return@Factory buildPlaybackDataSpec(dataSpec, url, ua)
                 }
@@ -226,6 +228,10 @@ class DownloadUtil
                 buildPlaybackDataSpec(dataSpec, streamUrl, userAgent)
             }
         }
+
+        // A url resolved before its client was demoted would stall the same way ~30 s in.
+        private fun isReusable(entry: Triple<String, String, Long>): Boolean =
+            entry.third > System.currentTimeMillis() && !ClientGateTracker.isGated(StreamDenialClassifier.clientOf(entry.first))
 
         private fun buildPlaybackDataSpec(
             dataSpec: DataSpec,
